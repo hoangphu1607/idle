@@ -24,7 +24,8 @@ export class Preloader extends Phaser.Scene {
 
     preload() {
         //  Load the assets for the game - Replace with your own assets
-        this.load.setPath('assets');
+        // this.load.setPath('assets');
+        //  this.scene.start("Game");
 
     }
 
