@@ -7,17 +7,7 @@ export default class BootScene extends Phaser.Scene {
     }
 
     create() {
-
-        this.add.text(
-            360,
-            640,
-            "Hello Idle Game",
-            {
-                fontSize: "40px",
-                color: "#ffffff"
-            }
-        ).setOrigin(0.5);
-
+        this.scene.start("PreloadScene");
     }
 
 }
