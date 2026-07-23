@@ -5,6 +5,7 @@ export class Boot extends Phaser.Scene
         super('Boot');
     }
 
+
     preload ()
     {
         //  The Boot Scene is typically used to load in any assets you require for your Preloader, such as a game logo or background.
