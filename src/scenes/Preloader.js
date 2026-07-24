@@ -8,6 +8,7 @@ export default class Preloader extends Phaser.Scene {
 
     preload() {
         this.load.image("bg", "src/assets/bg.png");
+        this.load.image("wizard", "src/assets/wizard.png");
     }
 
     create() {
