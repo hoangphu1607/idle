@@ -1,0 +1,41 @@
+{
+	"textures": [
+		{
+			"image": "btnUI.png",
+			"format": "RGBA8888",
+			"size": {
+				"w": 1138,
+				"h": 530
+			},
+			"scale": 1,
+			"frames": [
+				{
+					"filename": "btnUI.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 1136,
+						"h": 528
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 1136,
+						"h": 528
+					},
+					"frame": {
+						"x": 1,
+						"y": 1,
+						"w": 1136,
+						"h": 528
+					}
+				}
+			]
+		}
+	],
+	"meta": {
+		"app": "https://www.codeandweb.com/texturepacker",
+		"version": "3.0",
+		"smartupdate": "$TexturePacker:SmartUpdate:e50dca850dd14db5fab83ce607a13b17:9a3327f5b90514bf9d85f678e4f0c43b:60a31f5765e491809ba621a78047d020$"
+	}
+}
