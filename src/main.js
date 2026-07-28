@@ -12,7 +12,8 @@ const config = {
 
     parent: "game",
 
-    backgroundColor: "#000000",
+    //backgroundColor: "#3a2daf",
+    //backgroundImage: "url(./assets/bg.png)",
 
     scale: {
         mode: Phaser.Scale.FIT,

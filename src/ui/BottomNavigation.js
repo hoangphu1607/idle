@@ -1,11 +1,11 @@
 import Phaser from "phaser";
-
+import MenuUI from "./MenuUI";
+import HeroScreen from "../scenes/HeroScreen";
 export default class BottomNavigation {
 
     constructor(scene) {
         this.scene = scene;
         this.buttons = [];
-
         this.create();
     }
 
@@ -16,9 +16,9 @@ export default class BottomNavigation {
 
         const menu = [
             { id: "headquarters", text: "Headquarters" },
-            { id: "hero",         text: "Hero" },
-            { id: "gate",         text: "Gate" },
-            { id: "battle",       text: "Battle" }
+            { id: "hero", text: "Hero" },
+            { id: "gate", text: "Gate" },
+            { id: "battle", text: "Battle" }
         ];
 
         const spacing = width / menu.length;
@@ -52,9 +52,10 @@ export default class BottomNavigation {
 
             icon.on("pointerup", () => {
                 this.select(item.id);
+                this.handleButtonClick(item);
             });
 
-            this.buttons.push({id: item.id,icon,text});
+            this.buttons.push({ id: item.id, icon, text });
 
         });
 
@@ -80,6 +81,26 @@ export default class BottomNavigation {
 
         console.log("Current:", id);
 
+    }
+    handleButtonClick(item) {
+        this.select(item.id);
+
+        switch (item.id) {
+            case "headquarters":
+                this.scene.scene.launch("MenuScene");
+                break;
+            case "hero":
+                console.log(this.scene);
+                console.log(this.scene.heroScreen);
+                this.scene.heroScreen.show();
+                break;
+            case "gate":
+                console.log("Mở Gate");
+                break;
+            case "battle":
+                console.log("Mở Battle");
+                break;
+        }
     }
 
 }
