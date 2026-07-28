@@ -38,6 +38,8 @@ export default class HeroScreen {
         this.container.setVisible(false);
 
     }
+    
+
     createHeroList() {
 
         HEROES.forEach((hero, index) => {

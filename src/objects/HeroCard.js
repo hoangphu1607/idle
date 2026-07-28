@@ -12,7 +12,9 @@ export default class HeroCard {
         this.create();
 
     }
-
+    setOnClick(callback) {
+        this.onClick = callback;
+    }
     create() {
         // const width = this.cameras.main.width;
         // const height = this.cameras.main.height;
@@ -25,7 +27,15 @@ export default class HeroCard {
             width - 40,
             100,
             0x444444
-        ).setOrigin(0);
+        ).setOrigin(0).setInteractive({ useHandCursor: true });;
+
+        background.on("pointerup", () => {
+    console.log("Click Hero:", this.hero.name);
+
+    if (this.onClick) {
+        this.onClick(this.hero);
+    }
+});
 
         // Avatar
         const avatar = this.scene.add.image(
