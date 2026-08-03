@@ -4,6 +4,9 @@ import BootScene from "./scenes/Boot.js";
 import PreloaderScene from "./scenes/Preloader.js";
 import GameScene from "./scenes/Game.js";
 import MenuScene from "./scenes/MenuScene";
+import MapScene from "./scenes/MapScene";
+import ContentScene from "./scenes/ContentScene";
+import BattleScene from "./scenes/BattleScene";
 const config = {
     type: Phaser.AUTO,
 
@@ -24,7 +27,10 @@ const config = {
         BootScene,
         PreloaderScene,
         GameScene,
-        MenuScene
+        MenuScene,
+        MapScene,
+        ContentScene,
+         BattleScene,
     ]
 };
 

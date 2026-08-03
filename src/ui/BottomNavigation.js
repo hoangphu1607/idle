@@ -1,6 +1,7 @@
 import Phaser from "phaser";
 import MenuUI from "./MenuUI";
 import HeroScreen from "../scenes/HeroScreen";
+import MenuScene from "../scenes/MenuScene";
 export default class BottomNavigation {
 
     constructor(scene) {
@@ -87,12 +88,18 @@ export default class BottomNavigation {
 
         switch (item.id) {
             case "headquarters":
-                this.scene.scene.launch("MenuScene");
+                this.scene.scene.start("MenuScene");
                 break;
             case "hero":
                 console.log(this.scene);
                 console.log(this.scene.heroScreen);
-                this.scene.heroScreen.show();
+
+                // Thêm kiểm tra if để đảm bảo heroScreen tồn tại và có hàm show()
+                if (this.scene.heroScreen && typeof this.scene.heroScreen.show === "function") {
+                    this.scene.heroScreen.show();
+                } else {
+                    console.warn("heroScreen chưa được khởi tạo hoặc không có hàm show()!");
+                }
                 break;
             case "gate":
                 console.log("Mở Gate");

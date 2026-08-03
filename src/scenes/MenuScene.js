@@ -1,19 +1,45 @@
 import Phaser from "phaser";
 import MenuUI from "../ui/MenuUI";
+import HeroScreen from "./HeroScreen";
+import HeroDetailPopup from "./HeroDetailPopup";
+import BaseScene from "./base/BaseScene";
 
-export default class MenuScene extends Phaser.Scene {
+import MenuButton from "../objects/MenuButton";
+export default class MenuScene extends BaseScene  {
 
     constructor() {
         super("MenuScene");
     }
 
     create() {
-        
         const width_device = this.cameras.main.width;
         const height_device = this.cameras.main.height;
-
         this.add.image(0, 0, "bg").setOrigin(0, 0).setDisplaySize(width_device, height_device);
-        this.menuUI = new MenuUI(this);
+
+        // 1. Khởi tạo HeroScreen TRƯỚC
+        this.heroScreen = new HeroScreen(this);
+
+        // 2. Khởi tạo BottomNavigation SAU
+        // (BottomNavigation sẽ nhận 'this' chính là MenuScene - nơi đã có this.heroScreen)
+        this.createBottomNavigation("headquarters");
+
+        //Menu
+        this.menuContainer = this.add.container(0, 0);
+        const btnPlay = new MenuButton(this, {
+            x: 40,
+            y: 100,
+            width: width_device - 80,
+            height: 80,
+            icon: "sword",
+            text: "Play",
+            onClick: () => {
+                console.log("Play");
+                this.scene.start("MapScene");
+            }
+        });
+
+        this.menuContainer.add(btnPlay.container);
+
 
     }
 

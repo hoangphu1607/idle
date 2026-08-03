@@ -30,12 +30,12 @@ export default class HeroCard {
         ).setOrigin(0).setInteractive({ useHandCursor: true });;
 
         background.on("pointerup", () => {
-    console.log("Click Hero:", this.hero.name);
+            console.log("Click Hero:", this.hero.name);
 
-    if (this.onClick) {
-        this.onClick(this.hero);
-    }
-});
+            if (this.onClick) {
+                this.onClick(this.hero);
+            }
+        });
 
         // Avatar
         const avatar = this.scene.add.image(
