@@ -11,7 +11,7 @@ export default class Preloader extends Phaser.Scene {
         this.load.image("btnUI", "src/assets/system/btnUI.png");
         this.load.image("home", "src/assets/system/home.png");
         this.load.image("sky", "src/assets/bg/sky.png");
-        
+
         //Load champ
         this.load.image("wizard", "src/assets/champ/wizard.png");
         this.load.image("mace", "src/assets/champ/mace.png");
@@ -28,10 +28,15 @@ export default class Preloader extends Phaser.Scene {
         this.load.image("dungeon_solo", "src/assets/icon/dungeon-solo.png");
         this.load.image("dungeon_group", "src/assets/icon/dungeon-group.png");
 
+        //Monster
+        this.load.image("monster_slime", "src/assets/monster/monster_slime.png");
+        this.load.image("monster_wolf", "src/assets/monster/monster_wolf.png");
+        this.load.image("monster_orc", "src/assets/monster/monster_orc.png");
+
     }
 
     create() {
         this.scene.start("GameScene");
-        
+
     }
 }

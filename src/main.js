@@ -30,7 +30,7 @@ const config = {
         MenuScene,
         MapScene,
         ContentScene,
-         BattleScene,
+        BattleScene,
     ]
 };
 
