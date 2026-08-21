@@ -14,11 +14,11 @@ export default class Unit {
         // Chỉ số
         this.level = data.level || 1;
 
-        this.maxHp = data.maxHp || 1200;
-        this.hp = data.hp ?? this.maxHp;
+        this.hp = data.hp ?? 1200;
+        this.maxHp = data.maxHp || data.hp;
 
-        this.maxMp = data.maxMp || 200;
-        this.mp = data.mp || this.maxMp;
+        this.mp = data.mp || 200;
+        this.maxMp = data.maxMp || data.mp;
 
         this.attack_physical = data.attack_physical || 0;
         this.attack_magic = data.attack_magic || 0;
@@ -84,5 +84,11 @@ export default class Unit {
         return !this.dead;
 
     }
+    Active_Skill_First(battle) {
 
+        console.warn(
+            `${this.name} has no Active_Skill_First()`
+        );
+
+    }
 }

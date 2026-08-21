@@ -28,17 +28,12 @@ export default class UnitView {
             this.cellSize - 8
         );
 
+        this.hasManaBar = this.unit.team !== "enemy";
+
         // HP Background
         this.hpBg = this.scene.add.rectangle(
             0,
-            -this.cellSize / 2 - 8,
-            this.cellSize,
-            6,
-            0x333333
-        );
-        this.mpBg = this.scene.add.rectangle(
-            0,
-            -this.cellSize / 2,
+            this.cellSize / 2 + 5,
             this.cellSize,
             6,
             0x333333
@@ -47,23 +42,33 @@ export default class UnitView {
         // HP Fill
         this.hpBar = this.scene.add.rectangle(
             -this.cellSize / 2,
-            -this.cellSize / 2 - 8,
+            this.cellSize / 2 + 5,
             this.cellSize,
             6,
             0xff3333
         ).setOrigin(0, 0.5);
-        this.mpBar = this.scene.add.rectangle(
-            -this.cellSize / 2,
-            -this.cellSize / 2,
-            this.cellSize,
-            6,
-            0x3399ff
-        ).setOrigin(0, 0.5);
+
+        if (this.hasManaBar) {
+            this.mpBg = this.scene.add.rectangle(
+                0,
+                this.cellSize / 2 + 12,
+                this.cellSize,
+                6,
+                0x333333
+            );
+            this.mpBar = this.scene.add.rectangle(
+                -this.cellSize / 2,
+                this.cellSize / 2 + 12,
+                this.cellSize,
+                6,
+                0x3399ff
+            ).setOrigin(0, 0.5);
+        }
 
         // Level
         this.level = this.scene.add.text(
             -this.cellSize / 2,
-            this.cellSize / 2 - 14,
+            -this.cellSize / 2 - 16,
             `Lv.${this.unit.level}`,
             {
                 fontSize: "12px",
@@ -75,12 +80,13 @@ export default class UnitView {
             this.hpBg,
             this.hpBar,
 
-            this.mpBg,
-            this.mpBar,
-
             this.sprite,
-            this.level
+            //this.level
         ]);
+
+        if (this.hasManaBar) {
+            this.container.add([this.mpBg, this.mpBar]);
+        }
 
         this.sprite.setInteractive({ useHandCursor: true });
 
@@ -93,10 +99,13 @@ export default class UnitView {
     refresh() {
 
         const hpPercent = this.unit.hp / this.unit.maxHp;
-        const mpPercent = this.unit.mp / this.unit.maxMp;
 
         this.hpBar.width = this.cellSize * hpPercent;
-        this.mpBar.width = this.cellSize * mpPercent;
+
+        if (this.hasManaBar) {
+            const mpPercent = this.unit.mp / this.unit.maxMp;
+            this.mpBar.width = this.cellSize * mpPercent;
+        }
 
     }
 
