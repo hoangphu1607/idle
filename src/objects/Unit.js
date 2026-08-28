@@ -31,6 +31,7 @@ export default class Unit {
         // Vị trí
         this.row = null;
         this.col = null;
+        this.currentTarget = null;
 
         // Sprite
         this.sprite = null;

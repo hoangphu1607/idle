@@ -21,8 +21,8 @@ export const HEROES = [
         skills: [
             {
                 id: "mace_skill_first",
-                cooldown: 1,
-                initialCooldown: 3
+                cooldown: 3,
+                initialCooldown: 5
             }
         ]
     },
@@ -46,7 +46,11 @@ export const HEROES = [
         role: "dps",
 
         skills: [
-            "fireball"
+            {
+                id: "mage_skill_first",
+                cooldown: 2,
+                initialCooldown: 5
+            }
         ]
     },
 

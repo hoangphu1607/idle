@@ -137,17 +137,33 @@ export default class BattleScene extends BaseScene {
     }
 
     startAutoAttack(unit) {
-        const delay = unit.auto_attack * 1000;
+        const skill = unit.skills?.[0];
+        const cooldown = (skill?.cooldown ?? unit.auto_attack) * 1000;
+        const initialCooldown = (skill?.initialCooldown ?? 0) * 1000;
 
-        unit.attackTimer = this.time.addEvent({
-            delay,
+        const startCooldownTimer = () => {
+            unit.attackTimer = this.time.addEvent({
+                delay: cooldown,
+                loop: true,
+                callback: () => {
+                    this.attack(unit);
+                },
+            });
+        };
 
-            loop: true,
+        if (initialCooldown > 0) {
+            unit.initialAttackTimer = this.time.delayedCall(
+                initialCooldown,
+                () => {
+                    this.attack(unit);
+                    startCooldownTimer();
+                },
+            );
+            return;
+        }
 
-            callback: () => {
-                this.attack(unit);
-            },
-        });
+        this.attack(unit);
+        startCooldownTimer();
     }
 
     attack(attacker) {
@@ -170,6 +186,10 @@ export default class BattleScene extends BaseScene {
 
         if (unit.attackTimer) {
             unit.attackTimer.remove(false);
+        }
+
+        if (unit.initialAttackTimer) {
+            unit.initialAttackTimer.remove(false);
         }
 
         console.log(`${unit.name} chết`);
@@ -234,5 +254,20 @@ export default class BattleScene extends BaseScene {
         }
 
         return Phaser.Utils.Array.GetRandom(units);
+    }
+
+    findNearestTarget(grid, attacker) {
+        const units = this.getAllUnits(grid);
+
+        if (units.length === 0) {
+            return null;
+        }
+
+        return units.reduce((nearest, unit) => {
+            const distance = Math.abs(unit.row - attacker.row) + Math.abs(unit.col - attacker.col);
+            const nearestDistance = Math.abs(nearest.row - attacker.row) + Math.abs(nearest.col - attacker.col);
+
+            return distance < nearestDistance ? unit : nearest;
+        });
     }
 }

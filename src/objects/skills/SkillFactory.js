@@ -1,11 +1,10 @@
 import MaceSkill from "./MaceSkill";
-// import HunterSkill from "./HunterSkill";
-// import MageSkill from "./MageSkill";
+import MageSkill from "./MageSkill";
 
 const SKILL_CLASSES = {
     mace_skill_first: MaceSkill,
-    // hunter_skill_first: HunterSkill,
-    // mage_skill_first: MageSkill,
+    mage_skill_first: MageSkill,
+    fireball: MageSkill,
 };
 
 export function createSkill(skillData) {

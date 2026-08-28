@@ -33,6 +33,9 @@ export default class Preloader extends Phaser.Scene {
         this.load.image("monster_wolf", "src/assets/monster/monster_wolf.png");
         this.load.image("monster_orc", "src/assets/monster/monster_orc.png");
 
+        //Skill
+        this.load.image("Mage_first_skill", "src/assets/skills/Mage_first_skill.png");
+
     }
 
     create() {

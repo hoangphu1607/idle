@@ -96,6 +96,7 @@ export default class BottomNavigation {
 
                 // Thêm kiểm tra if để đảm bảo heroScreen tồn tại và có hàm show()
                 if (this.scene.heroScreen && typeof this.scene.heroScreen.show === "function") {
+                    this.scene.menuContainer?.setVisible(false);
                     this.scene.heroScreen.show();
                 } else {
                     console.warn("heroScreen chưa được khởi tạo hoặc không có hàm show()!");

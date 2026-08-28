@@ -18,6 +18,7 @@ export default class MenuScene extends BaseScene  {
 
         // 1. Khởi tạo HeroScreen TRƯỚC
         this.heroScreen = new HeroScreen(this);
+        this.heroDetailPopup = new HeroDetailPopup(this);
 
         // 2. Khởi tạo BottomNavigation SAU
         // (BottomNavigation sẽ nhận 'this' chính là MenuScene - nơi đã có this.heroScreen)

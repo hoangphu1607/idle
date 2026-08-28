@@ -4,7 +4,7 @@ export const MONSTERS = [
         name: "Slime",
         avatar: "monster_slime",
 
-        hp: 1,
+        hp: 100,
         mp: 200,
 
         attack_physical: 10,
@@ -20,7 +20,7 @@ export const MONSTERS = [
         name: "Wolf",
         avatar: "monster_wolf",
 
-        hp: 1,
+        hp: 150,
         mp: 200,
 
         attack_physical: 20,
@@ -36,7 +36,7 @@ export const MONSTERS = [
         name: "Orc",
         avatar: "monster_orc",
 
-        hp: 1,
+        hp: 300,
         mp: 200,
 
         attack_physical: 30,

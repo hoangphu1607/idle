@@ -20,7 +20,11 @@ export default class MaceSkill extends Skill {
 
         const targetGrid = caster.team === "enemy" ? battle.playerGrid : battle.enemyGrid;
 
-        const target = battle.findRandomTarget(targetGrid);
+        if (!caster.currentTarget || caster.currentTarget.dead) {
+            caster.currentTarget = battle.findNearestTarget(targetGrid, caster);
+        }
+
+        const target = caster.currentTarget;
 
         if (!target) {
             return;
