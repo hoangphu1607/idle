@@ -22,7 +22,7 @@ export const HEROES = [
             {
                 id: "mace_skill_first",
                 cooldown: 3,
-                initialCooldown: 5
+                initialCooldown: 1
             }
         ]
     },
@@ -49,101 +49,101 @@ export const HEROES = [
             {
                 id: "mage_skill_first",
                 cooldown: 2,
-                initialCooldown: 5
+                initialCooldown: 1
             }
         ]
     },
 
-    {
-        id: 3,
-        name: "Archer",
-        level: 1,
+    // {
+    //     id: 3,
+    //     name: "Archer",
+    //     level: 1,
 
-        attack_physical: 5,
-        attack_magic: 1,
+    //     attack_physical: 5,
+    //     attack_magic: 1,
 
-        auto_attack: 3,
+    //     auto_attack: 3,
 
-        hp: 1200,
-        mp: 200,
+    //     hp: 1200,
+    //     mp: 200,
 
-        image: "hero_archer",
-        avatar: "hunter",
+    //     image: "hero_archer",
+    //     avatar: "hunter",
 
-        role: "dps",
+    //     role: "dps",
 
-        skills: [
-            "arrow_shot"
-        ]
-    },
+    //     skills: [
+    //         "arrow_shot"
+    //     ]
+    // },
 
-    {
-        id: 4,
-        name: "Axe",
-        level: 1,
+    // {
+    //     id: 4,
+    //     name: "Axe",
+    //     level: 1,
 
-        attack_physical: 5,
-        attack_magic: 1,
+    //     attack_physical: 5,
+    //     attack_magic: 1,
 
-        auto_attack: 3,
+    //     auto_attack: 3,
 
-        hp: 1200,
-        mp: 200,
+    //     hp: 1200,
+    //     mp: 200,
 
-        image: "hero_archer",
-        avatar: "hunter",
+    //     image: "hero_archer",
+    //     avatar: "hunter",
 
-        role: "warrior",
+    //     role: "warrior",
 
-        skills: [
-            "axe_slash"
-        ]
-    },
+    //     skills: [
+    //         "axe_slash"
+    //     ]
+    // },
 
-    {
-        id: 5,
-        name: "Hammer",
-        level: 1,
+    // {
+    //     id: 5,
+    //     name: "Hammer",
+    //     level: 1,
 
-        attack_physical: 5,
-        attack_magic: 1,
+    //     attack_physical: 5,
+    //     attack_magic: 1,
 
-        auto_attack: 3,
+    //     auto_attack: 3,
 
-        hp: 1200,
-        mp: 200,
+    //     hp: 1200,
+    //     mp: 200,
 
-        image: "hero_archer",
-        avatar: "hunter",
+    //     image: "hero_archer",
+    //     avatar: "hunter",
 
-        role: "warrior",
+    //     role: "warrior",
 
-        skills: [
-            "hammer_smash"
-        ]
-    },
+    //     skills: [
+    //         "hammer_smash"
+    //     ]
+    // },
 
-    {
-        id: 6,
-        name: "Spear",
-        level: 1,
+    // {
+    //     id: 6,
+    //     name: "Spear",
+    //     level: 1,
 
-        attack_physical: 5,
-        attack_magic: 1,
+    //     attack_physical: 5,
+    //     attack_magic: 1,
 
-        auto_attack: 3,
+    //     auto_attack: 3,
 
-        hp: 1200,
-        mp: 200,
+    //     hp: 1200,
+    //     mp: 200,
 
-        image: "hero_archer",
-        avatar: "hunter",
+    //     image: "hero_archer",
+    //     avatar: "hunter",
 
-        role: "warrior",
+    //     role: "warrior",
 
-        skills: [
-            "spear_thrust"
-        ]
-    }
+    //     skills: [
+    //         "spear_thrust"
+    //     ]
+    // }
 
 ];

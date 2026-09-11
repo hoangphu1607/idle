@@ -72,11 +72,37 @@ export default class BattleGrid {
 
     spawnHeroes(heroes) {
         heroes.forEach((heroData) => {
-            const rows = this.getRowsByRole(heroData.role);
+            let pos;
 
-            const pos = this.getRandomCell(rows);
+            // Mace đứng hàng 3, cột 5
+            if (heroData.name === "Mace") {
+                pos = {
+                    row: 1,
+                    col: 4
+                };
+            }
+
+            // Mage đứng hàng 4, cột 5
+            else if (heroData.name === "Mage") {
+                pos = {
+                    row: 2,
+                    col: 4
+                };
+            }
+
+            // Các Hero khác vẫn spawn ngẫu nhiên theo Role
+            else {
+                const rows = this.getRowsByRole(heroData.role);
+                pos = this.getRandomCell(rows);
+            }
 
             if (!pos) return;
+
+            // Kiểm tra ô đã có Hero chưa
+            if (this.grid[pos.row][pos.col]) {
+                console.warn(`Ô [${pos.row}, ${pos.col}] đã có Hero!`);
+                return;
+            }
 
             // Tạo Hero object
             const hero = new Hero(this.scene, heroData);

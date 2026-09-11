@@ -1,4 +1,5 @@
 import Unit from "./Unit";
+import SlimeSkill from "./Monsters_Skills/SlimeSkill";
 
 export default class Monster extends Unit {
 
@@ -9,7 +10,16 @@ export default class Monster extends Unit {
         this.dropItems = data.dropItems || [];
         this.expReward = data.expReward || 0;
         this.team = "enemy";
-        this.skills = [];
+        this.skills = (data.skills || [])
+            .map((skillData) => {
+                if (skillData.id === "Slime_first_skill") {
+                    return new SlimeSkill(skillData);
+                }
+
+                console.warn(`Skill not found: ${skillData.id}`);
+                return null;
+            })
+            .filter((skill) => skill !== null);
 
     }
     Active_Skill_First(battle) {

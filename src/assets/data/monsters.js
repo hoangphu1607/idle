@@ -12,7 +12,14 @@ export const MONSTERS = [
 
         auto_attack: 3,
 
-        role: "melee"
+        role: "melee",
+        skills: [
+            {
+                id: "Slime_first_skill",
+                cooldown: 5,
+                initialCooldown: 1
+            }
+        ]
     },
 
     {

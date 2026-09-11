@@ -1,5 +1,5 @@
 import Unit from "./Unit";
-import { createSkill } from "./skills/SkillFactory";
+import { createSkill } from "./Hero_Skills/SkillFactory";
 export default class Hero extends Unit {
     constructor(scene, data) {
         super(scene, data);
