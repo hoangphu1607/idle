@@ -1,4 +1,5 @@
 import Phaser from "phaser";
+import SaveManager from "../managers/SaveManager";
 
 export default class UnitView {
 
@@ -29,6 +30,18 @@ export default class UnitView {
         );
 
         this.hasManaBar = this.unit.team !== "enemy";
+
+        if (this.hasManaBar) {
+            this.expText = this.scene.add.text(
+                -this.cellSize / 2,
+                -this.cellSize / 2 - 28,
+                `EXP ${this.unit.experience || 0}`,
+                {
+                    fontSize: "10px",
+                    color: "#87ceeb"
+                }
+            );
+        }
 
         // HP Background
         this.hpBg = this.scene.add.rectangle(
@@ -85,6 +98,12 @@ export default class UnitView {
         ]);
 
         if (this.hasManaBar) {
+            this.container.add(this.expText);
+        }
+
+        this.container.add(this.level);
+
+        if (this.hasManaBar) {
             this.container.add([this.mpBg, this.mpBar]);
         }
 
@@ -97,6 +116,18 @@ export default class UnitView {
     }
 
     refresh() {
+
+        if (this.hasManaBar && this.unit.id !== undefined) {
+            const savedHero = SaveManager.get(`heroes.${this.unit.id}`, {});
+            const experience = savedHero.experience ?? this.unit.experience ?? 0;
+
+            this.unit.experience = experience;
+            this.expText.setText(`EXP ${experience}`);
+
+            const level = savedHero.level ?? this.unit.level ?? 1;
+            this.unit.level = level;
+            this.level.setText(`Lv.${level}`);
+        }
 
         const hpPercent = this.unit.hp / this.unit.maxHp;
 

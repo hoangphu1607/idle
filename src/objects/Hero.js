@@ -6,7 +6,7 @@ export default class Hero extends Unit {
 
         this.role = data.role;
         this.rarity = data.rarity;
-        this.exp = data.exp || 0;
+        this.experience = data.experience || 0;
         this.team = "player";
 
         this.skills = data.skills

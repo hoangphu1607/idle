@@ -79,6 +79,18 @@ export default class HeroCard {
                 color: "#7CFC00"
             }
         );
+        console.log("Hero EXP:", this.hero.experience);
+
+        // Experience
+        const experience = this.scene.add.text(
+            360,
+            70,
+            `EXP : ${this.hero.experience || 0}`,
+            {
+                fontSize: "16px",
+                color: "#87ceeb"
+            }
+        );
 
         // Attack
         const atk = this.scene.add.text(
@@ -97,6 +109,7 @@ export default class HeroCard {
             name,
             level,
             hp,
+            experience,
             atk
         ]);
 

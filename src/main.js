@@ -7,6 +7,7 @@ import MenuScene from "./scenes/MenuScene";
 import MapScene from "./scenes/MapScene";
 import ContentScene from "./scenes/ContentScene";
 import BattleScene from "./scenes/BattleScene";
+import InventoryScene from "./scenes/InventoryScene";
 const config = {
     type: Phaser.AUTO,
 
@@ -31,6 +32,7 @@ const config = {
         MapScene,
         ContentScene,
         BattleScene,
+        InventoryScene,
     ]
 };
 

@@ -59,10 +59,21 @@ export default class HeroSelectCard {
             }
         ).setOrigin(0.5);
 
-        // Tick
-        this.check = this.scene.add.text(
+        // Experience
+        this.experience = this.scene.add.text(
             45,
             96,
+            `EXP ${this.hero.experience || 0}`,
+            {
+                fontSize: "12px",
+                color: "#444"
+            }
+        ).setOrigin(0.5);
+
+        // Tick
+        this.check = this.scene.add.text(
+            78,
+            14,
             "✓",
             {
                 fontSize: "22px",
@@ -77,6 +88,7 @@ export default class HeroSelectCard {
             this.avatar,
             this.name,
             this.level,
+            this.experience,
             this.check
         ]);
 

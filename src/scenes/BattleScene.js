@@ -2,6 +2,8 @@ import BaseScene from "./base/BaseScene";
 import Phaser from "phaser";
 import BattleGrid from "../objects/BattleGrid";
 import { STAGES } from "../assets/data/stages";
+import SaveManager from "../managers/SaveManager";
+import Inventory from "../managers/Inventory";
 export default class BattleScene extends BaseScene {
     constructor() {
         super("BattleScene");
@@ -174,6 +176,66 @@ export default class BattleScene extends BaseScene {
         attacker.Active_Skill_First(this);
     }
 
+    getExperienceToNextLevel(level) {
+        return Math.floor(100 * Math.pow(level, 1.5));
+    }
+
+    onUnitDefeated(defeatedUnit, attacker) {
+        if (
+            defeatedUnit.team !== "enemy" ||
+            !attacker ||
+            attacker.team !== "player" ||
+            (!defeatedUnit.experienceReward &&
+                !defeatedUnit.goldReward &&
+                defeatedUnit.dropItems.length === 0)
+        ) {
+            return;
+        }
+
+        const experienceReward = defeatedUnit.experienceReward;
+        const goldReward = defeatedUnit.goldReward;
+        const saveData = SaveManager.load();
+        saveData.heroes = saveData.heroes || {};
+        saveData.player = saveData.player || {};
+        const inventory = new Inventory(saveData.inventory || []);
+
+        saveData.player.gold = Number(saveData.player.gold || 0) + goldReward;
+        inventory.addDrops(defeatedUnit.dropItems);
+        saveData.inventory = inventory.getAllItems();
+
+        this.heroes.forEach((hero) => {
+            const heroId = String(hero.id);
+            const savedHero = saveData.heroes[heroId] || {};
+            const currentExperience = Number(savedHero.experience ?? hero.experience ?? 0);
+            let remainingExperience = currentExperience + experienceReward;
+            let level = Number(savedHero.level ?? hero.level ?? 1);
+
+            while (remainingExperience >= this.getExperienceToNextLevel(level)) {
+                const requiredExperience = this.getExperienceToNextLevel(level);
+
+                remainingExperience -= requiredExperience;
+                level += 1;
+            }
+
+            hero.experience = remainingExperience;
+            hero.level = level;
+
+            saveData.heroes[heroId] = {
+                ...savedHero,
+                level,
+                experience: remainingExperience
+            };
+        });
+
+        SaveManager.save(saveData);
+
+        this.getAllUnits(this.playerGrid).forEach((hero) => {
+            hero.view?.refresh();
+        });
+
+        console.log(`Đội hình nhận ${experienceReward} EXP mỗi hero và ${goldReward} gold`);
+    }
+
     removeUnit(unit) {
         if (!unit.dead) {
             return;
@@ -263,7 +325,17 @@ export default class BattleScene extends BaseScene {
             return null;
         }
 
-        return units.reduce((nearest, unit) => {
+        // Chọn tuyến đầu trước: hàng cuối của enemyGrid gần hero nhất,
+        // hàng đầu của playerGrid gần quái nhất.
+        const frontlineRow = grid === this.enemyGrid
+            ? Math.max(...units.map((unit) => unit.row))
+            : Math.min(...units.map((unit) => unit.row));
+
+        const frontlineUnits = units.filter(
+            (unit) => unit.row === frontlineRow
+        );
+
+        return frontlineUnits.reduce((nearest, unit) => {
             const distance = Math.abs(unit.row - attacker.row) + Math.abs(unit.col - attacker.col);
             const nearestDistance = Math.abs(nearest.row - attacker.row) + Math.abs(nearest.col - attacker.col);
 

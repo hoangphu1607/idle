@@ -1,5 +1,6 @@
 import HeroSelectCard from "../objects/HeroSelectCard";
 import { HEROES } from "../assets/data/heroes";
+import SaveManager from "../managers/SaveManager";
 
 export default class HeroSelectPopup {
 
@@ -154,7 +155,9 @@ export default class HeroSelectPopup {
         const gapX =
             (this.panelWidth - columns * cardWidth) / (columns + 1);
 
-        HEROES.forEach((hero, index) => {
+        const heroes = SaveManager.loadHeroes(HEROES);
+
+        heroes.forEach((hero, index) => {
 
             const col = index % columns;
             const row = Math.floor(index / columns);

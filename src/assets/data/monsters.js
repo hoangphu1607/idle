@@ -19,6 +19,28 @@ export const MONSTERS = [
                 cooldown: 5,
                 initialCooldown: 1
             }
+        ],
+        experience: 10,
+        gold: 2,
+        dropItems: [
+            {
+                itemId: "slime_essence",
+                chance: 1.0,
+                minQuantity: 1,
+                maxQuantity: 3
+            },
+            {
+                itemId: "health_potion",
+                chance: 0.2,
+                minQuantity: 1,
+                maxQuantity: 1
+            },
+            {
+                itemId: "rare_gem",
+                chance: 0.05,
+                minQuantity: 1,
+                maxQuantity: 1
+            }
         ]
     },
 
@@ -35,7 +57,9 @@ export const MONSTERS = [
 
         auto_attack: 3,
 
-        role: "melee"
+        role: "melee",
+        experience: 20,
+        gold: 3,
     },
 
     {
@@ -51,6 +75,8 @@ export const MONSTERS = [
 
         auto_attack: 3,
 
-        role: "tank"
+        role: "tank",
+        experience: 50,
+        gold: 7,
     }
 ];

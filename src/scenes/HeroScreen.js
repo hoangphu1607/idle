@@ -1,5 +1,6 @@
 import { HEROES } from "../assets/data/heroes.js";
 import HeroCard from "../objects/HeroCard";
+import SaveManager from "../managers/SaveManager";
 export default class HeroScreen {
 
     constructor(scene) {
@@ -42,7 +43,9 @@ export default class HeroScreen {
 
     createHeroList() {
 
-        HEROES.forEach((hero, index) => {
+        const heroes = SaveManager.loadHeroes(HEROES);
+
+        heroes.forEach((hero, index) => {
 
             const card = new HeroCard(
                 this.scene,

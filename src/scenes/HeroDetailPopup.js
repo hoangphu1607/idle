@@ -110,6 +110,13 @@ export default class HeroDetailPopup {
             165
         );
 
+        this.createStat(
+            "experience",
+            "Experience",
+            0,
+            220
+        );
+
         // Skills
         this.createStat(
             "skills",
@@ -237,6 +244,10 @@ export default class HeroDetailPopup {
 
         this.statTexts.auto_attack.setText(
             hero.auto_attack
+        );
+
+        this.statTexts.experience.setText(
+            hero.experience ?? 0
         );
 
         // Skills có thể là string hoặc object

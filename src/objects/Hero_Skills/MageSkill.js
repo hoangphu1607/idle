@@ -29,6 +29,13 @@ export default class MageSkill extends Skill {
             return;
         }
 
+        const damage = Number(caster.attack_magic ?? caster.auto_attack ?? 0);
+
+        if (damage <= 0) {
+            console.warn(`${caster.name} has no valid magic damage`);
+            return;
+        }
+
         const projectile = battle.add.image(
             caster.ownerGrid.container.x + caster.view.container.x,
             caster.ownerGrid.container.y + caster.view.container.y,
@@ -52,11 +59,13 @@ export default class MageSkill extends Skill {
                     return;
                 }
 
-                target.takeDamage(caster.attack_magic);
+                target.takeDamage(damage, caster);
 
                 if (target.dead) {
                     battle.removeUnit(target);
                 }
+
+                console.log(`${caster.name} attacks ${target.name} for ${damage} magic damage`);
             },
         });
 

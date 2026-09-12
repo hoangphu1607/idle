@@ -1,7 +1,4 @@
 import Phaser from "phaser";
-import MenuUI from "./MenuUI";
-import HeroScreen from "../scenes/HeroScreen";
-import MenuScene from "../scenes/MenuScene";
 export default class BottomNavigation {
 
     constructor(scene) {
@@ -18,7 +15,7 @@ export default class BottomNavigation {
         const menu = [
             { id: "headquarters", text: "Headquarters" },
             { id: "hero", text: "Hero" },
-            { id: "gate", text: "Gate" },
+            { id: "Inventory", text: "Inventory" },
             { id: "battle", text: "Battle" }
         ];
 
@@ -102,8 +99,8 @@ export default class BottomNavigation {
                     console.warn("heroScreen chưa được khởi tạo hoặc không có hàm show()!");
                 }
                 break;
-            case "gate":
-                console.log("Mở Gate");
+            case "Inventory":
+                this.scene.scene.start("InventoryScene");
                 break;
             case "battle":
                 console.log("Mở Battle");

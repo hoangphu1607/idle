@@ -36,6 +36,9 @@ export default class Unit {
         // Sprite
         this.sprite = null;
         this.dead = false;
+
+        // Trạng thái bị kích động
+        this.isAggro = false;
     }
 
     setPosition(row, col) {
@@ -45,20 +48,35 @@ export default class Unit {
 
     }
 
-    takeDamage(value) {
+    takeDamage(value, attacker = null) {
 
         if (this.dead) {
             return;
         }
 
-
         this.hp -= value;
+
+        /*
+         * Monster chỉ bị kích hoạt khi bị Hero/Player tấn công
+         */
+        if (
+            this.team === "enemy" &&
+            attacker &&
+            attacker.team === "player"
+        ) {
+            this.isAggro = true;
+
+            console.log(`${this.name} is now AGGRO!`);
+        }
 
         if (this.hp <= 0) {
             this.hp = 0;
             this.dead = true;
-        }
 
+            if (typeof this.scene.onUnitDefeated === "function") {
+                this.scene.onUnitDefeated(this, attacker);
+            }
+        }
 
         if (this.view) {
             this.view.refresh();
@@ -80,11 +98,13 @@ export default class Unit {
         return this.hp <= 0;
 
     }
+
     isAlive() {
 
         return !this.dead;
 
     }
+
     Active_Skill_First(battle) {
 
         console.warn(

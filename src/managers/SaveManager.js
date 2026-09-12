@@ -24,6 +24,8 @@ export default class SaveManager {
 
             heroes: {},
 
+            inventory: [],
+
             settings: {
                 music: true,
                 sound: true
@@ -104,6 +106,32 @@ export default class SaveManager {
 
             return newSave;
         }
+    }
+
+    static loadHeroes(defaultHeroes = []) {
+
+        const saveData = this.load();
+        const savedHeroes = saveData.heroes || {};
+
+        const heroes = defaultHeroes.map((hero) => {
+            const savedHero = savedHeroes[String(hero.id)] || {};
+            const experience = savedHero.experience ?? hero.experience ?? 0;
+
+            return {
+                ...hero,
+                ...savedHero,
+                experience
+            };
+        });
+
+        if (Object.keys(savedHeroes).length === 0 && heroes.length > 0) {
+            saveData.heroes = Object.fromEntries(
+                heroes.map((hero) => [String(hero.id), hero])
+            );
+            this.save(saveData);
+        }
+
+        return heroes;
     }
 
     /**

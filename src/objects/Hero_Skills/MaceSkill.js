@@ -17,10 +17,16 @@ export default class MaceSkill extends Skill {
             return;
         }
 
-        const targetGrid = caster.team === "enemy" ? battle.playerGrid : battle.enemyGrid;
+        const targetGrid =
+            caster.team === "enemy"
+                ? battle.playerGrid
+                : battle.enemyGrid;
 
         if (!caster.currentTarget || caster.currentTarget.dead) {
-            caster.currentTarget = battle.findNearestTarget(targetGrid, caster);
+            caster.currentTarget = battle.findNearestTarget(
+                targetGrid,
+                caster
+            );
         }
 
         const target = caster.currentTarget;
@@ -37,14 +43,18 @@ export default class MaceSkill extends Skill {
 
         projectile.setDepth(10);
 
-        const targetX = target.ownerGrid.container.x + target.view.container.x;
-        const targetY = target.ownerGrid.container.y + target.view.container.y;
+        const targetX =
+            target.ownerGrid.container.x + target.view.container.x;
+
+        const targetY =
+            target.ownerGrid.container.y + target.view.container.y;
 
         battle.tweens.add({
             targets: projectile,
             x: targetX,
             y: targetY,
             duration: 1000,
+
             onComplete: () => {
                 projectile.destroy();
 
@@ -53,7 +63,9 @@ export default class MaceSkill extends Skill {
                 }
 
                 const damage = caster.attack_physical;
-                target.takeDamage(damage);
+
+                // Truyền caster để Monster biết ai đã tấn công mình
+                target.takeDamage(damage, caster);
 
                 if (target.dead) {
                     battle.removeUnit(target);
@@ -65,7 +77,9 @@ export default class MaceSkill extends Skill {
             },
         });
 
-        console.log(`${caster.name} uses ${this.name} on ${target.name}`);
+        console.log(
+            `${caster.name} uses ${this.name} on ${target.name}`
+        );
 
         this.startCooldown(currentTime);
     }

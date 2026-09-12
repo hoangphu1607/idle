@@ -5,7 +5,7 @@ export const HEROES = [
         name: "Mace",
         level: 1,
 
-        attack_physical: 20,
+        attack_physical: 15,
         attack_magic: 1,
 
         auto_attack: 3,
@@ -24,7 +24,8 @@ export const HEROES = [
                 cooldown: 3,
                 initialCooldown: 1
             }
-        ]
+        ],
+        experience: 0
     },
 
     {
@@ -33,7 +34,7 @@ export const HEROES = [
         level: 1,
 
         attack_physical: 1,
-        attack_magic: 5,
+        attack_magic: 20,
 
         auto_attack: 3,
 
@@ -51,7 +52,8 @@ export const HEROES = [
                 cooldown: 2,
                 initialCooldown: 1
             }
-        ]
+        ],
+        experience: 0
     },
 
     // {

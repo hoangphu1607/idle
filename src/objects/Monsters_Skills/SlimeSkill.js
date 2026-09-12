@@ -1,67 +1,85 @@
 import Skill from "../Hero_Skills/Skill";
 
 export default class SlimeSkill extends Skill {
-	constructor(config) {
-		super({
-			id: "Slime_first_skill",
-			name: "Slime Attack",
-			cooldown: config.cooldown,
-			initialCooldown: config.initialCooldown,
-		});
-	}
+    constructor(config) {
+        super({
+            id: "Slime_first_skill",
+            name: "Slime Attack",
+            cooldown: config.cooldown,
+            initialCooldown: config.initialCooldown,
+        });
+    }
 
-	execute(caster, battle) {
-		const currentTime = battle.time.now;
+    execute(caster, battle) {
 
-		if (!this.isReady(currentTime)) {
-			return;
-		}
+        // Monster chưa bị tác động thì không dùng skill
+        if (!caster.isAggro) {
+            return;
+        }
 
-		const targetGrid = caster.team === "enemy" ? battle.playerGrid : battle.enemyGrid;
+        const currentTime = battle.time.now;
 
-		if (!caster.currentTarget || caster.currentTarget.dead) {
-			caster.currentTarget = battle.findNearestTarget(targetGrid, caster);
-		}
+        if (!this.isReady(currentTime)) {
+            return;
+        }
 
-		const target = caster.currentTarget;
+        const targetGrid =
+            caster.team === "enemy"
+                ? battle.playerGrid
+                : battle.enemyGrid;
 
-		if (!target || !caster.view || !target.view) {
-			return;
-		}
+        if (!caster.currentTarget || caster.currentTarget.dead) {
+            caster.currentTarget = battle.findNearestTarget(
+                targetGrid,
+                caster
+            );
+        }
 
-		const projectile = battle.add.image(
-			caster.ownerGrid.container.x + caster.view.container.x,
-			caster.ownerGrid.container.y + caster.view.container.y,
-			"Slime_first_skill",
-		);
+        const target = caster.currentTarget;
 
-		projectile.setDepth(10);
+        if (!target || !caster.view || !target.view) {
+            return;
+        }
 
-		const targetX = target.ownerGrid.container.x + target.view.container.x;
-		const targetY = target.ownerGrid.container.y + target.view.container.y;
+        const projectile = battle.add.image(
+            caster.ownerGrid.container.x + caster.view.container.x,
+            caster.ownerGrid.container.y + caster.view.container.y,
+            "Slime_first_skill",
+        );
 
-		battle.tweens.add({
-			targets: projectile,
-			x: targetX,
-			y: targetY,
-			duration: 1000,
-			onComplete: () => {
-				projectile.destroy();
+        projectile.setDepth(10);
 
-				if (target.dead) {
-					return;
-				}
+        const targetX =
+            target.ownerGrid.container.x + target.view.container.x;
 
-				const damage = caster.attack_physical;
-				target.takeDamage(damage);
+        const targetY =
+            target.ownerGrid.container.y + target.view.container.y;
 
-				if (target.dead) {
-					battle.removeUnit(target);
-				}
-			},
-		});
+        battle.tweens.add({
+            targets: projectile,
+            x: targetX,
+            y: targetY,
+            duration: 1000,
 
-		console.log(`${caster.name} uses ${this.name} on ${target.name}`);
-		this.startCooldown(currentTime);
-	}
+            onComplete: () => {
+                projectile.destroy();
+
+                if (target.dead) {
+                    return;
+                }
+
+                const damage = caster.attack_physical;
+
+                target.takeDamage(damage, caster);
+
+                if (target.dead) {
+                    battle.removeUnit(target);
+                }
+            },
+        });
+
+        console.log(`${caster.name} uses ${this.name} on ${target.name}`);
+
+        this.startCooldown(currentTime);
+    }
 }

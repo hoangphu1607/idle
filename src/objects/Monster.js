@@ -8,7 +8,8 @@ export default class Monster extends Unit {
         super(scene, data);
 
         this.dropItems = data.dropItems || [];
-        this.expReward = data.expReward || 0;
+        this.experienceReward = data.experience ?? 0;
+        this.goldReward = data.gold ?? 0;
         this.team = "enemy";
         this.skills = (data.skills || [])
             .map((skillData) => {
