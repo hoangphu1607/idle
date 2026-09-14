@@ -274,4 +274,12 @@ export default class SaveManager {
 
         return saveData;
     }
+
+    static loadHero(heroId) {
+
+        const saveData = this.load();
+
+        return saveData.heroes[String(heroId)] || null;
+
+    }
 }

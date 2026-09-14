@@ -1,3 +1,6 @@
+import SaveManager from "../managers/SaveManager";
+import items from "../assets/data/item";
+
 export default class HeroDetailPopup {
 
     constructor(scene) {
@@ -6,6 +9,17 @@ export default class HeroDetailPopup {
 
         this.container = scene.add.container(0, 0);
         this.container.setVisible(false);
+        this.container.setDepth(9999);
+
+        // =========================
+        // Kích thước Popup
+        // =========================
+
+        this.panelWidth = scene.scale.width * 0.8;
+        this.panelHeight = scene.scale.height * 0.8;
+
+        this.cx = scene.scale.width / 2;
+        this.cy = scene.scale.height / 2;
 
         // =========================
         // Overlay
@@ -30,14 +44,11 @@ export default class HeroDetailPopup {
         // Panel
         // =========================
 
-        const panelWidth = 650;
-        const panelHeight = 700;
-
         const panel = scene.add.rectangle(
-            scene.scale.width / 2,
-            scene.scale.height / 2,
-            panelWidth,
-            panelHeight,
+            this.cx,
+            this.cy,
+            this.panelWidth,
+            this.panelHeight,
             0xffffff
         );
 
@@ -46,95 +57,145 @@ export default class HeroDetailPopup {
         // =========================
 
         this.avatar = scene.add.image(
-            scene.scale.width / 2,
-            220,
+            this.cx - 185,
+            this.cy - 410,
             "wizard"
         );
 
-        this.avatar.setScale(0.8);
+        this.avatar.setDisplaySize(70, 70);
 
         // =========================
-        // Hero name
+        // Name
         // =========================
 
         this.name = scene.add.text(
-            scene.scale.width / 2,
-            335,
+            this.cx - 115,
+            this.cy - 435,
             "",
             {
-                fontSize: "36px",
-                color: "#000000",
-                fontStyle: "bold"
+                fontSize: "18px",
+                color: "#000000"
             }
-        ).setOrigin(0.5);
-
-        // =========================
-        // Stats container
-        // =========================
-
-        this.statsContainer = scene.add.container(
-            scene.scale.width / 2,
-            390
         );
 
         // =========================
-        // Stat rows
+        // Class
+        // =========================
+
+        this.role = scene.add.text(
+            this.cx - 115,
+            this.cy - 405,
+            "",
+            {
+                fontSize: "18px",
+                color: "#000000"
+            }
+        );
+
+        // =========================
+        // Level
+        // =========================
+
+        this.level = scene.add.text(
+            this.cx - 115,
+            this.cy - 375,
+            "",
+            {
+                fontSize: "16px",
+                color: "#000000"
+            }
+        );
+
+        // =========================
+        // Experience
+        // =========================
+
+        this.exp = scene.add.text(
+            this.cx - 115,
+            this.cy - 345,
+            "",
+            {
+                fontSize: "16px",
+                color: "#000000"
+            }
+        );
+
+        // =========================
+        // Equipment Slots
+        // =========================
+
+        this.equipmentSlots = [];
+
+        this.createEquipmentSlots();
+
+        // =========================
+        // Inventory
+        // =========================
+
+        this.inventoryContainer = scene.add.container(0, 0);
+
+        this.inventorySlots = [];
+
+        this.createInventoryGrid();
+
+        // =========================
+        // Stats
         // =========================
 
         this.statTexts = {};
 
-        this.createStat("level", "Level", 0, 0);
-        this.createStat("role", "Role", 300, 0);
-
-        this.createStat("hp", "HP", 0, 55);
-        this.createStat("mp", "MP", 300, 55);
-
-        this.createStat(
+        this.createStatText(
             "attack_physical",
-            "Physical ATK",
-            0,
-            110
+            "Physic Dame:",
+            this.cx - 225,
+            this.cy - 300
         );
 
-        this.createStat(
+        this.createStatText(
             "attack_magic",
-            "Magic ATK",
-            300,
-            110
+            "Mage Dame:",
+            this.cx + 25,
+            this.cy - 300
         );
 
-        this.createStat(
-            "auto_attack",
-            "Auto Attack",
-            0,
-            165
+        this.createStatText(
+            "defense",
+            "Armor:",
+            this.cx - 225,
+            this.cy - 270
         );
 
-        this.createStat(
-            "experience",
-            "Experience",
-            0,
-            220
+        this.createStatText(
+            "magic_resistance",
+            "Magic resistance:",
+            this.cx + 25,
+            this.cy - 270
         );
 
-        // Skills
-        this.createStat(
-            "skills",
-            "Skills",
-            300,
-            165
+        this.createStatText(
+            "hp",
+            "HP:",
+            this.cx - 225,
+            this.cy - 240
+        );
+
+        this.createStatText(
+            "mp",
+            "MP:",
+            this.cx + 25,
+            this.cy - 240
         );
 
         // =========================
-        // Close button
+        // Close Button
         // =========================
 
         const closeButton = scene.add.text(
-            scene.scale.width / 2 + panelWidth / 2 - 25,
-            scene.scale.height / 2 - panelHeight / 2 + 20,
+            this.cx + this.panelWidth / 2 - 20,
+            this.cy - this.panelHeight / 2 + 20,
             "×",
             {
-                fontSize: "36px",
+                fontSize: "30px",
                 color: "#000000",
                 fontStyle: "bold"
             }
@@ -157,7 +218,7 @@ export default class HeroDetailPopup {
         });
 
         // =========================
-        // Add to container
+        // Add Container
         // =========================
 
         this.container.add([
@@ -165,123 +226,147 @@ export default class HeroDetailPopup {
             panel,
             this.avatar,
             this.name,
-            this.statsContainer,
+            this.role,
+            this.level,
+            this.exp,
+
+            ...this.equipmentSlots,
+
+            ...Object.values(this.statTexts),
+            this.inventoryContainer,
             closeButton
         ]);
     }
 
+
     // =====================================================
-    // Create stat
+    // Tạo Equipment Slots
     // =====================================================
 
-    createStat(key, label, x, y) {
+    createEquipmentSlots() {
 
-        const row = this.scene.add.container(x - 325, y);
+        const startX = this.cx + 25;
+        const startY = this.cy - 435;
 
-        const background = this.scene.add.rectangle(
-            0,
-            0,
-            280,
-            45,
-            0xf2f2f2
-        ).setOrigin(0);
+        const slotSize = 48;
+        const gap = 4;
 
-        const labelText = this.scene.add.text(
-            15,
-            22,
-            label,
-            {
-                fontSize: "18px",
-                color: "#555555"
+        const columns = 4;
+        const rows = 2;
+
+        for (let row = 0; row < rows; row++) {
+
+            for (let col = 0; col < columns; col++) {
+
+                const x = startX + col * (slotSize + gap);
+                const y = startY + row * (slotSize + gap);
+
+                const slot = this.scene.add.rectangle(
+                    x,
+                    y,
+                    slotSize,
+                    slotSize,
+                    0xf0f0f0
+                );
+
+                slot.setStrokeStyle(1, 0x888888);
+
+                this.equipmentSlots.push(slot);
             }
-        ).setOrigin(0, 0.5);
-
-        const valueText = this.scene.add.text(
-            265,
-            22,
-            "-",
-            {
-                fontSize: "18px",
-                color: "#000000",
-                fontStyle: "bold"
-            }
-        ).setOrigin(1, 0.5);
-
-        row.add([
-            background,
-            labelText,
-            valueText
-        ]);
-
-        this.statsContainer.add(row);
-
-        this.statTexts[key] = valueText;
+        }
     }
 
+
     // =====================================================
-    // Show
+    // Tạo Stat Text
+    // =====================================================
+
+    createStatText(key, label, x, y) {
+
+        const text = this.scene.add.text(
+            x,
+            y,
+            `${label} 0`,
+            {
+                fontSize: "15px",
+                color: "#000000"
+            }
+        );
+
+        this.statTexts[key] = text;
+    }
+
+
+    // =====================================================
+    // Show Popup
     // =====================================================
 
     show(hero) {
 
+        // Lấy dữ liệu Hero từ Save
+        const savedHero = SaveManager.loadHero(hero.id) || {};
+
+        const saveData = SaveManager.load();
+
+        const inventory = saveData.inventory || [];
+
+        // Render Inventory
+        this.renderInventory(inventory);
+
         this.avatar.setTexture(hero.avatar);
 
-        this.name.setText(hero.name);
+        this.name.setText(hero.name || "Unknown");
 
-        this.statTexts.level.setText(hero.level);
-        this.statTexts.role.setText(hero.role);
+        this.role.setText(hero.role || "-");
 
-        this.statTexts.hp.setText(hero.hp);
-        this.statTexts.mp.setText(hero.mp);
+
+
+        // =========================
+        // Level & EXP từ Save
+        // =========================
+
+        this.level.setText(
+            `Lv: ${savedHero.level ?? hero.level ?? 1}`
+        );
+
+        this.exp.setText(
+            `Exp: ${savedHero.experience ?? hero.experience ?? 0}`
+        );
+
+        // =========================
+        // Stats từ dữ liệu Hero
+        // =========================
 
         this.statTexts.attack_physical.setText(
-            hero.attack_physical
+            `Physic Dame: ${hero.attack_physical || 0}`
         );
 
         this.statTexts.attack_magic.setText(
-            hero.attack_magic
+            `Mage Dame: ${hero.attack_magic || 0}`
         );
 
-        this.statTexts.auto_attack.setText(
-            hero.auto_attack
+        this.statTexts.defense.setText(
+            `Armor: ${hero.defense || 0}`
         );
 
-        this.statTexts.experience.setText(
-            hero.experience ?? 0
+        this.statTexts.magic_resistance.setText(
+            `Magic resistance: ${hero.magic_resistance || 0}`
         );
 
-        // Skills có thể là string hoặc object
-        let skillsText = "-";
+        this.statTexts.hp.setText(
+            `HP: ${hero.hp || 0}`
+        );
 
-        if (Array.isArray(hero.skills)) {
-
-            skillsText = hero.skills
-                .map(skill => {
-
-                    if (typeof skill === "string") {
-                        return skill;
-                    }
-
-                    if (skill && skill.id) {
-                        return skill.id;
-                    }
-
-                    return "-";
-
-                })
-                .join(", ");
-        }
-
-        this.statTexts.skills.setText(skillsText);
+        this.statTexts.mp.setText(
+            `MP: ${hero.mp || 0}`
+        );
 
         this.container.setVisible(true);
-
-        // Đưa popup lên trên cùng
-        this.container.setDepth(9999);
     }
 
+
     // =====================================================
-    // Hide
+    // Hide Popup
     // =====================================================
 
     hide() {
@@ -289,4 +374,121 @@ export default class HeroDetailPopup {
         this.container.setVisible(false);
 
     }
+
+    renderInventory(inventory = []) {
+
+        // Xóa toàn bộ nội dung Inventory cũ
+        this.inventoryContainer.removeAll(true);
+
+        // Tạo lại các ô trống
+        this.createInventoryGrid();
+
+        const slotSize = 48;
+        const gap = 4;
+        const columns = 5;
+
+        const startX = this.cx - 225;
+        const startY = this.cy - 165;
+
+        inventory.forEach((inventoryItem, index) => {
+
+            if (index >= this.inventorySlots.length) {
+                return;
+            }
+
+            // Tìm thông tin Item trong items.js
+            const itemData = items.find(
+                item => item.id === inventoryItem.itemId
+            );
+
+            // Không tìm thấy Item thì bỏ qua
+            if (!itemData) {
+                console.warn(
+                    `Item not found: ${inventoryItem.itemId}`
+                );
+                return;
+            }
+
+            const row = Math.floor(index / columns);
+            const col = index % columns;
+
+            const x = startX + col * (slotSize + gap);
+            const y = startY + row * (slotSize + gap);
+
+            // =========================
+            // Item Icon
+            // =========================
+
+            const itemImage = this.scene.add.image(
+                x + slotSize / 2,
+                y + slotSize / 2,
+                itemData.icon
+            );
+
+            itemImage.setDisplaySize(
+                slotSize - 6,
+                slotSize - 6
+            );
+
+            // =========================
+            // Quantity
+            // =========================
+
+            const quantity = this.scene.add.text(
+                x + slotSize - 3,
+                y + slotSize - 3,
+                `${inventoryItem.quantity}`,
+                {
+                    fontSize: "14px",
+                    color: "#ffffff",
+                    fontStyle: "bold",
+                    stroke: "#000000",
+                    strokeThickness: 3
+                }
+            ).setOrigin(1, 1);
+
+            // Thêm vào Inventory Container
+            this.inventoryContainer.add([
+                itemImage,
+                quantity
+            ]);
+        });
+    }
+
+    createInventoryGrid() {
+
+        const startX = this.cx - 225;
+        const startY = this.cy - 165;
+
+        const slotSize = 48;
+        const gap = 4;
+
+        const columns = 5;
+        const rows = 4;
+
+        for (let row = 0; row < rows; row++) {
+
+            for (let col = 0; col < columns; col++) {
+
+                const x = startX + col * (slotSize + gap);
+                const y = startY + row * (slotSize + gap);
+
+                const slot = this.scene.add.rectangle(
+                    x,
+                    y,
+                    slotSize,
+                    slotSize,
+                    0xf0f0f0
+                );
+
+                slot.setOrigin(0);
+                slot.setStrokeStyle(1, 0x888888);
+
+                this.inventorySlots.push(slot);
+
+                this.inventoryContainer.add(slot);
+            }
+        }
+    }
+
 }

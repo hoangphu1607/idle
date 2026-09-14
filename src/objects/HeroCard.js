@@ -92,6 +92,7 @@ export default class HeroCard {
             }
         );
 
+
         // Attack
         const atk = this.scene.add.text(
             220,
