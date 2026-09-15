@@ -6,6 +6,10 @@ export default class HeroDetailPopup {
     constructor(scene) {
 
         this.scene = scene;
+        this.currentHero = null;
+        this.equipmentItemImages = {};
+        this.equipmentItemQuantityTexts = {};
+        this.inventoryItemViews = [];
 
         this.container = scene.add.container(0, 0);
         this.container.setVisible(false);
@@ -51,6 +55,11 @@ export default class HeroDetailPopup {
             this.panelHeight,
             0xffffff
         );
+
+        panel.setInteractive();
+        panel.on("pointerup", pointer => {
+            pointer.event.stopPropagation();
+        });
 
         // =========================
         // Avatar
@@ -127,6 +136,11 @@ export default class HeroDetailPopup {
         this.equipmentSlots = [];
 
         this.createEquipmentSlots();
+
+        this.scene.input.on("dragstart", this.handleDragStart, this);
+        this.scene.input.on("drag", this.handleDrag, this);
+        this.scene.input.on("dragend", this.handleDragEnd, this);
+        this.scene.input.on("drop", this.handleDrop, this);
 
         // =========================
         // Inventory
@@ -254,6 +268,28 @@ export default class HeroDetailPopup {
         const columns = 4;
         const rows = 2;
 
+        const slotFrames = [
+            "slot_weapon",
+            "slot_shield",
+            "slot_helmet",
+            "slot_armor",
+            "slot_boots",
+            "slot_cloak",
+            "slot_potion",
+            "slot_food"
+        ];
+
+        const slotTypes = [
+            "weapon",
+            "shield",
+            "helmet",
+            "armor",
+            "boots",
+            "cloak",
+            "potion",
+            "food"
+        ];
+
         for (let row = 0; row < rows; row++) {
 
             for (let col = 0; col < columns; col++) {
@@ -261,15 +297,17 @@ export default class HeroDetailPopup {
                 const x = startX + col * (slotSize + gap);
                 const y = startY + row * (slotSize + gap);
 
-                const slot = this.scene.add.rectangle(
+                const slot = this.scene.add.image(
                     x,
                     y,
-                    slotSize,
-                    slotSize,
-                    0xf0f0f0
+                    "inventory_slots",
+                    slotFrames[row * columns + col]
                 );
 
-                slot.setStrokeStyle(1, 0x888888);
+                slot.setDisplaySize(slotSize, slotSize);
+                slot.slotType = slotTypes[row * columns + col];
+                slot.setInteractive();
+                slot.input.dropZone = true;
 
                 this.equipmentSlots.push(slot);
             }
@@ -303,6 +341,8 @@ export default class HeroDetailPopup {
 
     show(hero) {
 
+        this.currentHero = hero;
+
         // Lấy dữ liệu Hero từ Save
         const savedHero = SaveManager.loadHero(hero.id) || {};
 
@@ -312,6 +352,7 @@ export default class HeroDetailPopup {
 
         // Render Inventory
         this.renderInventory(inventory);
+        this.renderEquipment(savedHero.equipment || {});
 
         this.avatar.setTexture(hero.avatar);
 
@@ -375,20 +416,49 @@ export default class HeroDetailPopup {
 
     }
 
+    isStackableEquipmentSlot(slotType) {
+        return slotType === "potion" || slotType === "food";
+    }
+
+    getEquipmentEntry(equipment = {}, slotType) {
+        const entry = equipment?.[slotType];
+
+        if (typeof entry === "string") {
+            return {
+                itemId: entry,
+                quantity: 1
+            };
+        }
+
+        if (entry && typeof entry === "object" && entry.itemId) {
+            return {
+                itemId: entry.itemId,
+                quantity: Number(entry.quantity) > 0 ? Number(entry.quantity) : 1
+            };
+        }
+
+        return {
+            itemId: null,
+            quantity: 0
+        };
+    }
+
     renderInventory(inventory = []) {
 
         // Xóa toàn bộ nội dung Inventory cũ
         this.inventoryContainer.removeAll(true);
+        this.inventorySlots = [];
+        this.inventoryItemViews = [];
 
         // Tạo lại các ô trống
         this.createInventoryGrid();
 
-        const slotSize = 48;
+        const slotSize = 80;
         const gap = 4;
-        const columns = 5;
+        const columns = 6;
 
-        const startX = this.cx - 225;
-        const startY = this.cy - 165;
+        const startX = this.cx - 240;
+        const startY = this.cy - 180;
 
         inventory.forEach((inventoryItem, index) => {
 
@@ -430,6 +500,12 @@ export default class HeroDetailPopup {
                 slotSize - 6
             );
 
+            itemImage.setInteractive({ useHandCursor: true });
+            this.scene.input.setDraggable(itemImage);
+            itemImage.itemId = inventoryItem.itemId;
+            itemImage.dragStartX = itemImage.x;
+            itemImage.dragStartY = itemImage.y;
+
             // =========================
             // Quantity
             // =========================
@@ -452,18 +528,303 @@ export default class HeroDetailPopup {
                 itemImage,
                 quantity
             ]);
+
+            this.inventoryItemViews.push(itemImage);
         });
+    }
+
+    renderEquipment(equipment = {}) {
+
+        Object.values(this.equipmentItemImages).forEach(image => {
+            image.destroy();
+        });
+
+        Object.values(this.equipmentItemQuantityTexts).forEach(text => {
+            text.destroy();
+        });
+
+        this.equipmentItemImages = {};
+        this.equipmentItemQuantityTexts = {};
+
+        this.equipmentSlots.forEach(slot => {
+            const slotEntry = this.getEquipmentEntry(equipment, slot.slotType);
+            const itemId = slotEntry.itemId;
+            const equippedQuantity = slotEntry.quantity;
+            const itemData = items.find(item => item.id === itemId);
+
+            if (!itemData || !this.scene.textures.exists(itemData.icon)) {
+                return;
+            }
+
+            const itemImage = this.scene.add.image(
+                slot.x,
+                slot.y,
+                itemData.icon
+            );
+
+            itemImage.setDisplaySize(38, 38);
+            itemImage.setDepth(slot.depth + 1);
+            itemImage.setInteractive({ useHandCursor: true });
+            this.scene.input.setDraggable(itemImage);
+            itemImage.itemId = itemId;
+            itemImage.equipmentSlotType = slot.slotType;
+            itemImage.dragStartX = itemImage.x;
+            itemImage.dragStartY = itemImage.y;
+
+            this.container.add(itemImage);
+            this.equipmentItemImages[slot.slotType] = itemImage;
+
+            if (this.isStackableEquipmentSlot(slot.slotType) && equippedQuantity > 0) {
+                const quantityText = this.scene.add.text(
+                    slot.x + 26,
+                    slot.y + 22,
+                    `x${equippedQuantity}`,
+                    {
+                        fontSize: "12px",
+                        color: "#ffffff",
+                        fontStyle: "bold",
+                        stroke: "#000000",
+                        strokeThickness: 3
+                    }
+                ).setOrigin(1, 1);
+
+                this.container.add(quantityText);
+                this.equipmentItemQuantityTexts[slot.slotType] = quantityText;
+            }
+        });
+    }
+
+    handleDragStart(pointer, gameObject) {
+
+        if (!gameObject.itemId) {
+            return;
+        }
+
+        gameObject.setDepth(10001);
+        this.draggedItem = gameObject;
+        gameObject.wasEquipped = false;
+        gameObject.wasUnequipped = false;
+    }
+
+    handleDrag(pointer, gameObject, dragX, dragY) {
+
+        if (gameObject === this.draggedItem) {
+            gameObject.x = dragX;
+            gameObject.y = dragY;
+        }
+    }
+
+    handleDragEnd(pointer, gameObject) {
+
+        if (gameObject !== this.draggedItem) {
+            return;
+        }
+
+        if (!gameObject.wasEquipped && !gameObject.wasUnequipped) {
+            gameObject.x = gameObject.dragStartX;
+            gameObject.y = gameObject.dragStartY;
+            gameObject.setDepth(this.inventoryContainer.depth + 1);
+        }
+
+        this.draggedItem = null;
+    }
+
+    handleDrop(pointer, gameObject, dropZone) {
+
+        if (gameObject !== this.draggedItem) {
+            return;
+        }
+
+        if (gameObject.equipmentSlotType && dropZone.inventorySlot) {
+            gameObject.wasUnequipped = this.unequipItem(gameObject);
+            return;
+        }
+
+        if (!dropZone.slotType || gameObject.equipmentSlotType) {
+            return;
+        }
+
+        const itemData = items.find(item => item.id === gameObject.itemId);
+        const isStackableSlot = this.isStackableEquipmentSlot(dropZone.slotType);
+        const isCompatibleType = itemData && (
+            itemData.type === dropZone.slotType ||
+            (isStackableSlot && (
+                itemData.type === "potion" ||
+                itemData.type === "food" ||
+                itemData.type === "consumable"
+            ))
+        );
+
+        if (!isCompatibleType) {
+            return;
+        }
+
+        gameObject.wasEquipped = true;
+        this.equipItem(itemData, dropZone.slotType);
+    }
+
+    equipItem(itemData, slotType) {
+
+        if (!this.currentHero) {
+            return;
+        }
+
+        const saveData = SaveManager.load();
+        const inventory = saveData.inventory || [];
+        const inventoryItem = inventory.find(
+            item => item.itemId === itemData.id
+        );
+
+        if (!inventoryItem || inventoryItem.quantity < 1) {
+            return;
+        }
+
+        const heroKey = String(this.currentHero.id);
+        const savedHero = saveData.heroes[heroKey] || this.currentHero;
+        const equipment = {
+            ...(savedHero.equipment || {})
+        };
+        const currentEntry = this.getEquipmentEntry(equipment, slotType);
+        const previousItemId = currentEntry.itemId;
+        const isStackableSlot = this.isStackableEquipmentSlot(slotType);
+        const maxEquippedQuantity = isStackableSlot ? 10 : 1;
+        const currentQuantity = currentEntry.itemId === itemData.id ? currentEntry.quantity : 0;
+        const availableSpace = Math.max(0, maxEquippedQuantity - currentQuantity);
+        const transferQuantity = isStackableSlot
+            ? Math.min(inventoryItem.quantity, availableSpace)
+            : 1;
+
+        if (transferQuantity <= 0 || inventoryItem.quantity < transferQuantity) {
+            return;
+        }
+
+        inventoryItem.quantity -= transferQuantity;
+
+        if (inventoryItem.quantity <= 0) {
+            saveData.inventory = inventory.filter(
+                item => item !== inventoryItem
+            );
+        }
+
+        if (previousItemId && previousItemId !== itemData.id) {
+            const previousInventoryItem = saveData.inventory.find(
+                item => item.itemId === previousItemId
+            );
+
+            if (previousInventoryItem) {
+                previousInventoryItem.quantity += 1;
+            } else {
+                saveData.inventory.push({
+                    itemId: previousItemId,
+                    quantity: 1
+                });
+            }
+        }
+
+        if (isStackableSlot) {
+            const nextQuantity = currentEntry.itemId === itemData.id
+                ? currentQuantity + transferQuantity
+                : transferQuantity;
+
+            equipment[slotType] = {
+                itemId: itemData.id,
+                quantity: nextQuantity
+            };
+        } else {
+            equipment[slotType] = itemData.id;
+        }
+
+        saveData.heroes[heroKey] = {
+            ...savedHero,
+            equipment
+        };
+
+        SaveManager.save(saveData);
+        this.renderInventory(saveData.inventory);
+        this.renderEquipment(equipment);
+    }
+
+    unequipItem(gameObject) {
+
+        if (!this.currentHero) {
+            return false;
+        }
+
+        const saveData = SaveManager.load();
+        const inventory = saveData.inventory || [];
+        const hasExistingStack = inventory.some(
+            item => item.itemId === gameObject.itemId
+        );
+        const inventoryCapacity = 6 * 4;
+
+        if (!hasExistingStack && inventory.length >= inventoryCapacity) {
+            return false;
+        }
+
+        const heroKey = String(this.currentHero.id);
+        const savedHero = saveData.heroes[heroKey] || this.currentHero;
+        const equipment = {
+            ...(savedHero.equipment || {})
+        };
+        const currentEntry = this.getEquipmentEntry(equipment, gameObject.equipmentSlotType);
+
+        if (currentEntry.itemId !== gameObject.itemId) {
+            return false;
+        }
+
+        const inventoryItem = inventory.find(
+            item => item.itemId === gameObject.itemId
+        );
+        const quantityToReturn = this.isStackableEquipmentSlot(gameObject.equipmentSlotType)
+            ? currentEntry.quantity
+            : 1;
+
+        if (inventoryItem) {
+            inventoryItem.quantity += quantityToReturn;
+        } else {
+            inventory.push({
+                itemId: gameObject.itemId,
+                quantity: quantityToReturn
+            });
+        }
+
+        if (this.isStackableEquipmentSlot(gameObject.equipmentSlotType)) {
+            const nextQuantity = currentEntry.quantity - quantityToReturn;
+
+            if (nextQuantity > 0) {
+                equipment[gameObject.equipmentSlotType] = {
+                    itemId: gameObject.itemId,
+                    quantity: nextQuantity
+                };
+            } else {
+                delete equipment[gameObject.equipmentSlotType];
+            }
+        } else {
+            delete equipment[gameObject.equipmentSlotType];
+        }
+
+        saveData.inventory = inventory;
+        saveData.heroes[heroKey] = {
+            ...savedHero,
+            equipment
+        };
+
+        SaveManager.save(saveData);
+        this.renderInventory(inventory);
+        this.renderEquipment(equipment);
+
+        return true;
     }
 
     createInventoryGrid() {
 
-        const startX = this.cx - 225;
-        const startY = this.cy - 165;
+        const startX = this.cx - 240;
+        const startY = this.cy - 180;
 
-        const slotSize = 48;
+        const slotSize = 80;
         const gap = 4;
 
-        const columns = 5;
+        const columns = 6;
         const rows = 4;
 
         for (let row = 0; row < rows; row++) {
@@ -485,6 +846,10 @@ export default class HeroDetailPopup {
                 slot.setStrokeStyle(1, 0x888888);
 
                 this.inventorySlots.push(slot);
+
+                slot.setInteractive();
+                slot.input.dropZone = true;
+                slot.inventorySlot = true;
 
                 this.inventoryContainer.add(slot);
             }

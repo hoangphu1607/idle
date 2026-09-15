@@ -33,7 +33,7 @@ const items = [
         description: "Hồi phục HP.",
         icon: "item_health_potion",
 
-        type: "consumable",
+        type: "potion",
         rarity: "common",
 
         maxStack: 99,
@@ -41,7 +41,19 @@ const items = [
         effect: {
             hp: 200
         }
+    },
+    {
+        id: "rare_gem",
+        name: "Rare Gem",
+        description: "Đá quý hiếm dùng để nâng cấp trang bị.",
+        icon: "rare_gem",
+
+        type: "material",
+        rarity: "rare",
+
+        maxStack: 99
     }
 ];
+
 
 export default items;

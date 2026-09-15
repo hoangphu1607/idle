@@ -30,8 +30,8 @@ export const MONSTERS = [
                 maxQuantity: 3
             },
             {
-                itemId: "health_potion",
-                chance: 0.2,
+                itemId: "iron_sword",
+                chance: 1,
                 minQuantity: 1,
                 maxQuantity: 1
             },
