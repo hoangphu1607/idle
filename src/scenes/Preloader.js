@@ -17,12 +17,15 @@ export default class Preloader extends Phaser.Scene {
         this.load.image("mace", "src/assets/champ/mace.png");
         this.load.image("hunter", "src/assets/champ/hunter.png");
 
+        //Load map
+        this.load.image("map-forest", "src/assets/bg/map-forest.png");
+        this.load.image("map-swamp", "src/assets/bg/map-swamp.jpg");
+        this.load.image("map-desert", "src/assets/bg/map-desert.jpg");
+        this.load.image("map-snow", "src/assets/bg/map-snow.jpg");
+        this.load.image("map-plateau", "src/assets/bg/map-plateau.jpg");
+
         //load icon
-        this.load.image("sword", "src/assets/icon/sword.png");
-        this.load.image("safe-zone", "src/assets/icon/safe-zone.png");
-        this.load.image("yellow-zone", "src/assets/icon/yellow-zone.png");
-        this.load.image("red-zone", "src/assets/icon/red-zone.png");
-        this.load.image("black-zone", "src/assets/icon/black-zone.png");
+        this.load.image("sword", "src/assets/icon/sword.png");        
         this.load.image("roaming", "src/assets/icon/roaming.png");
         this.load.image("gather", "src/assets/icon/gather.png");
         this.load.image("dungeon_solo", "src/assets/icon/dungeon-solo.png");
@@ -51,7 +54,7 @@ export default class Preloader extends Phaser.Scene {
         this.load.image("item_iron_sword", "src/assets/item/item_iron_sword.png");
         this.load.image("item_health_potion", "src/assets/item/item_health_potion.png");
         this.load.image("rare_gem", "src/assets/item/rare_gem.png");
-        this.load.image("slime_essence", "src/assets/item/slime_essence.png");
+        this.load.image("item_slime_essence", "src/assets/item/slime_essence.png");
 
     }
 

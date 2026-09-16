@@ -35,24 +35,34 @@ export default class MapScene extends BaseScene {
 
         const maps = [
             {
-                icon: "safe-zone",
-                title: "Safe Zone",
-                tier: "Tier 1 - 3"
+                icon: "map-forest",
+                title: "Jungle",
+                tier: "Tier 1 - 3",
+                bg: "map-forest"
             },
             {
-                icon: "yellow-zone",
-                title: "Yellow Zone",
-                tier: "Tier 2 - 5"
+                icon: "map-swamp",
+                title: "Swamp",
+                tier: "Tier 2 - 5",
+                bg: "map-swamp"
             },
             {
-                icon: "red-zone",
-                title: "Red Zone",
-                tier: "Tier 3 - 6"
+                icon: "map-desert",
+                title: "Desert",
+                tier: "Tier 3 - 6",
+                bg: "map-desert"
             },
             {
-                icon: "black-zone",
-                title: "Black Zone",
-                tier: "Tier 5 - 8"
+                icon: "map-plateau",
+                title: "Plateau",
+                tier: "Tier 5 - 8",
+                bg: "map-plateau"
+            },
+            {
+                icon: "map-snow",
+                title: "Snow",
+                tier: "Tier 5 - 8",
+                bg: "map-snow"
             }
         ];
 
@@ -60,12 +70,13 @@ export default class MapScene extends BaseScene {
 
             const card = new MapCard(this, {
                 x: 40,
-                y: 150 + index * 110,
+                y: 200 + index * 165,
                 width: this.scale.width - 80,
-                height: 80,
+                height: 150,
                 icon: map.icon,
                 title: map.title,
                 subtitle: map.tier,
+                bg: map.bg,
                 onClick: () => {
 
                     console.log(map.title);
