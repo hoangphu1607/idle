@@ -56,28 +56,33 @@ export const HEROES = [
         experience: 0
     },
 
-    // {
-    //     id: 3,
-    //     name: "Archer",
-    //     level: 1,
+    {
+        id: 3,
+        name: "Nature",
+        level: 1,
 
-    //     attack_physical: 5,
-    //     attack_magic: 1,
+        attack_physical: 2,
+        attack_magic: 5,
 
-    //     auto_attack: 3,
+        auto_attack: 3,
 
-    //     hp: 1200,
-    //     mp: 200,
+        hp: 1200,
+        mp: 200,
 
-    //     image: "hero_archer",
-    //     avatar: "hunter",
+        image: "hero_nature",
+        avatar: "nature",
 
-    //     role: "dps",
+        role: "healer",
 
-    //     skills: [
-    //         "arrow_shot"
-    //     ]
-    // },
+        skills: [
+            {
+                id: "nature_skill_first",
+                cooldown: 2,
+                initialCooldown: 1
+            }
+        ],
+        experience: 0
+    },
 
     // {
     //     id: 4,

@@ -1,6 +1,7 @@
 import Phaser from "phaser";
 import BaseScene from "./base/BaseScene";
 import MapCard from "../objects/MapCard";
+import HeroSelectPopup from "../ui/HeroSelectPopup";
 
 export default class MapScene extends BaseScene {
 
@@ -35,37 +36,48 @@ export default class MapScene extends BaseScene {
 
         const maps = [
             {
+                id: "jungle",
                 icon: "map-forest",
                 title: "Jungle",
                 tier: "Tier 1 - 3",
-                bg: "map-forest"
+                bg: "map-forest",
+                content: "open world"
             },
             {
+                id: "swamp",
                 icon: "map-swamp",
                 title: "Swamp",
                 tier: "Tier 2 - 5",
-                bg: "map-swamp"
+                bg: "map-swamp",
+                content: "open world"
             },
             {
+                id: "desert",
                 icon: "map-desert",
                 title: "Desert",
                 tier: "Tier 3 - 6",
-                bg: "map-desert"
+                bg: "map-desert",
+                content: "open world"
             },
             {
+                id: "plateau",
                 icon: "map-plateau",
                 title: "Plateau",
                 tier: "Tier 5 - 8",
-                bg: "map-plateau"
+                bg: "map-plateau",
+                content: "open world"
             },
             {
+                id: "snow",
                 icon: "map-snow",
                 title: "Snow",
                 tier: "Tier 5 - 8",
-                bg: "map-snow"
+                bg: "map-snow",
+                content: "open world"
             }
         ];
-
+        
+        this.heroSelectPopup = new HeroSelectPopup(this);
         maps.forEach((map, index) => {
 
             const card = new MapCard(this, {
@@ -78,9 +90,9 @@ export default class MapScene extends BaseScene {
                 subtitle: map.tier,
                 bg: map.bg,
                 onClick: () => {
-
+                    
                     console.log(map.title);
-                    this.scene.start("ContentScene");
+                    this.heroSelectPopup.show(map.content);
 
 
                 }

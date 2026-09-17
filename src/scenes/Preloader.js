@@ -16,6 +16,7 @@ export default class Preloader extends Phaser.Scene {
         this.load.image("wizard", "src/assets/champ/wizard.png");
         this.load.image("mace", "src/assets/champ/mace.png");
         this.load.image("hunter", "src/assets/champ/hunter.png");
+        this.load.image("nature", "src/assets/champ/nature.jpg");
 
         //Load map
         this.load.image("map-forest", "src/assets/bg/map-forest.png");
@@ -39,6 +40,7 @@ export default class Preloader extends Phaser.Scene {
         //Hero Skills
         this.load.image("Mage_first_skill", "src/assets/Heros_Skills/Mage_first_skill.png");
         this.load.image("Mace_first_skill", "src/assets/Heros_Skills/Mace_first_skill.png");
+        this.load.image("Nature_first_skill", "src/assets/Heros_Skills/Nature_first_skill.png");
 
         //Monsters_Skills
         this.load.image("Slime_first_skill", "src/assets/Monsters_Skills/Slime_first_skill.png");

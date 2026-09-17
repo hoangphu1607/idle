@@ -9,7 +9,7 @@ export default class HeroSelectPopup {
         this.scene = scene;
 
         this.selectedHeroes = [];
-        this.maxSelect = 1;
+        this.maxSelect = 8;
         this.minSelect = 1;
         this.cards = [];
 
@@ -223,13 +223,13 @@ export default class HeroSelectPopup {
 
     show(content) {
 
-        this.content = content;
+        this.content = content || {};
 
-        switch (content.id) {
+        switch (this.content) {
 
-            case "roaming":
+            case "open world":
                 this.minSelect = 1;
-                this.maxSelect = 2;
+                this.maxSelect = 7;
                 break;
 
             default:

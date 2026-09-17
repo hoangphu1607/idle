@@ -38,8 +38,8 @@ export default class MapCard {
             height,
             bgKey
         )
-        .setOrigin(0)
-        .setTileScale(scale, scale);
+            .setOrigin(0)
+            .setTileScale(scale, scale);
 
         // Icon
         this.icon = this.scene.add.image(
@@ -47,7 +47,7 @@ export default class MapCard {
             height / 2,
             iconKey
         )
-        .setDisplaySize(48, 48);
+            .setDisplaySize(48, 48);
 
         // Title
         this.title = this.scene.add.text(

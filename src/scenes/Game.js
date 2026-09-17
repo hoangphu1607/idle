@@ -22,6 +22,6 @@ export default class GameScene extends Phaser.Scene {
         this.bottomNavigation = new BottomNavigation(this);
         this.bottomNavigation.select("headquarters");
 
-        this.scene.start("ContentScene");
+        this.scene.start("MenuScene");
     }
 }
