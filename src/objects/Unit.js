@@ -22,6 +22,7 @@ export default class Unit {
 
         this.attack_physical = data.attack_physical || 0;
         this.attack_magic = data.attack_magic || 0;
+        this.threat = data.threat ?? 1;
 
         this.auto_attack = data.auto_attack || 1;
 
@@ -39,6 +40,7 @@ export default class Unit {
 
         // Trạng thái bị kích động
         this.isAggro = false;
+        this.threatTable = new Map();
     }
 
     setPosition(row, col) {
@@ -65,8 +67,11 @@ export default class Unit {
             attacker.team === "player"
         ) {
             this.isAggro = true;
+            this.addThreat(attacker, value * attacker.threat);
+            this.scene.alertNearbyMonsters?.(this, attacker, value);
+            this.scene.recordDamage?.(attacker, value);
 
-            console.log(`${this.name} is now AGGRO!`);
+            //console.log(`${this.name} is now AGGRO!`);
         }
 
         if (this.hp <= 0) {
@@ -80,6 +85,19 @@ export default class Unit {
 
         if (this.view) {
             this.view.refresh();
+        }
+    }
+
+    addThreat(attacker, value) {
+        const currentThreat = this.threatTable.get(attacker) || 0;
+        this.threatTable.set(attacker, currentThreat + value);
+
+        const currentTargetThreat = this.currentTarget
+            ? this.threatTable.get(this.currentTarget) || 0
+            : 0;
+
+        if (!this.currentTarget || value + currentThreat > currentTargetThreat) {
+            this.currentTarget = attacker;
         }
     }
 

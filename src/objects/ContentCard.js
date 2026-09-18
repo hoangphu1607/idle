@@ -62,7 +62,7 @@ export default class ContentCard {
         });
         this.background.on("pointerup", () => {
 
-            console.log(this.scene.heroSelectPopup);
+            //console.log(this.scene.heroSelectPopup);
             this.scene.heroSelectPopup.show(this.content);
 
         });

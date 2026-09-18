@@ -31,6 +31,12 @@ export default class Preloader extends Phaser.Scene {
         this.load.image("gather", "src/assets/icon/gather.png");
         this.load.image("dungeon_solo", "src/assets/icon/dungeon-solo.png");
         this.load.image("dungeon_group", "src/assets/icon/dungeon-group.png");
+        this.load.image("btn_check_dps", "src/assets/ui/buttons/btn_check_dps.jpg");
+        this.load.image("btn_compete", "src/assets/ui/buttons/btn_compete.jpg");
+        this.load.image("text-1", "src/assets/ui/text-1.png");
+        this.load.image("text-2", "src/assets/ui/text-2.png");
+        this.load.image("text-3", "src/assets/ui/text-3.png");
+
 
         //Monster
         this.load.image("monster_slime", "src/assets/monster/monster_slime.png");

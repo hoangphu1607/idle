@@ -1,112 +1,158 @@
 import Skill from "./Skill";
 
 export default class NatureSkill extends Skill {
-	constructor(config) {
-		super({
-			id: "nature_skill_first",
-			name: "Nature Heal",
-			cooldown: config.cooldown,
-			initialCooldown: config.initialCooldown,
-		});
+    constructor(config) {
+        super({
+            id: "nature_skill_first",
+            name: "Nature Heal",
+            cooldown: config.cooldown,
+            initialCooldown: config.initialCooldown,
+        });
 
-		this.activeLeaves = new Map();
-	}
+        this.activeStacks = new Map();
+    }
 
-	execute(caster, battle) {
-		const currentTime = battle.time.now;
+    /**
+     * Hiển thị số hồi máu (+HP) màu xanh lá nổi lên bên trái nhân vật
+     */
+    showFloatingHealText(battle, target, amount) {
+        if (!target?.view?.container) return;
 
-		if (!this.isReady(currentTime)) {
-			return;
-		}
+        // Điểm bắt đầu: phía dưới bên trái của nhân vật
+        const startX = -40;
+        const startY = 15;
+        // Điểm kết thúc: trôi lên phía trên bên trái
+        const endY = -35;
 
-		const allies = battle.getAllUnits(battle.playerGrid).filter(
-			(unit) => unit && !unit.dead && unit.hp < unit.maxHp,
-		);
+        // Tạo text số máu màu xanh lá cây
+        const healText = battle.add.text(startX, startY, `+${amount}`, {
+            fontSize: "16px",
+            fontStyle: "bold",
+            color: "#00ff66", // Màu xanh lá cây nổi bật
+            stroke: "#003300", // Viền xanh đậm/đen giúp dễ đọc
+            strokeThickness: 3,
+        });
 
-		const target = allies.reduce((mostInjured, unit) => {
-			if (!mostInjured) {
-				return unit;
-			}
+        healText.setOrigin(0.5);
+        healText.setDepth(20); // Đảm bảo nổi lên trên nhân vật
 
-			return unit.maxHp - unit.hp > mostInjured.maxHp - mostInjured.hp
-				? unit
-				: mostInjured;
-		}, null);
+        // Gắn trực tiếp vào container của nhân vật để đi theo vị trí nhân vật
+        target.view.container.add(healText);
 
-		if (!target || !target.view) {
-			return;
-		}
+        // Hiệu ứng bay lên và mờ dần trong 0.5 giây (500ms)
+        battle.tweens.add({
+            targets: healText,
+            y: endY,
+            alpha: 0,
+            duration: 1000, // 1 giây
+            ease: "Cubic.easeOut",
+            onComplete: () => {
+                healText.destroy(); // Tự hủy sau khi hiệu ứng kết thúc
+            },
+        });
+    }
 
-		const missingHp = target.maxHp - target.hp;
-		const requestedLeaves = Math.min(3, Math.ceil(missingHp / 10));
-		const currentEffect = this.activeLeaves.get(target);
-		const existingLeafCount = currentEffect?.leaves.length || 0;
-		const leafCount = Math.min(
-			requestedLeaves,
-			3 - existingLeafCount,
-		);
+    execute(caster, battle) {
+        const currentTime = battle.time.now;
 
-		if (leafCount <= 0) {
-			return;
-		}
+        if (!this.isReady(currentTime)) {
+            return;
+        }
 
-		const targetX = target.ownerGrid.container.x + target.view.container.x;
-		const targetY = target.ownerGrid.container.y + target.view.container.y;
-		const effect = currentEffect || {
-			leaves: [],
-			timer: null,
-		};
-		const offsetsByCount = {
-			1: [0],
-			2: [-20, 20],
-			3: [-20, 20, 0],
-		};
+        const allies = battle.getAllUnits(battle.playerGrid).filter(
+            (unit) => unit && !unit.dead && unit.hp < unit.maxHp,
+        );
 
-		for (let index = 0; index < leafCount; index += 1) {
-			const totalLeafCount = effect.leaves.length + 1;
-			const offsets = offsetsByCount[totalLeafCount];
-			const leaf = battle.add.image(
-				targetX + offsets[totalLeafCount - 1],
-				targetY + 22,
-				"Nature_first_skill",
-			);
+        const target = allies.reduce((mostInjured, unit) => {
+            if (!mostInjured) {
+                return unit;
+            }
 
-			leaf.setDisplaySize(24, 24);
-			leaf.setDepth(9);
-			leaf.setAlpha(0);
-			effect.leaves.push(leaf);
+            return unit.maxHp - unit.hp > mostInjured.maxHp - mostInjured.hp
+                ? unit
+                : mostInjured;
+        }, null);
 
-			effect.leaves.forEach((activeLeaf, leafIndex) => {
-				activeLeaf.x = targetX + offsetsByCount[effect.leaves.length][leafIndex];
-				activeLeaf.y = targetY + 12;
-			});
+        if (!target || !target.view || !target.view.container) {
+            return;
+        }
 
-			target.heal(10);
-			target.view.refresh();
+        const currentEffect = this.activeStacks.get(target);
+        const currentCount = currentEffect?.count || 0;
 
-			battle.tweens.add({
-				targets: leaf,
-				alpha: 1,
-				duration: 180,
-				duration: 180,
-			});
-		}
+        const newTotalStacks = Math.min(3, currentCount + 1);
+        let effect = currentEffect;
 
-		if (effect.timer) {
-			effect.timer.remove(false);
-		}
+        if (!effect) {
+            const stackPosX = -32;
+            const stackPosY = 0;
 
-		effect.timer = battle.time.delayedCall(3000, () => {
-			effect.leaves.forEach((leaf) => leaf.destroy());
-			this.activeLeaves.delete(target);
-		});
+            const icon = battle.add.image(stackPosX, stackPosY, "Nature_first_skill");
+            icon.setDisplaySize(24, 24);
+            icon.setDepth(9);
 
-		this.activeLeaves.set(target, effect);
+            const text = battle.add.text(stackPosX + 8, stackPosY + 6, `${newTotalStacks}`, {
+                fontSize: "14px",
+                fontStyle: "bold",
+                color: "#ffffff",
+                stroke: "#000000",
+                strokeThickness: 3,
+            });
+            text.setOrigin(0.5);
+            text.setDepth(10);
 
-		console.log(
-			`${caster.name} uses ${this.name} on ${target.name} (${leafCount} leaves)`,
-		);
+            target.view.container.add([icon, text]);
 
-		this.startCooldown(currentTime);
-	}
+            effect = {
+                icon,
+                text,
+                count: newTotalStacks,
+                healEvent: null,
+            };
+        } else {
+            effect.count = newTotalStacks;
+            effect.text.setText(`${newTotalStacks}`);
+        }
+
+        if (effect.healEvent) {
+            effect.healEvent.remove(false);
+        }
+
+        let remainingTicks = 12;
+
+        effect.healEvent = battle.time.addEvent({
+            delay: 1000,
+            repeat: 11,
+            callback: () => {
+                if (target.dead) {
+                    if (effect.icon) effect.icon.destroy();
+                    if (effect.text) effect.text.destroy();
+                    this.activeStacks.delete(target);
+                    if (effect.healEvent) effect.healEvent.remove(false);
+                    return;
+                }
+
+                // Lượng máu hồi mỗi nhịp
+                const healAmount = effect.count * 10; 
+
+                target.heal(healAmount);
+                target.view.refresh();
+
+                // Kích hoạt hiệu ứng nổi chữ +HP màu xanh lá cây
+                this.showFloatingHealText(battle, target, healAmount);
+
+                remainingTicks -= 1;
+
+                if (remainingTicks <= 0) {
+                    if (effect.icon) effect.icon.destroy();
+                    if (effect.text) effect.text.destroy();
+                    this.activeStacks.delete(target);
+                }
+            },
+        });
+
+        this.activeStacks.set(target, effect);
+
+        this.startCooldown(currentTime);
+    }
 }

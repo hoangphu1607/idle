@@ -30,7 +30,7 @@ export default class HeroCard {
         ).setOrigin(0).setInteractive({ useHandCursor: true });;
 
         background.on("pointerup", () => {
-            console.log("Click Hero:", this.hero.name);
+            //console.log("Click Hero:", this.hero.name);
 
             if (this.onClick) {
                 this.onClick(this.hero);
@@ -79,7 +79,7 @@ export default class HeroCard {
                 color: "#7CFC00"
             }
         );
-        console.log("Hero EXP:", this.hero.experience);
+        //console.log("Hero EXP:", this.hero.experience);
 
         // Experience
         const experience = this.scene.add.text(

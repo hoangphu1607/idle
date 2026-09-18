@@ -7,7 +7,7 @@ export const MONSTERS = [
         hp: 100,
         mp: 200,
 
-        attack_physical: 10,
+        attack_physical: 20,
         attack_magic: 1,
 
         auto_attack: 3,
@@ -16,8 +16,8 @@ export const MONSTERS = [
         skills: [
             {
                 id: "Slime_first_skill",
-                cooldown: 5,
-                initialCooldown: 1
+                cooldown: 1,
+                initialCooldown: 0.2
             }
         ],
         experience: 10,
@@ -25,13 +25,13 @@ export const MONSTERS = [
         dropItems: [
             {
                 itemId: "slime_essence",
-                chance: 1.0,
+                chance: 0.1,
                 minQuantity: 1,
                 maxQuantity: 3
             },
             {
                 itemId: "iron_sword",
-                chance: 1,
+                chance: 0.1,
                 minQuantity: 1,
                 maxQuantity: 1
             },

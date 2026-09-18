@@ -40,7 +40,7 @@ export default class MenuUI {
         // Click
         this.button.on("pointerup", () => {
 
-            console.log("Start Game");
+            //console.log("Start Game");
 
             this.scene.scene.start("GameScene");
 

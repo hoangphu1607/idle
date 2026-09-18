@@ -125,12 +125,12 @@ export default class HeroSelectPopup {
 
             if (this.selectedHeroes.length < this.minSelect) {
 
-                console.log(`Cần chọn ít nhất ${this.minSelect} Hero`);
+                //console.log(`Cần chọn ít nhất ${this.minSelect} Hero`);
 
                 return;
             }
 
-            console.log(this.selectedHeroes);
+            //console.log(this.selectedHeroes);
 
             this.hide();
             this.scene.scene.start("BattleScene", {

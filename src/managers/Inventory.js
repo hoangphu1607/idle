@@ -27,9 +27,7 @@ export default class Inventory {
 
         }
 
-        console.log(
-            `Added ${itemId} x${quantity}`
-        );
+        //console.log(`Added ${itemId} x${quantity}`);
 
     }
 

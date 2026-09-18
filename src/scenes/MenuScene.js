@@ -34,7 +34,7 @@ export default class MenuScene extends BaseScene  {
             icon: "sword",
             text: "Play",
             onClick: () => {
-                console.log("Play");
+                //console.log("Play");
                 this.scene.start("MapScene");
             }
         });

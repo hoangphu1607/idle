@@ -91,7 +91,7 @@ export default class MapScene extends BaseScene {
                 bg: map.bg,
                 onClick: () => {
                     
-                    console.log(map.title);
+                    //console.log(map.title);
                     this.heroSelectPopup.show(map.content);
 
 

@@ -22,10 +22,11 @@ export const HEROES = [
             {
                 id: "mace_skill_first",
                 cooldown: 3,
-                initialCooldown: 1
+                initialCooldown: 0.2
             }
         ],
-        experience: 0
+        experience: 0,
+        threat: 4,
     },
 
     {
@@ -50,10 +51,11 @@ export const HEROES = [
             {
                 id: "mage_skill_first",
                 cooldown: 2,
-                initialCooldown: 1
+                initialCooldown: 0.2
             }
         ],
-        experience: 0
+        experience: 0,
+        threat: 1,
     },
 
     {
@@ -77,11 +79,12 @@ export const HEROES = [
         skills: [
             {
                 id: "nature_skill_first",
-                cooldown: 2,
+                cooldown: 1,
                 initialCooldown: 1
             }
         ],
-        experience: 0
+        experience: 0,
+        threat: 1,
     },
 
     // {

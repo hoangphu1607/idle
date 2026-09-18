@@ -78,7 +78,7 @@ export default class SlimeSkill extends Skill {
             },
         });
 
-        console.log(`${caster.name} uses ${this.name} on ${target.name}`);
+        console.log(`${caster.name} uses ${this.name} on ${target.name}: time=${currentTime}, damage=${caster.attack_physical}`);
 
         this.startCooldown(currentTime);
     }

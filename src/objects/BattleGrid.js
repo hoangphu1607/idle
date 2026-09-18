@@ -75,7 +75,7 @@ export default class BattleGrid {
             let pos;
 
             // Mace đứng hàng 3, cột 5
-            if (heroData.name === "Mace") {
+            if (heroData.role === "tank") {
                 pos = {
                     row: 1,
                     col: 4
@@ -83,9 +83,15 @@ export default class BattleGrid {
             }
 
             // Mage đứng hàng 4, cột 5
-            else if (heroData.name === "Mage") {
+            else if (heroData.role === "dps") {
                 pos = {
                     row: 2,
+                    col: 4
+                };
+            }
+            else if (heroData.role === "healer") {
+                pos = {
+                    row: 3,
                     col: 4
                 };
             }

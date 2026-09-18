@@ -110,7 +110,7 @@ export default class UnitView {
         this.sprite.setInteractive({ useHandCursor: true });
 
         this.sprite.on("pointerup", () => {
-            console.log(this.unit);
+            //console.log(this.unit);
         });
 
     }

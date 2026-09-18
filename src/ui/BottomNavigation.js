@@ -77,7 +77,7 @@ export default class BottomNavigation {
 
         });
 
-        console.log("Current:", id);
+        //console.log("Current:", id);
 
     }
     handleButtonClick(item) {
@@ -88,8 +88,8 @@ export default class BottomNavigation {
                 this.scene.scene.start("MenuScene");
                 break;
             case "hero":
-                console.log(this.scene);
-                console.log(this.scene.heroScreen);
+                //console.log(this.scene);
+                //console.log(this.scene.heroScreen);
 
                 // Thêm kiểm tra if để đảm bảo heroScreen tồn tại và có hàm show()
                 if (this.scene.heroScreen && typeof this.scene.heroScreen.show === "function") {
@@ -103,7 +103,7 @@ export default class BottomNavigation {
                 this.scene.scene.start("InventoryScene");
                 break;
             case "battle":
-                console.log("Mở Battle");
+                //console.log("Mở Battle");
                 break;
         }
     }

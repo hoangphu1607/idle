@@ -65,11 +65,11 @@ export default class MageSkill extends Skill {
                     battle.removeUnit(target);
                 }
 
-                console.log(`${caster.name} attacks ${target.name} for ${damage} magic damage`);
+                //console.log(`${caster.name} attacks ${target.name} for ${damage} magic damage`);
             },
         });
 
-        console.log(`${caster.name} uses ${this.name} on ${target.name}`);
+        //console.log(`${caster.name} uses ${this.name} on ${target.name}`);
         this.startCooldown(currentTime);
     }
 }

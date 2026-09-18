@@ -12,7 +12,7 @@ export default class DungeonScene extends Phaser.Scene {
         this.dataManager = new DataManager(this);
         this.dataManager.init();
 
-        console.log(this.dataManager.getMonster(1));
+        //console.log(this.dataManager.getMonster(1));
 
     }
 
