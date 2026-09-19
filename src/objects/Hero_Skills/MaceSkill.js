@@ -1,4 +1,4 @@
-import Skill from "./Skill";
+import Skill from "./Skill.js";
 
 export default class MaceSkill extends Skill {
     constructor(config) {
@@ -65,7 +65,7 @@ export default class MaceSkill extends Skill {
                 const damage = caster.attack_physical;
 
                 // Truyền caster để Monster biết ai đã tấn công mình
-                target.takeDamage(damage, caster);
+                target.takeDamage(damage, caster, "physical");
 
                 if (target.dead) {
                     battle.removeUnit(target);

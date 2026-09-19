@@ -1,5 +1,5 @@
-import Unit from "./Unit";
-import { createSkill } from "./Hero_Skills/SkillFactory";
+import Unit from "./Unit.js";
+import { createSkill } from "./Hero_Skills/SkillFactory.js";
 export default class Hero extends Unit {
     constructor(scene, data) {
         super(scene, data);
@@ -15,12 +15,10 @@ export default class Hero extends Unit {
     }
 
     Active_Skill_First(battle) {
-        const skill = this.skills[0];
+        const firstSkill = this.skills[0];
 
-        if (!skill) {
-            return;
+        if (firstSkill) {
+            firstSkill.execute(this, battle);
         }
-
-        skill.execute(this, battle);
     }
 }

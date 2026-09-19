@@ -110,7 +110,16 @@ export default class UnitView {
         this.sprite.setInteractive({ useHandCursor: true });
 
         this.sprite.on("pointerup", () => {
-            //console.log(this.unit);
+            if (this.unit.team === "enemy") {
+                // console.log("Monster stats", {
+                //     name: this.unit.name,
+                //     id: this.unit.id,
+                //     tier: this.unit.tier,
+                //     baseStats: this.unit.baseStats,
+                //     tierMultiplier: this.unit.tierMultiplier,
+                //     finalStats: this.unit.finalStats,
+                // });
+            }
         });
 
     }

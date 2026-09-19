@@ -1,9 +1,9 @@
 import Phaser from "phaser";
 
-import { GAME, COLORS } from "./Constants";
+import { GAME, COLORS } from "./Constants.js";
 
-import BootScene from "../scenes/BootScene";
-import PreloadScene from "../scenes/PreloadScene";
+import BootScene from "../scenes/BootScene.js";
+import PreloadScene from "../scenes/PreloadScene.js";
 
 const config = {
 

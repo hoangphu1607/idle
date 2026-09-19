@@ -1,6 +1,6 @@
 import SaveManager from "../managers/SaveManager";
 import items from "../assets/data/item";
-
+import Phaser from "phaser";
 export default class HeroDetailPopup {
 
     constructor(scene) {
@@ -10,6 +10,7 @@ export default class HeroDetailPopup {
         this.equipmentItemImages = {};
         this.equipmentItemQuantityTexts = {};
         this.inventoryItemViews = [];
+        this.actionMenu = null;
 
         this.container = scene.add.container(0, 0);
         this.container.setVisible(false);
@@ -59,6 +60,7 @@ export default class HeroDetailPopup {
         panel.setInteractive();
         panel.on("pointerup", pointer => {
             pointer.event.stopPropagation();
+            this.hideItemMenu();
         });
 
         // =========================
@@ -252,11 +254,6 @@ export default class HeroDetailPopup {
         ]);
     }
 
-
-    // =====================================================
-    // Tạo Equipment Slots
-    // =====================================================
-
     createEquipmentSlots() {
 
         const startX = this.cx + 25;
@@ -314,11 +311,6 @@ export default class HeroDetailPopup {
         }
     }
 
-
-    // =====================================================
-    // Tạo Stat Text
-    // =====================================================
-
     createStatText(key, label, x, y) {
 
         const text = this.scene.add.text(
@@ -334,37 +326,21 @@ export default class HeroDetailPopup {
         this.statTexts[key] = text;
     }
 
-
-    // =====================================================
-    // Show Popup
-    // =====================================================
-
     show(hero) {
 
         this.currentHero = hero;
+        this.hideItemMenu();
 
-        // Lấy dữ liệu Hero từ Save
         const savedHero = SaveManager.loadHero(hero.id) || {};
-
         const saveData = SaveManager.load();
-
         const inventory = saveData.inventory || [];
 
-        // Render Inventory
         this.renderInventory(inventory);
         this.renderEquipment(savedHero.equipment || {});
 
         this.avatar.setTexture(hero.avatar);
-
         this.name.setText(hero.name || "Unknown");
-
         this.role.setText(hero.role || "-");
-
-
-
-        // =========================
-        // Level & EXP từ Save
-        // =========================
 
         this.level.setText(
             `Lv: ${savedHero.level ?? hero.level ?? 1}`
@@ -373,10 +349,6 @@ export default class HeroDetailPopup {
         this.exp.setText(
             `Exp: ${savedHero.experience ?? hero.experience ?? 0}`
         );
-
-        // =========================
-        // Stats từ dữ liệu Hero
-        // =========================
 
         this.statTexts.attack_physical.setText(
             `Physic Dame: ${hero.attack_physical || 0}`
@@ -405,15 +377,9 @@ export default class HeroDetailPopup {
         this.container.setVisible(true);
     }
 
-
-    // =====================================================
-    // Hide Popup
-    // =====================================================
-
     hide() {
-
+        this.hideItemMenu();
         this.container.setVisible(false);
-
     }
 
     isStackableEquipmentSlot(slotType) {
@@ -445,12 +411,10 @@ export default class HeroDetailPopup {
 
     renderInventory(inventory = []) {
 
-        // Xóa toàn bộ nội dung Inventory cũ
         this.inventoryContainer.removeAll(true);
         this.inventorySlots = [];
         this.inventoryItemViews = [];
 
-        // Tạo lại các ô trống
         this.createInventoryGrid();
 
         const slotSize = 80;
@@ -466,12 +430,10 @@ export default class HeroDetailPopup {
                 return;
             }
 
-            // Tìm thông tin Item trong items.js
             const itemData = items.find(
                 item => item.id === inventoryItem.itemId
             );
 
-            // Không tìm thấy Item thì bỏ qua
             if (!itemData) {
                 console.warn(
                     `Item not found: ${inventoryItem.itemId}`
@@ -484,10 +446,6 @@ export default class HeroDetailPopup {
 
             const x = startX + col * (slotSize + gap);
             const y = startY + row * (slotSize + gap);
-
-            // =========================
-            // Item Icon
-            // =========================
 
             const itemImage = this.scene.add.image(
                 x + slotSize / 2,
@@ -506,9 +464,22 @@ export default class HeroDetailPopup {
             itemImage.dragStartX = itemImage.x;
             itemImage.dragStartY = itemImage.y;
 
-            // =========================
-            // Quantity
-            // =========================
+            // Bắt sự kiện click mở menu
+            itemImage.on("pointerup", (pointer) => {
+                if (pointer.event) {
+                    pointer.event.stopPropagation();
+                }
+                // Nếu khoảng cách kéo rê nhỏ hơn 5px thì tính là thao tác click
+                const dist = Phaser.Math.Distance.Between(
+                    itemImage.dragStartX,
+                    itemImage.dragStartY,
+                    itemImage.x,
+                    itemImage.y
+                );
+                if (dist < 5) {
+                    this.showItemMenu(itemImage.x, itemImage.y, slotSize, itemData, false);
+                }
+            });
 
             const quantity = this.scene.add.text(
                 x + slotSize - 3,
@@ -523,7 +494,6 @@ export default class HeroDetailPopup {
                 }
             ).setOrigin(1, 1);
 
-            // Thêm vào Inventory Container
             this.inventoryContainer.add([
                 itemImage,
                 quantity
@@ -571,6 +541,22 @@ export default class HeroDetailPopup {
             itemImage.dragStartX = itemImage.x;
             itemImage.dragStartY = itemImage.y;
 
+            // Click vào trang bị đang mặc để mở menu
+            itemImage.on("pointerup", (pointer) => {
+                if (pointer.event) {
+                    pointer.event.stopPropagation();
+                }
+                const dist = Phaser.Math.Distance.Between(
+                    itemImage.dragStartX,
+                    itemImage.dragStartY,
+                    itemImage.x,
+                    itemImage.y
+                );
+                if (dist < 5) {
+                    this.showItemMenu(itemImage.x, itemImage.y, 48, itemData, true, slot.slotType);
+                }
+            });
+
             this.container.add(itemImage);
             this.equipmentItemImages[slot.slotType] = itemImage;
 
@@ -594,12 +580,145 @@ export default class HeroDetailPopup {
         });
     }
 
+    // =====================================================
+    // Logic Menu Popup (Trang bị / Bán)
+    // =====================================================
+
+    showItemMenu(targetX, targetY, cellSize, itemData, isEquipped = false, slotType = null) {
+        this.hideItemMenu();
+
+        const menuWidth = 110;
+        const menuHeight = 84;
+        const margin = 8;
+
+        const panelRight = this.cx + this.panelWidth / 2;
+        const fitsRight = (targetX + cellSize / 2 + margin + menuWidth) <= (panelRight - 10);
+
+        const menuX = fitsRight
+            ? targetX + cellSize / 2 + margin
+            : targetX - cellSize / 2 - margin - menuWidth;
+
+        const menuY = Phaser.Math.Clamp(
+            targetY - cellSize / 2,
+            this.cy - this.panelHeight / 2 + 10,
+            this.cy + this.panelHeight / 2 - menuHeight - 10
+        );
+
+        this.actionMenu = this.scene.add.container(menuX, menuY);
+        this.actionMenu.setDepth(10005);
+
+        // Nền Menu
+        const bg = this.scene.add.rectangle(0, 0, menuWidth, menuHeight, 0x18212b, 0.96)
+            .setOrigin(0, 0)
+            .setStrokeStyle(2, 0xe5c07b, 0.9)
+            .setInteractive();
+
+        bg.on("pointerup", pointer => {
+            if (pointer.event) pointer.event.stopPropagation();
+        });
+
+        // Nút trên: "Tháo trang bị" nếu đang mặc, hoặc "Trang bị" nếu trong inventory
+        const firstActionText = isEquipped ? "Tháo ra" : "Trang bị";
+        const firstBtn = this.createMenuButton(0, 0, menuWidth, 40, firstActionText, () => {
+            if (isEquipped) {
+                this.unequipItem({
+                    itemId: itemData.id,
+                    equipmentSlotType: slotType
+                });
+            } else {
+                const targetSlot = itemData.type === "potion" || itemData.type === "consumable" 
+                    ? "potion" 
+                    : (itemData.type === "food" ? "food" : itemData.type);
+                this.equipItem(itemData, targetSlot);
+            }
+            this.hideItemMenu();
+        });
+
+        // Đường phân cách
+        const divider = this.scene.add.line(0, 41, 6, 0, menuWidth - 6, 0, 0x3e4f66).setOrigin(0);
+
+        // Nút dưới: "Bán"
+        const sellBtn = this.createMenuButton(0, 42, menuWidth, 40, "Bán", () => {
+            this.sellItem(itemData, isEquipped, slotType);
+            this.hideItemMenu();
+        });
+
+        this.actionMenu.add([bg, firstBtn, divider, sellBtn]);
+        this.container.add(this.actionMenu);
+    }
+
+    createMenuButton(x, y, btnWidth, btnHeight, textStr, onClick) {
+        const container = this.scene.add.container(x, y);
+
+        const hitArea = this.scene.add.rectangle(0, 0, btnWidth, btnHeight, 0x000000, 0.001)
+            .setOrigin(0, 0)
+            .setInteractive({ useHandCursor: true });
+
+        const label = this.scene.add.text(btnWidth / 2, btnHeight / 2, textStr, {
+            fontSize: "15px",
+            color: "#ffffff",
+            fontStyle: "bold"
+        }).setOrigin(0.5);
+
+        hitArea.on("pointerover", () => label.setColor("#ffd700"));
+        hitArea.on("pointerout", () => label.setColor("#ffffff"));
+        hitArea.on("pointerup", (pointer) => {
+            if (pointer.event) {
+                pointer.event.stopPropagation();
+            }
+            onClick();
+        });
+
+        container.add([hitArea, label]);
+        return container;
+    }
+
+    hideItemMenu() {
+        if (this.actionMenu) {
+            this.actionMenu.destroy();
+            this.actionMenu = null;
+        }
+    }
+
+    sellItem(itemData, isEquipped = false, slotType = null) {
+        const saveData = SaveManager.load();
+        const price = itemData.price || itemData.gold || 10;
+
+        if (isEquipped && slotType) {
+            this.unequipItem({
+                itemId: itemData.id,
+                equipmentSlotType: slotType
+            });
+        }
+
+        const freshData = SaveManager.load();
+        const inventory = freshData.inventory || [];
+        const index = inventory.findIndex(item => item.itemId === itemData.id);
+
+        if (index !== -1) {
+            if (inventory[index].quantity > 1) {
+                inventory[index].quantity -= 1;
+            } else {
+                inventory.splice(index, 1);
+            }
+
+            freshData.player = freshData.player || {};
+            freshData.player.gold = Number(freshData.player.gold || 0) + price;
+            freshData.inventory = inventory;
+
+            SaveManager.save(freshData);
+            this.renderInventory(inventory);
+            //console.log(`Đã bán ${itemData.name || itemData.id} nhận ${price} vàng`);
+        }
+    }
+
     handleDragStart(pointer, gameObject) {
 
         if (!gameObject.itemId) {
             return;
         }
 
+        this.hideItemMenu();
         gameObject.setDepth(10001);
         this.draggedItem = gameObject;
         gameObject.wasEquipped = false;
@@ -855,5 +974,4 @@ export default class HeroDetailPopup {
             }
         }
     }
-
 }

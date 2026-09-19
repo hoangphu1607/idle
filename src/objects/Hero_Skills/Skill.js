@@ -1,3 +1,4 @@
+
 export default class Skill {
     constructor(data = {}) {
         this.id = data.id || "";

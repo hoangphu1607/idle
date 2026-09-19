@@ -1,9 +1,9 @@
-import BattleCell from "./BattleCell";
+import BattleCell from "./BattleCell.js";
 import Phaser from "phaser";
-import Hero from "./Hero";
-import Monster from "./Monster";
-import UnitView from "./UnitView";
-import { MONSTERS } from "../assets/data/monsters";
+import Hero from "./Hero.js";
+import Monster from "./Monster.js";
+import UnitView from "./UnitView.js";
+import { MONSTERS } from "../assets/data/monsters.js";
 export default class BattleGrid {
     constructor(scene, x, y, cellSize = 30, rows = 5, cols = 9, rowGap = 10) {
         this.scene = scene;
@@ -177,7 +177,10 @@ export default class BattleGrid {
 
                 const row = position.row + formationRowIndex;
                 const col = position.col + formationColIndex;
-                const monster = new Monster(this.scene, monsterData);
+                const monster = new Monster(this.scene, {
+                    ...monsterData,
+                    tier: spawnData.tier ?? monsterData.tier ?? 1,
+                });
 
                 monster.setPosition(row, col);
                 monster.ownerGrid = this;

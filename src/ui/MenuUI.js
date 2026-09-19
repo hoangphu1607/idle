@@ -1,5 +1,5 @@
 import Phaser from "phaser";
-import BottomNavigation from "./BottomNavigation";
+import BottomNavigation from "./BottomNavigation.js";
 export default class MenuUI {
 
     constructor(scene) {

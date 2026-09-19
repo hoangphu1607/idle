@@ -3,11 +3,11 @@ import Phaser from "phaser";
 import BootScene from "./scenes/Boot.js";
 import PreloaderScene from "./scenes/Preloader.js";
 import GameScene from "./scenes/Game.js";
-import MenuScene from "./scenes/MenuScene";
-import MapScene from "./scenes/MapScene";
-import ContentScene from "./scenes/ContentScene";
-import BattleScene from "./scenes/BattleScene";
-import InventoryScene from "./scenes/InventoryScene";
+import MenuScene from "./scenes/MenuScene.js";
+import MapScene from "./scenes/MapScene.js";
+import ContentScene from "./scenes/ContentScene.js";
+import BattleScene from "./scenes/BattleScene.js";
+import InventoryScene from "./scenes/InventoryScene.js";
 const config = {
     type: Phaser.AUTO,
 

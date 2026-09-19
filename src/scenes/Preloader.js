@@ -48,8 +48,12 @@ export default class Preloader extends Phaser.Scene {
         this.load.image("Mace_first_skill", "src/assets/Heros_Skills/Mace_first_skill.png");
         this.load.image("Nature_first_skill", "src/assets/Heros_Skills/Nature_first_skill.png");
 
+        this.load.image("Mace_second_skill", "src/assets/Heros_Skills/Mace_second_skill.png");
+
+
         //Monsters_Skills
         this.load.image("Slime_first_skill", "src/assets/Monsters_Skills/Slime_first_skill.png");
+        this.load.image("Base_first_skill", "src/assets/Monsters_Skills/Base_first_skill.png");
 
 
         //slot item

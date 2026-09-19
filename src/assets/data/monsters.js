@@ -7,12 +7,14 @@ export const MONSTERS = [
         hp: 100,
         mp: 200,
 
-        attack_physical: 20,
-        attack_magic: 1,
+        attack_physical: 12,
+        attack_magic: 5,
 
-        auto_attack: 3,
+        armor: 5,
+        magic_resistance: 5,
 
         role: "melee",
+
         skills: [
             {
                 id: "Slime_first_skill",
@@ -20,28 +22,9 @@ export const MONSTERS = [
                 initialCooldown: 0.2
             }
         ],
+
         experience: 10,
-        gold: 2,
-        dropItems: [
-            {
-                itemId: "slime_essence",
-                chance: 0.1,
-                minQuantity: 1,
-                maxQuantity: 3
-            },
-            {
-                itemId: "iron_sword",
-                chance: 0.1,
-                minQuantity: 1,
-                maxQuantity: 1
-            },
-            {
-                itemId: "rare_gem",
-                chance: 0.05,
-                minQuantity: 1,
-                maxQuantity: 1
-            }
-        ]
+        gold: 2
     },
 
     {
@@ -52,14 +35,24 @@ export const MONSTERS = [
         hp: 150,
         mp: 200,
 
-        attack_physical: 20,
-        attack_magic: 0,
+        attack_physical: 15,
+        attack_magic: 1,
 
-        auto_attack: 3,
+        armor: 8,
+        magic_resistance: 8,
 
         role: "melee",
+
+        skills: [
+            {
+                id: "Wolf_first_skill",
+                cooldown: 1,
+                initialCooldown: 0.2
+            }
+        ],
+
         experience: 20,
-        gold: 3,
+        gold: 3
     },
 
     {
@@ -71,12 +64,22 @@ export const MONSTERS = [
         mp: 200,
 
         attack_physical: 30,
-        attack_magic: 0,
+        attack_magic: 1,
 
-        auto_attack: 3,
+        armor: 10,
+        magic_resistance: 10,
 
         role: "tank",
+
+        skills: [
+            {
+                id: "Orc_first_skill",
+                cooldown: 1,
+                initialCooldown: 0.2
+            }
+        ],
+
         experience: 50,
-        gold: 7,
+        gold: 7
     }
 ];

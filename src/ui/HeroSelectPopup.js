@@ -135,7 +135,9 @@ export default class HeroSelectPopup {
             this.hide();
             this.scene.scene.start("BattleScene", {
                 heroes: this.selectedHeroes,
-                content: this.content
+                content: this.content,
+                mapId: this.mapId,
+                mapName: this.mapName,
             });
         });
 
@@ -221,9 +223,11 @@ export default class HeroSelectPopup {
 
     }
 
-    show(content) {
+    show(content, mapId = "jungle", mapName = "Jungle") {
 
         this.content = content || {};
+        this.mapId = mapId;
+        this.mapName = mapName;
 
         switch (this.content) {
 

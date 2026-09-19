@@ -1,10 +1,10 @@
 import Phaser from "phaser";
-import MenuUI from "../ui/MenuUI";
-import HeroScreen from "./HeroScreen";
-import HeroDetailPopup from "./HeroDetailPopup";
-import BaseScene from "./base/BaseScene";
+import MenuUI from "../ui/MenuUI.js";
+import HeroScreen from "./HeroScreen.js";
+import HeroDetailPopup from "./HeroDetailPopup.js";
+import BaseScene from "./base/BaseScene.js";
 
-import MenuButton from "../objects/MenuButton";
+import MenuButton from "../objects/MenuButton.js";
 export default class MenuScene extends BaseScene  {
 
     constructor() {

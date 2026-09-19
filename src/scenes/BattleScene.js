@@ -1,9 +1,9 @@
-import BaseScene from "./base/BaseScene";
+import BaseScene from "./base/BaseScene.js";
 import Phaser from "phaser";
-import BattleGrid from "../objects/BattleGrid";
-import { STAGES } from "../assets/data/stages";
-import SaveManager from "../managers/SaveManager";
-import Inventory from "../managers/Inventory";
+import BattleGrid from "../objects/BattleGrid.js";
+import { STAGES_BY_MAP } from "../assets/data/stages.js";
+import SaveManager from "../managers/SaveManager.js";
+import Inventory from "../managers/Inventory.js";
 export default class BattleScene extends BaseScene {
     constructor() {
         super("BattleScene");
@@ -11,7 +11,11 @@ export default class BattleScene extends BaseScene {
     init(data) {
         this.heroes = data.heroes || [];
         this.content = data.content;
+        this.mapId = data.mapId || "jungle";
+        this.mapName = data.mapName || this.mapId;
+        this.stages = STAGES_BY_MAP[this.mapId] || STAGES_BY_MAP.jungle;
         this.stageIndex = data.stageIndex || 0;
+        this.currentStage = null;
         this.waveIndex = 0;
         this.isTransitioning = false;
         this.damageTotals = new Map();
@@ -163,17 +167,29 @@ export default class BattleScene extends BaseScene {
     }
 
     spawnCurrentWave() {
-        const stage = STAGES[this.stageIndex];
 
-        if (!stage) {
-            this.handleVictory();
-            return;
+        // Chưa có stage hiện tại
+        if (!this.currentStage) {
+
+            this.currentStage = this.getRandomStage();
+
+            if (!this.currentStage) {
+                return;
+            }
+
+            // console.log(
+            //     "Random Stage:",
+            //     this.currentStage.id
+            // );
         }
 
-        const wave = stage.waves[this.waveIndex];
+        const wave =
+            this.currentStage.waves[this.waveIndex];
 
         if (!wave) {
+
             this.advanceStage();
+
             return;
         }
 
@@ -218,14 +234,33 @@ export default class BattleScene extends BaseScene {
             if (
                 monster === target ||
                 monster.team !== "enemy" ||
-                monster.dead ||
-                Math.abs(monster.row - target.row) + Math.abs(monster.col - target.col) !== 1
+                monster.dead
             ) {
                 return;
             }
 
+            const dRow = Math.abs(monster.row - target.row);
+            const dCol = Math.abs(monster.col - target.col);
+
+            // Kiểm tra 8 ô lân cận (khoảng cách tối đa 1 ô)
+            const isAdjacent = Math.max(dRow, dCol) === 1;
+
+            if (!isAdjacent) {
+                return;
+            }
+
+            const wasPassive = !monster.isAggro;
             monster.isAggro = true;
             monster.addThreat(attacker, damage * attacker.threat);
+
+            // Nếu mob lân cận vừa bị lôi vào giao tranh, cho nó tấn công sau 200ms
+            if (wasPassive) {
+                this.time.delayedCall(200, () => {
+                    if (monster && !monster.dead && typeof this.attack === "function") {
+                        this.attack(monster);
+                    }
+                });
+            }
         });
     }
 
@@ -236,46 +271,134 @@ export default class BattleScene extends BaseScene {
 
     startGridAutoAttack(grid) {
         grid.grid.forEach((row) => {
-            row.forEach((monster) => {
-                if (monster) {
-                    this.startAutoAttack(monster);
+            row.forEach((unit) => {
+                if (!unit || unit.dead) {
+                    return;
+                }
+
+                const hasTimers = unit.skillTimers && Object.keys(unit.skillTimers).length > 0;
+
+                if (!hasTimers) {
+                    this.startAutoAttack(unit);
                 }
             });
         });
     }
 
     startAutoAttack(unit) {
-        const skill = unit.skills?.[0];
-        const cooldown = (skill?.cooldown ?? unit.auto_attack) * 1000;
-        const initialCooldown = (skill?.initialCooldown ?? 0) * 1000;
-
-        const startCooldownTimer = () => {
-            unit.attackTimer = this.time.addEvent({
-                delay: cooldown,
-                loop: true,
-                callback: () => {
-                    this.attack(unit);
-                },
-            });
-        };
-
-        if (initialCooldown > 0) {
-            unit.initialAttackTimer = this.time.delayedCall(
-                initialCooldown,
-                () => {
-                    this.attack(unit);
-                    startCooldownTimer();
-                },
-            );
+        if (!unit || unit.dead) {
             return;
         }
 
-        this.attack(unit);
-        startCooldownTimer();
+        if (unit.skillTimers && Object.keys(unit.skillTimers).length > 0) {
+            return;
+        }
+
+        unit.skillTimers = unit.skillTimers || {};
+
+        const maceSecondSkill = unit.skills?.find(
+            (skill) => skill?.id === "mace_skill_second"
+        );
+
+        if (maceSecondSkill) {
+            const secondCooldown = (maceSecondSkill.cooldown ?? 10) * 1000;
+            const secondInitial = (maceSecondSkill.initialCooldown ?? 0) * 1000;
+
+            const triggerMaceSecondSkill = () => {
+                if (!unit || unit.dead || unit.isStunned) {
+                    return;
+                }
+
+                maceSecondSkill.execute(unit, this);
+            };
+
+            if (secondInitial > 0) {
+                unit.maceSecondSkillInitialTimer = this.time.delayedCall(
+                    secondInitial,
+                    () => {
+                        triggerMaceSecondSkill();
+                        unit.maceSecondSkillTimer = this.time.addEvent({
+                            delay: secondCooldown,
+                            loop: true,
+                            callback: triggerMaceSecondSkill,
+                        });
+                    }
+                );
+            } else {
+                triggerMaceSecondSkill();
+                unit.maceSecondSkillTimer = this.time.addEvent({
+                    delay: secondCooldown,
+                    loop: true,
+                    callback: triggerMaceSecondSkill,
+                });
+            }
+        }
+
+        unit.skills?.forEach((skill, index) => {
+            if (skill?.id === "mace_skill_second") {
+                return;
+            }
+            const cooldown = (skill.cooldown ?? 1) * 1000;
+            const initialCooldown = (skill.initialCooldown ?? 0) * 1000;
+
+            const useSkill = () => {
+                if (!unit || unit.dead) {
+                    return;
+                }
+
+                if (unit.isStunned) {
+                    return;
+                }
+
+                skill.execute(unit, this);
+            };
+
+            const createLoopTimer = () => {
+                const loopTimer = this.time.addEvent({
+                    delay: cooldown,
+                    loop: true,
+                    callback: useSkill,
+                });
+
+                unit.skillTimers[index] = {
+                    ...(unit.skillTimers[index] || {}),
+                    loopTimer,
+                };
+
+                if (index === 0) {
+                    unit.attackTimer = loopTimer;
+                }
+            };
+
+            if (initialCooldown > 0) {
+                const initialTimer = this.time.delayedCall(initialCooldown, () => {
+                    useSkill();
+                    createLoopTimer();
+                });
+
+                unit.skillTimers[index] = {
+                    ...(unit.skillTimers[index] || {}),
+                    initialTimer,
+                };
+
+                if (index === 0) {
+                    unit.initialAttackTimer = initialTimer;
+                }
+
+                return;
+            }
+
+            useSkill();
+            createLoopTimer();
+        });
     }
 
     attack(attacker) {
-        if (attacker.dead) {
+        if (!attacker || attacker.dead) {
+            return;
+        }
+
+        if (attacker.isStunned) {
             return;
         }
 
@@ -338,7 +461,7 @@ export default class BattleScene extends BaseScene {
         this.getAllUnits(this.playerGrid).forEach((hero) => {
             hero.view?.refresh();
         });
-
+        console.log(`Vừa nhận được item:`, defeatedUnit.dropItems);
         //console.log(`Đội hình nhận ${experienceReward} EXP mỗi hero và ${goldReward} gold`);
     }
 
@@ -346,11 +469,27 @@ export default class BattleScene extends BaseScene {
         if (!unit.dead) {
             return;
         }
+
         // Xóa khỏi BattleGrid
         unit.ownerGrid.grid[unit.row][unit.col] = null;
 
         // Xóa giao diện
         unit.view.destroy();
+
+        if (unit.skillTimers) {
+            Object.values(unit.skillTimers).forEach(({ initialTimer, loopTimer }) => {
+                initialTimer?.remove?.(false);
+                loopTimer?.remove?.(false);
+            });
+        }
+
+        if (unit.maceSecondSkillTimer) {
+            unit.maceSecondSkillTimer.remove(false);
+        }
+
+        if (unit.maceSecondSkillInitialTimer) {
+            unit.maceSecondSkillInitialTimer.remove(false);
+        }
 
         if (unit.attackTimer) {
             unit.attackTimer.remove(false);
@@ -360,46 +499,73 @@ export default class BattleScene extends BaseScene {
             unit.initialAttackTimer.remove(false);
         }
 
-        //console.log(`${unit.name} chết`);
-
-        if (unit.team === "enemy" && this.getAllUnits(this.enemyGrid).length === 0) {
+        if (
+            unit.team === "enemy" &&
+            this.getAllUnits(this.enemyGrid).length === 0
+        ) {
             this.advanceWave();
         }
     }
 
     advanceWave() {
+
         if (this.isTransitioning) {
             return;
         }
 
         this.isTransitioning = true;
+
         this.time.delayedCall(300, () => {
+
             this.isTransitioning = false;
 
-            const stage = STAGES[this.stageIndex];
+            // Còn wave trong stage hiện tại
+            if (
+                this.waveIndex + 1 <
+                this.currentStage.waves.length
+            ) {
 
-            if (this.waveIndex + 1 < stage.waves.length) {
                 this.waveIndex += 1;
+
                 this.spawnCurrentWave();
-                this.startGridAutoAttack(this.enemyGrid);
+
+                this.startGridAutoAttack(
+                    this.enemyGrid
+                );
+
                 return;
             }
 
+            // Hết wave -> sang stage random mới
             this.advanceStage();
+
         });
     }
 
     advanceStage() {
-        this.stageIndex += 1;
+
+        // Reset wave
         this.waveIndex = 0;
 
-        if (!STAGES[this.stageIndex]) {
-            this.handleVictory();
+        // Random stage mới
+        this.currentStage = this.getRandomStage();
+
+        if (!this.currentStage) {
             return;
         }
 
+        console.log(
+            "Next Random Stage:",
+            this.currentStage.id
+        );
+
+        // Spawn wave đầu tiên
         this.spawnCurrentWave();
-        this.startGridAutoAttack(this.enemyGrid);
+
+        // Cho monster bắt đầu đánh
+        this.startGridAutoAttack(
+            this.enemyGrid
+        );
     }
 
     handleVictory() {
@@ -525,5 +691,14 @@ export default class BattleScene extends BaseScene {
         showNextNumber();
     }
 
-    
+    getRandomStage() {
+
+        if (!this.stages || this.stages.length === 0) {
+            return null;
+        }
+
+        return Phaser.Utils.Array.GetRandom(this.stages);
+    }
+
+
 }

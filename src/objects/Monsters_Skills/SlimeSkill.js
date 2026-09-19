@@ -1,4 +1,4 @@
-import Skill from "../Hero_Skills/Skill";
+import Skill from "../Hero_Skills/Skill.js";
 
 export default class SlimeSkill extends Skill {
     constructor(config) {
@@ -70,7 +70,7 @@ export default class SlimeSkill extends Skill {
 
                 const damage = caster.attack_physical;
 
-                target.takeDamage(damage, caster);
+                target.takeDamage(damage, caster, "physical");
 
                 if (target.dead) {
                     battle.removeUnit(target);

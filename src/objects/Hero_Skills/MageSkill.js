@@ -1,4 +1,4 @@
-import Skill from "./Skill";
+import Skill from "./Skill.js";
 
 export default class MageSkill extends Skill {
     constructor(config) {
@@ -59,7 +59,7 @@ export default class MageSkill extends Skill {
                     return;
                 }
 
-                target.takeDamage(damage, caster);
+                target.takeDamage(damage, caster, "magic");
 
                 if (target.dead) {
                     battle.removeUnit(target);

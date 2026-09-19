@@ -92,7 +92,7 @@ export default class MapScene extends BaseScene {
                 onClick: () => {
                     
                     //console.log(map.title);
-                    this.heroSelectPopup.show(map.content);
+                    this.heroSelectPopup.show(map.content, map.id, map.title);
 
 
                 }

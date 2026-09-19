@@ -1,8 +1,8 @@
 import Phaser from "phaser";
-import BottomNavigation from "../ui/BottomNavigation";
-import HeroScreen from "./HeroScreen";
-import HeroDetailPopup from "./HeroDetailPopup";
-import ContentScene from "./ContentScene";
+import BottomNavigation from "../ui/BottomNavigation.js";
+import HeroScreen from "./HeroScreen.js";
+import HeroDetailPopup from "./HeroDetailPopup.js";
+import ContentScene from "./ContentScene.js";
 
 export default class GameScene extends Phaser.Scene {
     constructor() {

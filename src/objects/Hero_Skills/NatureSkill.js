@@ -1,4 +1,5 @@
-import Skill from "./Skill";
+import Skill from "./Skill.js";
+import Phaser from "phaser";
 
 export default class NatureSkill extends Skill {
     constructor(config) {
@@ -59,45 +60,93 @@ export default class NatureSkill extends Skill {
             return;
         }
 
+        // Lấy tất cả đồng minh còn sống
         const allies = battle.getAllUnits(battle.playerGrid).filter(
-            (unit) => unit && !unit.dead && unit.hp < unit.maxHp,
+            (unit) => unit && !unit.dead
         );
 
-        const target = allies.reduce((mostInjured, unit) => {
-            if (!mostInjured) {
-                return unit;
-            }
+        if (allies.length === 0) {
+            return;
+        }
 
-            return unit.maxHp - unit.hp > mostInjured.maxHp - mostInjured.hp
-                ? unit
-                : mostInjured;
-        }, null);
+        // =========================================================
+        // 1. Ưu tiên đồng minh đang thiếu HP nhiều nhất
+        // =========================================================
+        const injuredAllies = allies.filter(
+            (unit) => unit.hp < unit.maxHp
+        );
+
+        let target;
+
+        if (injuredAllies.length > 0) {
+
+            // Có người bị thương -> chọn người thiếu HP nhiều nhất
+            target = injuredAllies.reduce((mostInjured, unit) => {
+                if (!mostInjured) {
+                    return unit;
+                }
+
+                const missingHp = unit.maxHp - unit.hp;
+                const mostMissingHp =
+                    mostInjured.maxHp - mostInjured.hp;
+
+                return missingHp > mostMissingHp
+                    ? unit
+                    : mostInjured;
+            }, null);
+
+        } else {
+
+            // =====================================================
+            // 2. Tất cả đều đầy HP -> chọn ngẫu nhiên
+            // =====================================================
+            target = Phaser.Utils.Array.GetRandom(allies);
+        }
 
         if (!target || !target.view || !target.view.container) {
             return;
         }
 
+        // =========================================================
+        // 3. Lấy Nature Effect hiện tại của target
+        // =========================================================
         const currentEffect = this.activeStacks.get(target);
         const currentCount = currentEffect?.count || 0;
 
+        // Tăng stack, tối đa 3
         const newTotalStacks = Math.min(3, currentCount + 1);
+
         let effect = currentEffect;
 
+        // =========================================================
+        // 4. Nếu target chưa có Nature Effect
+        // =========================================================
         if (!effect) {
             const stackPosX = -32;
             const stackPosY = 0;
 
-            const icon = battle.add.image(stackPosX, stackPosY, "Nature_first_skill");
+            const icon = battle.add.image(
+                stackPosX,
+                stackPosY,
+                "Nature_first_skill"
+            );
+
             icon.setDisplaySize(24, 24);
             icon.setDepth(9);
 
-            const text = battle.add.text(stackPosX + 8, stackPosY + 6, `${newTotalStacks}`, {
-                fontSize: "14px",
-                fontStyle: "bold",
-                color: "#ffffff",
-                stroke: "#000000",
-                strokeThickness: 3,
-            });
+            const text = battle.add.text(
+                stackPosX + 8,
+                stackPosY + 6,
+                `${newTotalStacks}`,
+                {
+                    fontSize: "14px",
+                    fontStyle: "bold",
+                    color: "#ffffff",
+                    stroke: "#000000",
+                    strokeThickness: 3,
+                }
+            );
+
             text.setOrigin(0.5);
             text.setDepth(10);
 
@@ -109,43 +158,91 @@ export default class NatureSkill extends Skill {
                 count: newTotalStacks,
                 healEvent: null,
             };
+
         } else {
+
+            // =====================================================
+            // 5. Target đã có effect -> tăng stack
+            // =====================================================
             effect.count = newTotalStacks;
             effect.text.setText(`${newTotalStacks}`);
         }
 
+        // =========================================================
+        // 6. Reset timer hồi máu
+        // =========================================================
         if (effect.healEvent) {
             effect.healEvent.remove(false);
         }
 
-        let remainingTicks = 12;
+        let remainingTicks = 4; // 4 ticks, mỗi tick 1 giây
 
         effect.healEvent = battle.time.addEvent({
             delay: 1000,
-            repeat: 11,
+            repeat: 3,
+
             callback: () => {
+
+                // Target chết
                 if (target.dead) {
-                    if (effect.icon) effect.icon.destroy();
-                    if (effect.text) effect.text.destroy();
+
+                    if (effect.icon) {
+                        effect.icon.destroy();
+                    }
+
+                    if (effect.text) {
+                        effect.text.destroy();
+                    }
+
                     this.activeStacks.delete(target);
-                    if (effect.healEvent) effect.healEvent.remove(false);
+
+                    if (effect.healEvent) {
+                        effect.healEvent.remove(false);
+                    }
+
                     return;
                 }
 
-                // Lượng máu hồi mỗi nhịp
-                const healAmount = effect.count * 10; 
+                // =================================================
+                // Lượng HP hồi
+                // =================================================
+                const healAmount = effect.count * 10;
 
-                target.heal(healAmount);
-                target.view.refresh();
+                // Chỉ heal nếu đang thiếu HP
+                if (target.hp < target.maxHp) {
 
-                // Kích hoạt hiệu ứng nổi chữ +HP màu xanh lá cây
-                this.showFloatingHealText(battle, target, healAmount);
+                    const oldHp = target.hp;
+
+                    target.heal(healAmount);
+
+                    const actualHeal = target.hp - oldHp;
+
+                    if (actualHeal > 0) {
+                        target.view.refresh();
+
+                        this.showFloatingHealText(
+                            battle,
+                            target,
+                            actualHeal
+                        );
+                    }
+                }
 
                 remainingTicks -= 1;
 
+                // =================================================
+                // Hết 12 giây
+                // =================================================
                 if (remainingTicks <= 0) {
-                    if (effect.icon) effect.icon.destroy();
-                    if (effect.text) effect.text.destroy();
+
+                    if (effect.icon) {
+                        effect.icon.destroy();
+                    }
+
+                    if (effect.text) {
+                        effect.text.destroy();
+                    }
+
                     this.activeStacks.delete(target);
                 }
             },
@@ -153,6 +250,9 @@ export default class NatureSkill extends Skill {
 
         this.activeStacks.set(target, effect);
 
+        // =========================================================
+        // 7. Bắt đầu cooldown skill
+        // =========================================================
         this.startCooldown(currentTime);
     }
 }

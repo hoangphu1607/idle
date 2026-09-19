@@ -1,8 +1,8 @@
-import BaseScene from "./base/BaseScene";
+import BaseScene from "./base/BaseScene.js";
 
-import { CONTENTS } from "../assets/data/contents";
-import ContentCard from "../objects/ContentCard";
-import HeroSelectPopup from "../ui/HeroSelectPopup";
+import { CONTENTS } from "../assets/data/contents.js";
+import ContentCard from "../objects/ContentCard.js";
+import HeroSelectPopup from "../ui/HeroSelectPopup.js";
 
 export default class ContentScene extends BaseScene {
 
