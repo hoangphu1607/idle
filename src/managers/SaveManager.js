@@ -108,30 +108,21 @@ export default class SaveManager {
         }
     }
 
+    // SaveManager.js
     static loadHeroes(defaultHeroes = []) {
-
         const saveData = this.load();
         const savedHeroes = saveData.heroes || {};
 
-        const heroes = defaultHeroes.map((hero) => {
+        return defaultHeroes.map((hero) => {
             const savedHero = savedHeroes[String(hero.id)] || {};
-            const experience = savedHero.experience ?? hero.experience ?? 0;
 
             return {
-                ...hero,
-                ...savedHero,
-                experience
+                ...hero, // skills, stats, role... luôn lấy từ heroes.js
+                level: savedHero.level ?? hero.level ?? 1,
+                experience: savedHero.experience ?? hero.experience ?? 0,
+                equipment: savedHero.equipment ?? {},
             };
         });
-
-        if (Object.keys(savedHeroes).length === 0 && heroes.length > 0) {
-            saveData.heroes = Object.fromEntries(
-                heroes.map((hero) => [String(hero.id), hero])
-            );
-            this.save(saveData);
-        }
-
-        return heroes;
     }
 
     /**

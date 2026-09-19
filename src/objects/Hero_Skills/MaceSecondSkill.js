@@ -58,13 +58,15 @@ export default class MaceSecondSkill extends Skill {
         const originY = target.ownerGrid.container.y + target.view.container.y;
 
         const wave = battle.add.image(originX, originY, "Mace_second_skill")
-            .setOrigin(0.5)            
-            .setDisplaySize(90, 90);
+            .setOrigin(0.5)
+            .setDisplaySize(90, 90)
+            .setDepth(10);
 
         battle.tweens.add({
             targets: wave,
             alpha: 0,
-            scale: 1.4,
+            scaleX: wave.scaleX * 1.4,
+            scaleY: wave.scaleY * 1.4,
             duration: 450,
             ease: "Linear",
             onComplete: () => wave.destroy(),
@@ -78,7 +80,6 @@ export default class MaceSecondSkill extends Skill {
             }
 
             const damage = unit.takeDamage(baseDamage, caster, "physical");
-            debugger;
             if (damage && unit.team !== caster.team) {
                 unit.applyStun?.(5000);
                 console.log('Stunned', unit.name, 'for 5 seconds');
