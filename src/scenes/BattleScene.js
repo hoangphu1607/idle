@@ -9,7 +9,7 @@ export default class BattleScene extends BaseScene {
         super("BattleScene");
     }
     init(data) {
-        this.heroes = data.heroes || [];
+        this.heroes = (data.heroes || []).map((hero) => SaveManager.getEffectiveHero(hero));
         this.content = data.content;
         this.mapId = data.mapId || "jungle";
         this.mapName = data.mapName || this.mapId;
@@ -462,7 +462,6 @@ export default class BattleScene extends BaseScene {
             hero.view?.refresh();
         });
         console.log(`Vừa nhận được item:`, defeatedUnit.dropItems);
-        //console.log(`Đội hình nhận ${experienceReward} EXP mỗi hero và ${goldReward} gold`);
     }
 
     removeUnit(unit) {

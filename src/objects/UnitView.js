@@ -118,16 +118,25 @@ export default class UnitView {
         this.sprite.setInteractive({ useHandCursor: true });
 
         this.sprite.on("pointerup", () => {
-            if (this.unit.team === "enemy") {
-                // console.log("Monster stats", {
-                //     name: this.unit.name,
-                //     id: this.unit.id,
-                //     tier: this.unit.tier,
-                //     baseStats: this.unit.baseStats,
-                //     tierMultiplier: this.unit.tierMultiplier,
-                //     finalStats: this.unit.finalStats,
-                // });
-            }
+            const unitInfo = this.unit.team === "player"
+                ? SaveManager.getEffectiveHero(this.unit)
+                : this.unit;
+
+            console.log("Hero info:", {
+                id: unitInfo.id,
+                name: unitInfo.name,
+                role: unitInfo.role || "-",
+                level: unitInfo.level || 1,
+                team: unitInfo.team,
+                hp: unitInfo.hp,
+                maxHp: unitInfo.maxHp ?? unitInfo.hp,
+                mp: unitInfo.mp,
+                maxMp: unitInfo.maxMp ?? unitInfo.mp,
+                attack_physical: unitInfo.attack_physical || 0,
+                attack_magic: unitInfo.attack_magic || 0,
+                armor: unitInfo.armor ?? unitInfo.defense ?? 0,
+                magic_resistance: unitInfo.magic_resistance || 0,
+            });
         });
 
     }

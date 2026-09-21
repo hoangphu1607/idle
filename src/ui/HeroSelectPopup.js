@@ -34,6 +34,8 @@ export default class HeroSelectPopup {
             0x000000,
             0.6
         ).setOrigin(0);
+        // Chặn click xuyên xuống MapCard / ContentCard / BottomNavigation
+        overlay.setInteractive();
 
         const panel = this.scene.add.rectangle(
             this.scene.scale.width / 2,
@@ -42,6 +44,8 @@ export default class HeroSelectPopup {
             this.panelHeight,
             0xffffff
         );
+        // Click vào khoảng trắng của panel cũng không làm gì cả
+        panel.setInteractive();
 
         const title = this.scene.add.text(
             this.scene.scale.width / 2,
@@ -52,11 +56,38 @@ export default class HeroSelectPopup {
                 color: "#000"
             }
         ).setOrigin(0.5);
+        // Nút X đóng popup
+        const closeButton = this.scene.add.text(
+            this.scene.scale.width / 2 + this.panelWidth / 2 - 20,
+            this.scene.scale.height / 2 - this.panelHeight / 2 + 20,
+            "×",
+            {
+                fontSize: "30px",
+                color: "#000000",
+                fontStyle: "bold",
+                padding: { x: 8, y: 4 } // mở rộng vùng bấm cho dễ trúng
+            }
+        ).setOrigin(0.5);
+
+        closeButton.setInteractive({ useHandCursor: true });
+
+        closeButton.on("pointerover", () => {
+            closeButton.setColor("#ff0000");
+        });
+
+        closeButton.on("pointerout", () => {
+            closeButton.setColor("#000000");
+        });
+
+        closeButton.on("pointerup", () => {
+            this.hide();
+        });
 
         this.container.add([
             overlay,
             panel,
-            title
+            title,
+            closeButton
         ]);
         this.txtCount = this.scene.add.text(
             500,

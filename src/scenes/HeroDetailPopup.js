@@ -1,6 +1,7 @@
 import SaveManager from "../managers/SaveManager";
 import items from "../assets/data/item";
 import Phaser from "phaser";
+import { HERO_SKILL_INFO, CLASS_LABELS } from "../assets/data/heroSkills.js";
 export default class HeroDetailPopup {
 
     constructor(scene) {
@@ -17,8 +18,6 @@ export default class HeroDetailPopup {
         this.container.setDepth(9999);
 
         this.activeTab = "inventory";
-        this.skillPanel = null;
-        this.tabButtons = {};
 
         // =========================
         // Kích thước Popup
@@ -157,12 +156,13 @@ export default class HeroDetailPopup {
         this.inventorySlots = [];
 
         this.createInventoryGrid();
+        this.tabs = {};
+        this.tabObjects = [];
+
+        this.skillContainer = scene.add.container(0, 0);
+        this.skillContainer.setVisible(false);
         this.createTabs();
 
-        this.container.add(this.inventoryContainer);
-        Object.values(this.tabButtons).forEach((btn) => {
-            this.container.add([btn.background, btn.text]);
-        });
 
         // =========================
         // Stats
@@ -260,10 +260,207 @@ export default class HeroDetailPopup {
 
             ...Object.values(this.statTexts),
             this.inventoryContainer,
+            ...this.tabObjects,
+            this.skillContainer,
             closeButton
         ]);
     }
 
+    // =====================================================
+    // Tabs
+    // =====================================================
+
+    createTabs() {
+
+        const tabWidth = 120;
+        const tabHeight = 30;
+        const gap = 6;
+
+        const startX = this.cx - 240;
+        const y = this.cy - 217;
+
+        const defs = [
+            { id: "inventory", label: "Inventory" },
+            { id: "skill", label: "Skill" }
+        ];
+
+        defs.forEach((def, index) => {
+
+            const x = startX + index * (tabWidth + gap);
+
+            const bg = this.scene.add.rectangle(
+                x,
+                y,
+                tabWidth,
+                tabHeight,
+                0xdddddd
+            )
+                .setOrigin(0)
+                .setStrokeStyle(1, 0x888888)
+                .setInteractive({ useHandCursor: true });
+
+            const label = this.scene.add.text(
+                x + tabWidth / 2,
+                y + tabHeight / 2,
+                def.label,
+                {
+                    fontSize: "16px",
+                    color: "#000000",
+                    fontStyle: "bold"
+                }
+            ).setOrigin(0.5);
+
+            bg.on("pointerup", (pointer) => {
+                if (pointer.event) {
+                    pointer.event.stopPropagation();
+                }
+                this.setTab(def.id);
+            });
+
+            this.tabs[def.id] = { bg, label };
+            this.tabObjects.push(bg, label);
+        });
+
+        this.setTab("inventory");
+    }
+
+    setTab(tabId) {
+
+        this.activeTab = tabId;
+        this.hideItemMenu();
+
+        Object.entries(this.tabs).forEach(([id, tab]) => {
+            const active = id === tabId;
+
+            tab.bg.setFillStyle(active ? 0x3366cc : 0xdddddd);
+            tab.label.setColor(active ? "#ffffff" : "#000000");
+        });
+
+        // Container ẩn thì các object bên trong cũng không nhận click/drop
+        this.inventoryContainer.setVisible(tabId === "inventory");
+        this.skillContainer.setVisible(tabId === "skill");
+    }
+
+    renderSkills(hero) {
+
+        this.skillContainer.removeAll(true);
+
+        const startX = this.cx - 240;
+        const startY = this.cy - 170;
+        const rowWidth = 504;
+        const rowHeight = 96;
+        const gap = 8;
+
+        // Tiêu đề class
+        const classLabel = CLASS_LABELS[hero.role] || hero.role || "-";
+
+        this.skillContainer.add(
+            this.scene.add.text(
+                startX,
+                startY,
+                `Class: ${classLabel}`,
+                {
+                    fontSize: "18px",
+                    color: "#000000",
+                    fontStyle: "bold"
+                }
+            )
+        );
+
+        const skills = hero.skills || [];
+
+        if (skills.length === 0) {
+            this.skillContainer.add(
+                this.scene.add.text(
+                    startX,
+                    startY + 34,
+                    "Class này chưa có skill",
+                    { fontSize: "16px", color: "#666666" }
+                )
+            );
+            return;
+        }
+
+        skills.forEach((skillData, index) => {
+
+            const info = HERO_SKILL_INFO[skillData.id] || {
+                name: skillData.id,
+                icon: null,
+                description: ""
+            };
+
+            const y = startY + 34 + index * (rowHeight + gap);
+
+            const bg = this.scene.add.rectangle(
+                startX,
+                y,
+                rowWidth,
+                rowHeight,
+                0xf0f0f0
+            )
+                .setOrigin(0)
+                .setStrokeStyle(1, 0x888888);
+
+            const iconFrame = this.scene.add.rectangle(
+                startX + 10,
+                y + 10,
+                76,
+                76,
+                0xffffff
+            )
+                .setOrigin(0)
+                .setStrokeStyle(2, 0xe5c07b);
+
+            const objects = [bg, iconFrame];
+
+            if (info.icon && this.scene.textures.exists(info.icon)) {
+                const icon = this.scene.add.image(
+                    startX + 48,
+                    y + 48,
+                    info.icon
+                );
+
+                icon.setDisplaySize(64, 64);
+                objects.push(icon);
+            }
+
+            const name = this.scene.add.text(
+                startX + 100,
+                y + 10,
+                info.name,
+                {
+                    fontSize: "18px",
+                    color: "#000000",
+                    fontStyle: "bold"
+                }
+            );
+
+            const cooldown = this.scene.add.text(
+                startX + rowWidth - 10,
+                y + 12,
+                `CD: ${skillData.cooldown ?? "-"}s`,
+                {
+                    fontSize: "14px",
+                    color: "#555555"
+                }
+            ).setOrigin(1, 0);
+
+            const description = this.scene.add.text(
+                startX + 100,
+                y + 38,
+                info.description,
+                {
+                    fontSize: "14px",
+                    color: "#333333",
+                    wordWrap: { width: rowWidth - 115 }
+                }
+            );
+
+            objects.push(name, cooldown, description);
+
+            this.skillContainer.add(objects);
+        });
+    }
     createEquipmentSlots() {
 
         const startX = this.cx + 25;
@@ -336,250 +533,20 @@ export default class HeroDetailPopup {
         this.statTexts[key] = text;
     }
 
-    createTabs() {
-        const tabY = this.cy - 440;
-        const tabWidth = 120;
-        const tabHeight = 32;
-        const tabGap = 16;
-        const startX = this.cx - 180;
-
-        const tabData = [
-            { key: "inventory", label: "Inventory" },
-            { key: "skills", label: "Skills" }
-        ];
-
-        tabData.forEach(({ key, label }, index) => {
-            const x = startX + index * (tabWidth + tabGap);
-
-            const background = this.scene.add.rectangle(
-                x,
-                tabY,
-                tabWidth,
-                tabHeight,
-                key === this.activeTab ? 0x6fa8dc : 0x2c3e50,
-                1
-            );
-
-            const text = this.scene.add.text(
-                x,
-                tabY,
-                label,
-                {
-                    fontSize: "15px",
-                    color: "#ffffff",
-                    fontStyle: "bold"
-                }
-            ).setOrigin(0.5);
-
-            background.setInteractive({ useHandCursor: true });
-            background.on("pointerup", () => {
-                this.setActiveTab(key);
-            });
-
-            this.tabButtons[key] = { background, text };
-            this.container.add([background, text]);
-        });
-    }
-
-    setActiveTab(tabKey) {
-        this.activeTab = tabKey;
-
-        Object.entries(this.tabButtons).forEach(([key, btn]) => {
-            btn.background.setFillStyle(key === tabKey ? 0x6fa8dc : 0x2c3e50, 1);
-        });
-
-        if (this.inventoryContainer) {
-            this.inventoryContainer.setVisible(tabKey === "inventory");
-        }
-
-        if (this.skillPanel) {
-            this.skillPanel.setVisible(tabKey === "skills");
-        }
-
-        if (tabKey === "skills") {
-            this.renderSkillPanel();
-        }
-    }
-
-    getSkillAssetName(skillId) {
-        const map = {
-            mace_skill_first: "Mace_first_skill",
-            mace_skill_second: "Mace_second_skill",
-            mage_skill_first: "Mage_first_skill",
-            mage_skill_second: "Mage_second_skill_area",
-            nature_skill_first: "Nature_first_skill",
-            nature_skill_second: "Nature_second_skill",
-        };
-
-        return map[skillId] || "Mage_first_skill";
-    }
-
-    getHeroSkillLevels(hero) {
-        const saveData = SaveManager.load();
-        const heroSave = saveData.heroes?.[String(hero.id)] || {};
-        const skillLevels = heroSave.skillLevels || {};
-
-        return (hero.skills || []).map((skill) => ({
-            ...skill,
-            currentLevel: Number(skillLevels[skill.id] || 0),
-            icon: this.getSkillAssetName(skill.id),
-        }));
-    }
-
-    renderSkillPanel() {
-        if (!this.currentHero) {
-            return;
-        }
-
-        if (!this.skillPanel) {
-            const panelWidth = 500;
-            const panelHeight = 330;
-            const panelX = this.cx;
-            const panelY = this.cy + 20;
-
-            this.skillPanel = this.scene.add.container(panelX - panelWidth / 2, panelY - panelHeight / 2);
-            this.skillPanel.setVisible(false);
-            this.container.add(this.skillPanel);
-
-            const bg = this.scene.add.rectangle(
-                panelWidth / 2,
-                panelHeight / 2,
-                panelWidth,
-                panelHeight,
-                0xf5f5f5,
-                0.95
-            );
-            bg.setStrokeStyle(2, 0x999999);
-            this.skillPanel.add(bg);
-        }
-
-        this.skillPanel.removeAll(true);
-
-        const bg = this.scene.add.rectangle(
-            250,
-            165,
-            500,
-            330,
-            0xf5f5f5,
-            0.95
-        );
-        bg.setStrokeStyle(2, 0x999999);
-        this.skillPanel.add(bg);
-
-        const skillList = this.getHeroSkillLevels(this.currentHero);
-        const startY = 30;
-        const rowHeight = 70;
-
-        skillList.forEach((skill, index) => {
-            const rowY = startY + index * rowHeight;
-            const rowBg = this.scene.add.rectangle(
-                250,
-                rowY + 25,
-                470,
-                58,
-                0xe8eef7,
-                0.8
-            );
-            rowBg.setStrokeStyle(1, 0xc0cbd8);
-            this.skillPanel.add(rowBg);
-
-            const icon = this.scene.add.image(
-                45,
-                rowY + 25,
-                skill.icon
-            );
-            icon.setDisplaySize(40, 40);
-            this.skillPanel.add(icon);
-
-            const nameText = this.scene.add.text(
-                80,
-                rowY + 10,
-                `${skill.name || skill.id}`,
-                {
-                    fontSize: "15px",
-                    color: "#000000",
-                    fontStyle: "bold"
-                }
-            );
-            this.skillPanel.add(nameText);
-
-            const levelText = this.scene.add.text(
-                80,
-                rowY + 32,
-                `Lv ${skill.currentLevel}`,
-                {
-                    fontSize: "13px",
-                    color: "#3b5f8d"
-                }
-            );
-            this.skillPanel.add(levelText);
-
-            const cost = 25 + skill.currentLevel * 20;
-            const upgradeButton = this.scene.add.container(370, rowY + 25);
-            const buttonBg = this.scene.add.rectangle(0, 0, 100, 32, 0x4caf50, 1);
-            const buttonText = this.scene.add.text(0, 0, `+ Lv (${cost})`, {
-                fontSize: "13px",
-                color: "#ffffff",
-                fontStyle: "bold"
-            }).setOrigin(0.5);
-
-            buttonBg.setInteractive({ useHandCursor: true });
-            buttonBg.on("pointerup", () => {
-                this.upgradeSkill(skill.id, cost);
-            });
-
-            upgradeButton.add([buttonBg, buttonText]);
-            this.skillPanel.add(upgradeButton);
-        });
-
-        this.skillPanel.setVisible(this.activeTab === "skills");
-    }
-
-    upgradeSkill(skillId, cost) {
-        if (!this.currentHero) {
-            return;
-        }
-
-        const saveData = SaveManager.load();
-        const heroKey = String(this.currentHero.id);
-        const savedHero = saveData.heroes[heroKey] || {};
-        const skillLevels = savedHero.skillLevels || {};
-        const currentLevel = Number(skillLevels[skillId] || 0);
-
-        if (saveData.player.gold < cost) {
-            return;
-        }
-
-        saveData.player.gold = Number(saveData.player.gold || 0) - cost;
-        skillLevels[skillId] = currentLevel + 1;
-        savedHero.skillLevels = skillLevels;
-        saveData.heroes[heroKey] = {
-            ...savedHero,
-            level: savedHero.level ?? this.currentHero.level ?? 1,
-            experience: savedHero.experience ?? this.currentHero.experience ?? 0,
-            equipment: savedHero.equipment || {},
-        };
-
-        SaveManager.save(saveData);
-        this.renderSkillPanel();
-    }
-
     show(hero) {
 
         this.currentHero = hero;
         this.hideItemMenu();
-        this.activeTab = "inventory";
-
-        if (this.inventoryContainer) {
-            this.inventoryContainer.setVisible(true);
-        }
 
         const savedHero = SaveManager.loadHero(hero.id) || {};
         const saveData = SaveManager.load();
         const inventory = saveData.inventory || [];
+        const effectiveHero = SaveManager.getEffectiveHero(hero);
 
         this.renderInventory(inventory);
         this.renderEquipment(savedHero.equipment || {});
+        this.renderSkills(hero);
+        this.setTab("inventory");
 
         this.avatar.setTexture(hero.avatar);
         this.name.setText(hero.name || "Unknown");
@@ -594,30 +561,29 @@ export default class HeroDetailPopup {
         );
 
         this.statTexts.attack_physical.setText(
-            `Physic Dame: ${hero.attack_physical || 0}`
+            `Physic Dame: ${effectiveHero.attack_physical || 0}`
         );
 
         this.statTexts.attack_magic.setText(
-            `Mage Dame: ${hero.attack_magic || 0}`
+            `Mage Dame: ${effectiveHero.attack_magic || 0}`
         );
 
         this.statTexts.defense.setText(
-            `Armor: ${hero.defense || 0}`
+            `Armor: ${effectiveHero.armor ?? effectiveHero.defense ?? 0}`
         );
 
         this.statTexts.magic_resistance.setText(
-            `Magic resistance: ${hero.magic_resistance || 0}`
+            `Magic resistance: ${effectiveHero.magic_resistance || 0}`
         );
 
         this.statTexts.hp.setText(
-            `HP: ${hero.hp || 0}`
+            `HP: ${effectiveHero.hp || 0}`
         );
 
         this.statTexts.mp.setText(
-            `MP: ${hero.mp || 0}`
+            `MP: ${effectiveHero.mp || 0}`
         );
 
-        this.setActiveTab(this.activeTab);
         this.container.setVisible(true);
     }
 
@@ -628,6 +594,32 @@ export default class HeroDetailPopup {
 
     isStackableEquipmentSlot(slotType) {
         return slotType === "potion" || slotType === "food";
+    }
+
+    isWeaponClassCompatible(itemData, hero = this.currentHero) {
+        if (!itemData || !hero) {
+            return true;
+        }
+
+        if (itemData.type !== "weapon") {
+            return true;
+        }
+
+        const requiredClass = String(itemData.weaponClass || itemData.class || itemData.heroClass || "").trim();
+
+        if (!requiredClass) {
+            return true;
+        }
+
+        const candidateClasses = [
+            hero.name,
+            hero.className,
+            hero.role,
+            hero.heroClass,
+            hero.class,
+        ].filter(Boolean).map(value => String(value).trim());
+
+        return candidateClasses.some(className => className.toLowerCase() === requiredClass.toLowerCase());
     }
 
     getEquipmentEntry(equipment = {}, slotType) {
@@ -870,8 +862,8 @@ export default class HeroDetailPopup {
                     equipmentSlotType: slotType
                 });
             } else {
-                const targetSlot = itemData.type === "potion" || itemData.type === "consumable" 
-                    ? "potion" 
+                const targetSlot = itemData.type === "potion" || itemData.type === "consumable"
+                    ? "potion"
                     : (itemData.type === "food" ? "food" : itemData.type);
                 this.equipItem(itemData, targetSlot);
             }
@@ -926,7 +918,7 @@ export default class HeroDetailPopup {
 
     sellItem(itemData, isEquipped = false, slotType = null) {
         const saveData = SaveManager.load();
-        const price = itemData.price || itemData.gold || 10;
+        const price = itemData.sell_price ? itemData.sell_price : 10; // Giá bán mặc định nếu không có sell_price
 
         if (isEquipped && slotType) {
             this.unequipItem({
@@ -1018,7 +1010,9 @@ export default class HeroDetailPopup {
             ))
         );
 
-        if (!isCompatibleType) {
+        const isClassCompatible = this.isWeaponClassCompatible(itemData, this.currentHero);
+
+        if (!isCompatibleType || !isClassCompatible) {
             return;
         }
 
@@ -1032,8 +1026,33 @@ export default class HeroDetailPopup {
             return;
         }
 
+        // 1. Slot phải tồn tại và item phải đúng loại
+        const validSlotTypes = this.equipmentSlots.map(slot => slot.slotType);
+
+        if (!validSlotTypes.includes(slotType)) {
+            return;
+        }
+
+        const isStackableSlot = this.isStackableEquipmentSlot(slotType);
+
+        const isCompatible = isStackableSlot
+            ? ["potion", "food", "consumable"].includes(itemData.type)
+            : itemData.type === slotType;
+
+        if (!isCompatible) {
+            return;
+        }
+
+        if (slotType === "weapon" && !this.isWeaponClassCompatible(itemData, this.currentHero)) {
+            console.warn(`Vũ khí ${itemData.name} không phù hợp với hero ${this.currentHero.name}`);
+            return;
+        }
+
         const saveData = SaveManager.load();
-        const inventory = saveData.inventory || [];
+        saveData.heroes = saveData.heroes || {};
+        saveData.inventory = saveData.inventory || [];
+
+        const inventory = saveData.inventory;
         const inventoryItem = inventory.find(
             item => item.itemId === itemData.id
         );
@@ -1047,20 +1066,28 @@ export default class HeroDetailPopup {
         const equipment = {
             ...(savedHero.equipment || {})
         };
+
         const currentEntry = this.getEquipmentEntry(equipment, slotType);
         const previousItemId = currentEntry.itemId;
-        const isStackableSlot = this.isStackableEquipmentSlot(slotType);
+        const isSameItem = previousItemId === itemData.id;
+
+        // 2. Slot không xếp chồng mà đã mặc đúng món này -> không làm gì
+        if (!isStackableSlot && isSameItem) {
+            return;
+        }
+
         const maxEquippedQuantity = isStackableSlot ? 10 : 1;
-        const currentQuantity = currentEntry.itemId === itemData.id ? currentEntry.quantity : 0;
+        const currentQuantity = isSameItem ? currentEntry.quantity : 0;
         const availableSpace = Math.max(0, maxEquippedQuantity - currentQuantity);
         const transferQuantity = isStackableSlot
             ? Math.min(inventoryItem.quantity, availableSpace)
             : 1;
 
-        if (transferQuantity <= 0 || inventoryItem.quantity < transferQuantity) {
+        if (transferQuantity <= 0) {
             return;
         }
 
+        // 3. Trừ đồ trong túi
         inventoryItem.quantity -= transferQuantity;
 
         if (inventoryItem.quantity <= 0) {
@@ -1069,29 +1096,27 @@ export default class HeroDetailPopup {
             );
         }
 
-        if (previousItemId && previousItemId !== itemData.id) {
+        // 4. Trả TOÀN BỘ món cũ (đúng số lượng) về túi khi đổi sang món khác
+        if (previousItemId && !isSameItem) {
             const previousInventoryItem = saveData.inventory.find(
                 item => item.itemId === previousItemId
             );
 
             if (previousInventoryItem) {
-                previousInventoryItem.quantity += 1;
+                previousInventoryItem.quantity += currentEntry.quantity;
             } else {
                 saveData.inventory.push({
                     itemId: previousItemId,
-                    quantity: 1
+                    quantity: currentEntry.quantity
                 });
             }
         }
 
+        // 5. Ghi vào slot
         if (isStackableSlot) {
-            const nextQuantity = currentEntry.itemId === itemData.id
-                ? currentQuantity + transferQuantity
-                : transferQuantity;
-
             equipment[slotType] = {
                 itemId: itemData.id,
-                quantity: nextQuantity
+                quantity: currentQuantity + transferQuantity
             };
         } else {
             equipment[slotType] = itemData.id;

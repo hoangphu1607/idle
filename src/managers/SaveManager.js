@@ -1,3 +1,5 @@
+import items from "../assets/data/item.js";
+
 export default class SaveManager {
 
     static STORAGE_KEY = "idle_game_save";
@@ -264,6 +266,70 @@ export default class SaveManager {
         saveData.version = this.VERSION;
 
         return saveData;
+    }
+
+    static getHeroEquipment(heroId) {
+        const savedHero = this.loadHero(heroId) || {};
+        return savedHero.equipment || {};
+    }
+
+    static getEffectiveHero(hero) {
+        if (!hero) {
+            return hero;
+        }
+
+        const equipment = this.getHeroEquipment(hero.id);
+        const bonusStats = {
+            attack_physical: 0,
+            attack_magic: 0,
+            armor: 0,
+            defense: 0,
+            magic_resistance: 0,
+            hp: 0,
+            mp: 0,
+            speed: 0,
+            threat: 0
+        };
+
+        Object.values(equipment).forEach((entry) => {
+            const itemId = typeof entry === "string"
+                ? entry
+                : entry?.itemId;
+
+            if (!itemId) {
+                return;
+            }
+
+            const itemData = items.find((item) => item.id === itemId);
+
+            if (!itemData || !itemData.stats) {
+                return;
+            }
+
+            Object.entries(itemData.stats).forEach(([key, value]) => {
+                if (bonusStats[key] !== undefined) {
+                    bonusStats[key] += Number(value) || 0;
+                }
+            });
+        });
+
+        const baseArmor = Number(hero.armor ?? hero.defense ?? 0);
+        const baseDefense = Number(hero.defense ?? 0);
+
+        return {
+            ...hero,
+            attack_physical: Number(hero.attack_physical || 0) + bonusStats.attack_physical,
+            attack_magic: Number(hero.attack_magic || 0) + bonusStats.attack_magic,
+            armor: baseArmor + bonusStats.armor,
+            defense: baseDefense + bonusStats.defense,
+            magic_resistance: Number(hero.magic_resistance || 0) + bonusStats.magic_resistance,
+            hp: Number(hero.hp || 0) + bonusStats.hp,
+            maxHp: Number(hero.maxHp ?? hero.hp ?? 0) + bonusStats.hp,
+            mp: Number(hero.mp || 0) + bonusStats.mp,
+            maxMp: Number(hero.maxMp ?? hero.mp ?? 0) + bonusStats.mp,
+            speed: Number(hero.speed || 100) + bonusStats.speed,
+            threat: Number(hero.threat || 1) + bonusStats.threat,
+        };
     }
 
     static loadHero(heroId) {

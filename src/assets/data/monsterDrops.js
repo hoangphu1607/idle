@@ -8,8 +8,20 @@ export const MONSTER_DROPS = {
             maxQuantity: 3
         },
         {
-            itemId: "iron_sword",
-            chance: 0.1,
+            itemId: "mace",
+            chance: 1,
+            minQuantity: 1,
+            maxQuantity: 1
+        },
+        {
+            itemId: "fire_staff",
+            chance: 1,
+            minQuantity: 1,
+            maxQuantity: 1
+        },
+        {
+            itemId: "nature_staff",
+            chance: 1,
             minQuantity: 1,
             maxQuantity: 1
         },

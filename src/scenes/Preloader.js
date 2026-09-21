@@ -36,6 +36,7 @@ export default class Preloader extends Phaser.Scene {
         this.load.image("text-1", "src/assets/ui/text-1.png");
         this.load.image("text-2", "src/assets/ui/text-2.png");
         this.load.image("text-3", "src/assets/ui/text-3.png");
+        this.load.image("icon_bag", "src/assets/ui/bag.png");
 
 
         //Monster
@@ -75,6 +76,9 @@ export default class Preloader extends Phaser.Scene {
         this.load.image("item_health_potion", "src/assets/item/item_health_potion.png");
         this.load.image("rare_gem", "src/assets/item/rare_gem.png");
         this.load.image("item_slime_essence", "src/assets/item/slime_essence.png");
+        this.load.image("item_mace", "src/assets/item/item_mace.png");
+        this.load.image("item_fire_staff", "src/assets/item/item_fire_staff.png");
+        this.load.image("item_nature_staff", "src/assets/item/item_nature_staff.png");
 
         //effect
         this.load.image("effect_stun", "src/assets/effect/effect_stun.png");

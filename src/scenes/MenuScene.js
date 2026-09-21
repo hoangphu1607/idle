@@ -39,8 +39,21 @@ export default class MenuScene extends BaseScene  {
             }
         });
 
-        this.menuContainer.add(btnPlay.container);
+        const btnInventory = new MenuButton(this, {
+            x: 40,
+            y: 200,
+            width: width_device - 80,
+            height: 80,
+            icon: "icon_bag",
+            text: "Inventory",
+            onClick: () => {
+                //console.log("Inventory");
+                this.scene.start("InventoryScene");
+            }
+        });
 
+        this.menuContainer.add(btnPlay.container);
+        this.menuContainer.add(btnInventory.container);
 
     }
 
