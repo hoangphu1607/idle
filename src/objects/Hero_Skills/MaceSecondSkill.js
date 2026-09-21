@@ -81,8 +81,8 @@ export default class MaceSecondSkill extends Skill {
 
             const damage = unit.takeDamage(baseDamage, caster, "physical");
             if (damage && unit.team !== caster.team) {
-                unit.applyStun?.(5000);
-                console.log('Stunned', unit.name, 'for 5 seconds');
+                unit.applyStun?.(2000);
+                console.log('Stunned', unit.name, 'for 2 seconds');
             }
 
             if (unit.dead) {

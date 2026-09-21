@@ -147,7 +147,14 @@ export default class Unit {
             this.isStunned = false;
             this.stunUntil = 0;
             this.stunTimer = null;
+            if (this.view) {
+                this.view.refresh();
+            }
         });
+
+        if (this.view) {
+            this.view.refresh();
+        }
     }
 
     heal(value) {

@@ -29,6 +29,14 @@ export default class UnitView {
             this.cellSize - 8
         );
 
+        this.stunIcon = this.scene.add.image(
+            this.cellSize / 2 - 8,
+            -this.cellSize / 2 + 8,
+            "effect_stun"
+        );
+        this.stunIcon.setDisplaySize(18, 18);
+        this.stunIcon.setVisible(false);
+
         this.hasManaBar = this.unit.team !== "enemy";
 
         if (this.hasManaBar) {
@@ -92,8 +100,8 @@ export default class UnitView {
         this.container.add([
             this.hpBg,
             this.hpBar,
-
             this.sprite,
+            this.stunIcon,
             //this.level
         ]);
 
@@ -141,6 +149,10 @@ export default class UnitView {
         const hpPercent = this.unit.hp / this.unit.maxHp;
 
         this.hpBar.width = this.cellSize * hpPercent;
+
+        if (this.stunIcon) {
+            this.stunIcon.setVisible(Boolean(this.unit.isStunned));
+        }
 
         if (this.hasManaBar) {
             const mpPercent = this.unit.mp / this.unit.maxMp;

@@ -44,11 +44,19 @@ export default class Preloader extends Phaser.Scene {
         this.load.image("monster_orc", "src/assets/monster/monster_orc.png");
 
         //Hero Skills
-        this.load.image("Mage_first_skill", "src/assets/Heros_Skills/Mage_first_skill.png");
+        //*------------Mace------------
         this.load.image("Mace_first_skill", "src/assets/Heros_Skills/Mace_first_skill.png");
-        this.load.image("Nature_first_skill", "src/assets/Heros_Skills/Nature_first_skill.png");
-
         this.load.image("Mace_second_skill", "src/assets/Heros_Skills/Mace_second_skill.png");
+        
+        //*------------Mage------------
+        this.load.image("Mage_first_skill", "src/assets/Heros_Skills/Mage_first_skill.png");
+        this.load.image("Mage_second_skill_falling", "src/assets/Heros_Skills/Mage_second_skill_falling.jpg");
+        this.load.image("Mage_second_skill_area", "src/assets/Heros_Skills/Mage_second_skill_area.png");
+        
+        //*------------Nature------------
+        this.load.image("Nature_first_skill", "src/assets/Heros_Skills/Nature_first_skill.png");
+        this.load.image("Nature_second_skill", "src/assets/Heros_Skills/Nature_second_skill.png");
+
 
 
         //Monsters_Skills
@@ -67,6 +75,9 @@ export default class Preloader extends Phaser.Scene {
         this.load.image("item_health_potion", "src/assets/item/item_health_potion.png");
         this.load.image("rare_gem", "src/assets/item/rare_gem.png");
         this.load.image("item_slime_essence", "src/assets/item/slime_essence.png");
+
+        //effect
+        this.load.image("effect_stun", "src/assets/effect/effect_stun.png");
 
     }
 

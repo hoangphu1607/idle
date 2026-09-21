@@ -16,6 +16,10 @@ export default class HeroDetailPopup {
         this.container.setVisible(false);
         this.container.setDepth(9999);
 
+        this.activeTab = "inventory";
+        this.skillPanel = null;
+        this.tabButtons = {};
+
         // =========================
         // Kích thước Popup
         // =========================
@@ -153,6 +157,12 @@ export default class HeroDetailPopup {
         this.inventorySlots = [];
 
         this.createInventoryGrid();
+        this.createTabs();
+
+        this.container.add(this.inventoryContainer);
+        Object.values(this.tabButtons).forEach((btn) => {
+            this.container.add([btn.background, btn.text]);
+        });
 
         // =========================
         // Stats
@@ -326,10 +336,243 @@ export default class HeroDetailPopup {
         this.statTexts[key] = text;
     }
 
+    createTabs() {
+        const tabY = this.cy - 440;
+        const tabWidth = 120;
+        const tabHeight = 32;
+        const tabGap = 16;
+        const startX = this.cx - 180;
+
+        const tabData = [
+            { key: "inventory", label: "Inventory" },
+            { key: "skills", label: "Skills" }
+        ];
+
+        tabData.forEach(({ key, label }, index) => {
+            const x = startX + index * (tabWidth + tabGap);
+
+            const background = this.scene.add.rectangle(
+                x,
+                tabY,
+                tabWidth,
+                tabHeight,
+                key === this.activeTab ? 0x6fa8dc : 0x2c3e50,
+                1
+            );
+
+            const text = this.scene.add.text(
+                x,
+                tabY,
+                label,
+                {
+                    fontSize: "15px",
+                    color: "#ffffff",
+                    fontStyle: "bold"
+                }
+            ).setOrigin(0.5);
+
+            background.setInteractive({ useHandCursor: true });
+            background.on("pointerup", () => {
+                this.setActiveTab(key);
+            });
+
+            this.tabButtons[key] = { background, text };
+            this.container.add([background, text]);
+        });
+    }
+
+    setActiveTab(tabKey) {
+        this.activeTab = tabKey;
+
+        Object.entries(this.tabButtons).forEach(([key, btn]) => {
+            btn.background.setFillStyle(key === tabKey ? 0x6fa8dc : 0x2c3e50, 1);
+        });
+
+        if (this.inventoryContainer) {
+            this.inventoryContainer.setVisible(tabKey === "inventory");
+        }
+
+        if (this.skillPanel) {
+            this.skillPanel.setVisible(tabKey === "skills");
+        }
+
+        if (tabKey === "skills") {
+            this.renderSkillPanel();
+        }
+    }
+
+    getSkillAssetName(skillId) {
+        const map = {
+            mace_skill_first: "Mace_first_skill",
+            mace_skill_second: "Mace_second_skill",
+            mage_skill_first: "Mage_first_skill",
+            mage_skill_second: "Mage_second_skill_area",
+            nature_skill_first: "Nature_first_skill",
+            nature_skill_second: "Nature_second_skill",
+        };
+
+        return map[skillId] || "Mage_first_skill";
+    }
+
+    getHeroSkillLevels(hero) {
+        const saveData = SaveManager.load();
+        const heroSave = saveData.heroes?.[String(hero.id)] || {};
+        const skillLevels = heroSave.skillLevels || {};
+
+        return (hero.skills || []).map((skill) => ({
+            ...skill,
+            currentLevel: Number(skillLevels[skill.id] || 0),
+            icon: this.getSkillAssetName(skill.id),
+        }));
+    }
+
+    renderSkillPanel() {
+        if (!this.currentHero) {
+            return;
+        }
+
+        if (!this.skillPanel) {
+            const panelWidth = 500;
+            const panelHeight = 330;
+            const panelX = this.cx;
+            const panelY = this.cy + 20;
+
+            this.skillPanel = this.scene.add.container(panelX - panelWidth / 2, panelY - panelHeight / 2);
+            this.skillPanel.setVisible(false);
+            this.container.add(this.skillPanel);
+
+            const bg = this.scene.add.rectangle(
+                panelWidth / 2,
+                panelHeight / 2,
+                panelWidth,
+                panelHeight,
+                0xf5f5f5,
+                0.95
+            );
+            bg.setStrokeStyle(2, 0x999999);
+            this.skillPanel.add(bg);
+        }
+
+        this.skillPanel.removeAll(true);
+
+        const bg = this.scene.add.rectangle(
+            250,
+            165,
+            500,
+            330,
+            0xf5f5f5,
+            0.95
+        );
+        bg.setStrokeStyle(2, 0x999999);
+        this.skillPanel.add(bg);
+
+        const skillList = this.getHeroSkillLevels(this.currentHero);
+        const startY = 30;
+        const rowHeight = 70;
+
+        skillList.forEach((skill, index) => {
+            const rowY = startY + index * rowHeight;
+            const rowBg = this.scene.add.rectangle(
+                250,
+                rowY + 25,
+                470,
+                58,
+                0xe8eef7,
+                0.8
+            );
+            rowBg.setStrokeStyle(1, 0xc0cbd8);
+            this.skillPanel.add(rowBg);
+
+            const icon = this.scene.add.image(
+                45,
+                rowY + 25,
+                skill.icon
+            );
+            icon.setDisplaySize(40, 40);
+            this.skillPanel.add(icon);
+
+            const nameText = this.scene.add.text(
+                80,
+                rowY + 10,
+                `${skill.name || skill.id}`,
+                {
+                    fontSize: "15px",
+                    color: "#000000",
+                    fontStyle: "bold"
+                }
+            );
+            this.skillPanel.add(nameText);
+
+            const levelText = this.scene.add.text(
+                80,
+                rowY + 32,
+                `Lv ${skill.currentLevel}`,
+                {
+                    fontSize: "13px",
+                    color: "#3b5f8d"
+                }
+            );
+            this.skillPanel.add(levelText);
+
+            const cost = 25 + skill.currentLevel * 20;
+            const upgradeButton = this.scene.add.container(370, rowY + 25);
+            const buttonBg = this.scene.add.rectangle(0, 0, 100, 32, 0x4caf50, 1);
+            const buttonText = this.scene.add.text(0, 0, `+ Lv (${cost})`, {
+                fontSize: "13px",
+                color: "#ffffff",
+                fontStyle: "bold"
+            }).setOrigin(0.5);
+
+            buttonBg.setInteractive({ useHandCursor: true });
+            buttonBg.on("pointerup", () => {
+                this.upgradeSkill(skill.id, cost);
+            });
+
+            upgradeButton.add([buttonBg, buttonText]);
+            this.skillPanel.add(upgradeButton);
+        });
+
+        this.skillPanel.setVisible(this.activeTab === "skills");
+    }
+
+    upgradeSkill(skillId, cost) {
+        if (!this.currentHero) {
+            return;
+        }
+
+        const saveData = SaveManager.load();
+        const heroKey = String(this.currentHero.id);
+        const savedHero = saveData.heroes[heroKey] || {};
+        const skillLevels = savedHero.skillLevels || {};
+        const currentLevel = Number(skillLevels[skillId] || 0);
+
+        if (saveData.player.gold < cost) {
+            return;
+        }
+
+        saveData.player.gold = Number(saveData.player.gold || 0) - cost;
+        skillLevels[skillId] = currentLevel + 1;
+        savedHero.skillLevels = skillLevels;
+        saveData.heroes[heroKey] = {
+            ...savedHero,
+            level: savedHero.level ?? this.currentHero.level ?? 1,
+            experience: savedHero.experience ?? this.currentHero.experience ?? 0,
+            equipment: savedHero.equipment || {},
+        };
+
+        SaveManager.save(saveData);
+        this.renderSkillPanel();
+    }
+
     show(hero) {
 
         this.currentHero = hero;
         this.hideItemMenu();
+        this.activeTab = "inventory";
+
+        if (this.inventoryContainer) {
+            this.inventoryContainer.setVisible(true);
+        }
 
         const savedHero = SaveManager.loadHero(hero.id) || {};
         const saveData = SaveManager.load();
@@ -374,6 +617,7 @@ export default class HeroDetailPopup {
             `MP: ${hero.mp || 0}`
         );
 
+        this.setActiveTab(this.activeTab);
         this.container.setVisible(true);
     }
 
