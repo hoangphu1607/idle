@@ -71,7 +71,11 @@ const items = [
         maxStack: 1,
 
         stats: {
-            attack_physical: 15
+            attack_physical: 15,
+            hp: 50,
+            mp: 20,
+            armor: 5,
+            magic_resistance: 5
         }
     },
     {

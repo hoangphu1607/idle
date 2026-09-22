@@ -1,7 +1,7 @@
 import SaveManager from "../managers/SaveManager";
 import items from "../assets/data/item";
 import Phaser from "phaser";
-import { HERO_SKILL_INFO, CLASS_LABELS } from "../assets/data/heroSkills.js";
+import { HERO_SKILL_INFO, CLASS_LABELS, HERO_PASSIVE_INFO } from "../assets/data/heroSkills.js";
 export default class HeroDetailPopup {
 
     constructor(scene) {
@@ -142,10 +142,11 @@ export default class HeroDetailPopup {
 
         this.createEquipmentSlots();
 
-        this.scene.input.on("dragstart", this.handleDragStart, this);
-        this.scene.input.on("drag", this.handleDrag, this);
-        this.scene.input.on("dragend", this.handleDragEnd, this);
-        this.scene.input.on("drop", this.handleDrop, this);
+        // Tạm thời tắt drag item để tránh tương tác kéo thả khi đang test UI
+        // this.scene.input.on("dragstart", this.handleDragStart, this);
+        // this.scene.input.on("drag", this.handleDrag, this);
+        // this.scene.input.on("dragend", this.handleDragEnd, this);
+        // this.scene.input.on("drop", this.handleDrop, this);
 
         // =========================
         // Inventory
@@ -161,6 +162,9 @@ export default class HeroDetailPopup {
 
         this.skillContainer = scene.add.container(0, 0);
         this.skillContainer.setVisible(false);
+
+        this.passiveContainer = scene.add.container(0, 0);
+        this.passiveContainer.setVisible(false);
         this.createTabs();
 
 
@@ -262,6 +266,7 @@ export default class HeroDetailPopup {
             this.inventoryContainer,
             ...this.tabObjects,
             this.skillContainer,
+            this.passiveContainer,
             closeButton
         ]);
     }
@@ -281,7 +286,8 @@ export default class HeroDetailPopup {
 
         const defs = [
             { id: "inventory", label: "Inventory" },
-            { id: "skill", label: "Skill" }
+            { id: "skill", label: "Skill" },
+            { id: "passive", label: "Passive" }
         ];
 
         defs.forEach((def, index) => {
@@ -339,6 +345,107 @@ export default class HeroDetailPopup {
         // Container ẩn thì các object bên trong cũng không nhận click/drop
         this.inventoryContainer.setVisible(tabId === "inventory");
         this.skillContainer.setVisible(tabId === "skill");
+        this.passiveContainer.setVisible(tabId === "passive");
+    }
+
+    getHeroPassiveList(hero) {
+        const passiveMap = {
+            mace: "mace_passive",
+            mage: "mage_passive",
+            nature: "nature_passive",
+            tank: "mace_passive",
+            dps: "mage_passive",
+            healer: "nature_passive",
+        };
+
+        const heroName = String(hero?.name || "").toLowerCase();
+        const heroRole = String(hero?.role || "").toLowerCase();
+        const passiveId = passiveMap[heroName] || passiveMap[heroRole] || "mace_passive";
+
+        return [{
+            id: passiveId,
+            info: HERO_PASSIVE_INFO[passiveId] || {
+                name: passiveId,
+                description: "Passive",
+                icon: null,
+            },
+            level: this.getPassiveLevel(hero, passiveId),
+        }];
+    }
+
+    getPassiveLevel(hero, passiveId) {
+        if (!hero) {
+            return 0;
+        }
+
+        const savedHero = SaveManager.loadHero(hero.id) || {};
+        const savedPassives = savedHero.passives || {};
+        const value = Number(savedPassives[passiveId] ?? 0);
+
+        return Number.isFinite(value) ? Math.max(0, Math.min(10, value)) : 0;
+    }
+
+    getHeroLevel(hero) {
+        if (!hero) {
+            return 1;
+        }
+
+        const savedHero = SaveManager.loadHero(hero.id) || {};
+        return Math.max(1, Number(savedHero.level ?? hero.level ?? 1) || 1);
+    }
+
+    getAvailablePassivePoints(hero) {
+        const heroLevel = this.getHeroLevel(hero);
+        const savedHero = SaveManager.loadHero(hero.id) || {};
+        const currentPassives = savedHero.passives || {};
+        const spentPoints = Object.values(currentPassives).reduce((sum, value) => {
+            const level = Number(value) || 0;
+            return sum + Math.max(0, level);
+        }, 0);
+
+        return Math.max(0, heroLevel - spentPoints);
+    }
+
+    updatePassiveLevel(hero, passiveId, delta) {
+        if (!hero || !passiveId) {
+            return;
+        }
+
+        const saveData = SaveManager.load();
+        const heroKey = String(hero.id);
+        const currentHeroSave = saveData.heroes?.[heroKey] || { ...hero, equipment: {}, passives: {} };
+
+        const currentPassives = { ...(currentHeroSave.passives || {}) };
+        const currentLevel = Number(currentPassives[passiveId] || 0);
+
+        if (delta > 0) {
+            const availablePoints = this.getAvailablePassivePoints(hero);
+            if (availablePoints <= 0 || currentLevel >= 10) {
+                return;
+            }
+        }
+
+        if (delta < 0 && currentLevel <= 0) {
+            return;
+        }
+
+        const nextLevel = Math.max(0, Math.min(10, currentLevel + delta));
+
+        if (nextLevel === currentLevel) {
+            return;
+        }
+
+        currentPassives[passiveId] = nextLevel;
+
+        saveData.heroes = saveData.heroes || {};
+        saveData.heroes[heroKey] = {
+            ...currentHeroSave,
+            passives: currentPassives,
+        };
+
+        SaveManager.save(saveData);
+        this.renderPassives(this.currentHero);
+        this.refreshStats();
     }
 
     renderSkills(hero) {
@@ -461,6 +568,152 @@ export default class HeroDetailPopup {
             this.skillContainer.add(objects);
         });
     }
+
+    renderPassives(hero) {
+        this.passiveContainer.removeAll(true);
+
+        const startX = this.cx - 240;
+        const startY = this.cy - 170;
+        const rowWidth = 504;
+        const rowHeight = 96;
+        const gap = 8;
+
+        const passives = this.getHeroPassiveList(hero);
+        const availablePoints = this.getAvailablePassivePoints(hero);
+
+        this.passiveContainer.add(
+            this.scene.add.text(
+                startX,
+                startY,
+                `Class Passive: ${CLASS_LABELS[hero.role] || hero.role || "-"}`,
+                {
+                    fontSize: "18px",
+                    color: "#000000",
+                    fontStyle: "bold"
+                }
+            )
+        );
+
+        this.passiveContainer.add(
+            this.scene.add.text(
+                startX + 260,
+                startY,
+                `Điểm còn: ${availablePoints}`,
+                {
+                    fontSize: "16px",
+                    color: availablePoints > 0 ? "#1d6f42" : "#7a1f1f",
+                    fontStyle: "bold"
+                }
+            )
+        );
+
+        if (passives.length === 0) {
+            this.passiveContainer.add(
+                this.scene.add.text(
+                    startX,
+                    startY + 34,
+                    "Không có passive",
+                    { fontSize: "16px", color: "#666666" }
+                )
+            );
+            return;
+        }
+
+        passives.forEach((passive, index) => {
+            const info = passive.info || { name: passive.id, icon: null, description: "" };
+            const y = startY + 34 + index * (rowHeight + gap);
+
+            const bg = this.scene.add.rectangle(
+                startX,
+                y,
+                rowWidth,
+                rowHeight,
+                0xf0f0f0
+            )
+                .setOrigin(0)
+                .setStrokeStyle(1, 0x888888);
+
+            const iconFrame = this.scene.add.rectangle(
+                startX + 10,
+                y + 10,
+                76,
+                76,
+                0xffffff
+            )
+                .setOrigin(0)
+                .setStrokeStyle(2, 0xe5c07b);
+
+            const objects = [bg, iconFrame];
+
+            if (info.icon && this.scene.textures.exists(info.icon)) {
+                const icon = this.scene.add.image(startX + 48, y + 48, info.icon);
+                icon.setDisplaySize(64, 64);
+                objects.push(icon);
+            }
+
+            const name = this.scene.add.text(
+                startX + 100,
+                y + 10,
+                info.name,
+                {
+                    fontSize: "18px",
+                    color: "#000000",
+                    fontStyle: "bold"
+                }
+            );
+
+            const levelText = this.scene.add.text(
+                startX + rowWidth - 100,
+                y + 12,
+                `Lv ${passive.level}/${10}`,
+                {
+                    fontSize: "14px",
+                    color: "#333333",
+                    fontStyle: "bold"
+                }
+            ).setOrigin(1, 0);
+
+            const description = this.scene.add.text(
+                startX + 100,
+                y + 38,
+                info.description,
+                {
+                    fontSize: "14px",
+                    color: "#333333",
+                    wordWrap: { width: rowWidth - 120 }
+                }
+            );
+
+            const minusBtn = this.scene.add.text(
+                startX + rowWidth - 50,
+                y + 52,
+                "-",
+                {
+                    fontSize: "28px",
+                    color: passive.level > 0 ? "#000000" : "#999999",
+                    fontStyle: "bold"
+                }
+            ).setInteractive({ useHandCursor: true });
+            minusBtn.on("pointerup", () => this.updatePassiveLevel(hero, passive.id, -1));
+            minusBtn.setAlpha(passive.level > 0 ? 1 : 0.45);
+
+            const plusBtn = this.scene.add.text(
+                startX + rowWidth - 20,
+                y + 52,
+                "+",
+                {
+                    fontSize: "28px",
+                    color: availablePoints > 0 && passive.level < 10 ? "#000000" : "#999999",
+                    fontStyle: "bold"
+                }
+            ).setInteractive({ useHandCursor: true });
+            plusBtn.on("pointerup", () => this.updatePassiveLevel(hero, passive.id, 1));
+            plusBtn.setAlpha(availablePoints > 0 && passive.level < 10 ? 1 : 0.45);
+
+            objects.push(name, levelText, description, minusBtn, plusBtn);
+            this.passiveContainer.add(objects);
+        });
+    }
     createEquipmentSlots() {
 
         const startX = this.cx + 25;
@@ -533,6 +786,54 @@ export default class HeroDetailPopup {
         this.statTexts[key] = text;
     }
 
+    refreshStats() {
+        if (!this.currentHero) {
+            return;
+        }
+
+        const savedHero = SaveManager.loadHero(this.currentHero.id) || {};
+        const saveData = SaveManager.load();
+        const inventory = saveData.inventory || [];
+        const effectiveHero = SaveManager.getEffectiveHero(this.currentHero);
+
+        this.renderInventory(inventory);
+        this.renderEquipment(savedHero.equipment || {});
+        this.renderSkills(this.currentHero);
+        this.renderPassives(this.currentHero);
+
+        this.level.setText(
+            `Lv: ${savedHero.level ?? this.currentHero.level ?? 1}`
+        );
+
+        this.exp.setText(
+            `Exp: ${savedHero.experience ?? this.currentHero.experience ?? 0}`
+        );
+
+        this.statTexts.attack_physical.setText(
+            `Physic Dame: ${effectiveHero.attack_physical || 0}`
+        );
+
+        this.statTexts.attack_magic.setText(
+            `Mage Dame: ${effectiveHero.attack_magic || 0}`
+        );
+
+        this.statTexts.defense.setText(
+            `Armor: ${effectiveHero.armor ?? effectiveHero.defense ?? 0}`
+        );
+
+        this.statTexts.magic_resistance.setText(
+            `Magic resistance: ${effectiveHero.magic_resistance || 0}`
+        );
+
+        this.statTexts.hp.setText(
+            `HP: ${effectiveHero.hp || 0}`
+        );
+
+        this.statTexts.mp.setText(
+            `MP: ${effectiveHero.mp || 0}`
+        );
+    }
+
     show(hero) {
 
         this.currentHero = hero;
@@ -546,6 +847,7 @@ export default class HeroDetailPopup {
         this.renderInventory(inventory);
         this.renderEquipment(savedHero.equipment || {});
         this.renderSkills(hero);
+        this.renderPassives(hero);
         this.setTab("inventory");
 
         this.avatar.setTexture(hero.avatar);
@@ -695,7 +997,8 @@ export default class HeroDetailPopup {
             );
 
             itemImage.setInteractive({ useHandCursor: true });
-            this.scene.input.setDraggable(itemImage);
+            // Tạm thời tắt kéo thả item
+            // this.scene.input.setDraggable(itemImage);
             itemImage.itemId = inventoryItem.itemId;
             itemImage.dragStartX = itemImage.x;
             itemImage.dragStartY = itemImage.y;
@@ -771,7 +1074,8 @@ export default class HeroDetailPopup {
             itemImage.setDisplaySize(38, 38);
             itemImage.setDepth(slot.depth + 1);
             itemImage.setInteractive({ useHandCursor: true });
-            this.scene.input.setDraggable(itemImage);
+            // Tạm thời tắt kéo thả item
+            // this.scene.input.setDraggable(itemImage);
             itemImage.itemId = itemId;
             itemImage.equipmentSlotType = slot.slotType;
             itemImage.dragStartX = itemImage.x;
@@ -1128,8 +1432,7 @@ export default class HeroDetailPopup {
         };
 
         SaveManager.save(saveData);
-        this.renderInventory(saveData.inventory);
-        this.renderEquipment(equipment);
+        this.refreshStats();
     }
 
     unequipItem(gameObject) {
@@ -1198,8 +1501,7 @@ export default class HeroDetailPopup {
         };
 
         SaveManager.save(saveData);
-        this.renderInventory(inventory);
-        this.renderEquipment(equipment);
+        this.refreshStats();
 
         return true;
     }

@@ -1,4 +1,5 @@
 import items from "../assets/data/item.js";
+import { HERO_SKILL_INFO, CLASS_LABELS, HERO_PASSIVE_INFO } from "../assets/data/heroSkills.js";
 
 export default class SaveManager {
 
@@ -123,6 +124,7 @@ export default class SaveManager {
                 level: savedHero.level ?? hero.level ?? 1,
                 experience: savedHero.experience ?? hero.experience ?? 0,
                 equipment: savedHero.equipment ?? {},
+                passives: savedHero.passives ?? {},
             };
         });
     }
@@ -279,6 +281,8 @@ export default class SaveManager {
         }
 
         const equipment = this.getHeroEquipment(hero.id);
+        const savedHero = this.loadHero(hero.id) || {};
+        const passives = savedHero.passives || {};
         const bonusStats = {
             attack_physical: 0,
             attack_magic: 0,
@@ -313,8 +317,49 @@ export default class SaveManager {
             });
         });
 
+        Object.entries(passives).forEach(([passiveId, levelValue]) => {
+            const passiveLevel = Number(levelValue) || 0;
+            if (passiveLevel <= 0) {
+                return;
+            }
+
+            const passiveInfo = HERO_PASSIVE_INFO[passiveId] || {};
+            const effect = passiveInfo.effect || {};
+            const baseArmor = Number(hero.armor ?? hero.defense ?? 0);
+            const baseDefense = Number(hero.defense ?? hero.armor ?? 0);
+            const baseMagicResistance = Number(hero.magic_resistance ?? 0);
+            const baseAttackMagic = Number(hero.attack_magic ?? 0);
+            const baseHp = Number(hero.hp ?? 0);
+
+            switch (passiveId) {
+                case "mace_passive": {
+                    // Defense Mastery tăng toàn bộ chỉ số phòng thủ hiện có, gồm cả
+                    // chỉ số gốc và chỉ số cộng từ trang bị.
+                    const armorBoost = (baseArmor + bonusStats.armor) * passiveLevel * (effect.increaseArmor ?? 0.01);
+                    const defenseBoost = (baseDefense + bonusStats.defense) * passiveLevel * (effect.increaseArmor ?? 0.01);
+                    const magicResBoost = (baseMagicResistance + bonusStats.magic_resistance) * passiveLevel * (effect.increaseMagicResistance ?? 0.01);
+                    bonusStats.armor += armorBoost;
+                    bonusStats.defense += defenseBoost;
+                    bonusStats.magic_resistance += magicResBoost;
+                    break;
+                }
+                case "mage_passive": {
+                    const attackMagicBoost = baseAttackMagic * passiveLevel * (effect.increaseAttackMagic ?? 0.01);
+                    bonusStats.attack_magic += attackMagicBoost;
+                    break;
+                }
+                case "nature_passive": {
+                    const hpBoost = baseHp * passiveLevel * (effect.increaseHp ?? 0.01);
+                    bonusStats.hp += hpBoost;
+                    break;
+                }
+                default:
+                    break;
+            }
+        });
+
         const baseArmor = Number(hero.armor ?? hero.defense ?? 0);
-        const baseDefense = Number(hero.defense ?? 0);
+        const baseDefense = Number(hero.defense ?? hero.armor ?? 0);
 
         return {
             ...hero,

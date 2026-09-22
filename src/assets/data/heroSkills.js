@@ -26,3 +26,31 @@ export const HERO_SKILL_INFO = {
         description: "Hồi máu đồng minh đang thiếu HP nhất trong 4 giây. Mỗi giây hồi 10 HP x số stack (tối đa 3 stack).",
     },
 };
+
+export const HERO_PASSIVE_INFO = {
+    mace_passive: {
+        name: "Defense Mastery",
+        icon: "Defense_mastery",
+        description: "Tăng 1% giáp và kháng phép mỗi level, tối đa 10%.",
+        effect: {
+            increaseArmor: 0.01, // Tăng 1% giáp mỗi level
+            increaseMagicResistance: 0.01, // Tăng 1% kháng phép mỗi level
+        }
+    },
+    mage_passive: {
+        name: "Magic Mastery",
+        icon: "Magic_mastery",
+        description: "Tăng 1% sát thương phép mỗi level, tối đa 10%.",
+        effect: {
+            increaseAttackMagic: 0.01, // Tăng 1% sát thương phép mỗi level
+        }
+    },
+    nature_passive: {
+        name: "Healing Mastery",
+        icon: "Healing_mastery",
+        description: "Tăng 1% hồi máu mỗi level, tối đa 10%.",
+        effect: {
+            increaseHp: 0.01, // Tăng 1% hồi máu mỗi level
+        }
+    },
+};

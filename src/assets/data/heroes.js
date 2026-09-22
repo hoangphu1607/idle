@@ -7,6 +7,7 @@ export const HEROES = [
 
         attack_physical: 20,
         attack_magic: 5,
+        // Mace cần chỉ số phòng thủ gốc để Defense Mastery có thể tăng theo %.
         armor: 10,
         magic_resistance: 10,
 
@@ -41,8 +42,8 @@ export const HEROES = [
 
         attack_physical: 2,
         attack_magic: 20,
-        armor: 7,
-        magic_resistance: 7,
+        armor: 5,
+        magic_resistance: 5,
 
         hp: 1200,
         mp: 200,
@@ -75,8 +76,8 @@ export const HEROES = [
 
         attack_physical: 4,
         attack_magic: 16,
-        armor: 8,
-        magic_resistance: 8,
+        armor: 5,
+        magic_resistance: 5,
 
         hp: 1200,
         mp: 200,

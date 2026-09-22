@@ -4,6 +4,7 @@ import HeroScreen from "./HeroScreen.js";
 import HeroDetailPopup from "./HeroDetailPopup.js";
 import BaseScene from "./base/BaseScene.js";
 
+
 import MenuButton from "../objects/MenuButton.js";
 export default class MenuScene extends BaseScene  {
 
@@ -52,8 +53,26 @@ export default class MenuScene extends BaseScene  {
             }
         });
 
+        const btnHeroes = new MenuButton(this, {
+            x: 40,
+            y: 300,
+            width: width_device - 80,
+            height: 80,
+            icon: "icon_hero",
+            text: "Heroes",
+            onClick: () => {
+                if (this.heroScreen && typeof this.heroScreen.show === "function") {
+                    this.menuContainer.setVisible(false);
+                    this.heroScreen.show();
+                } else {
+                    console.warn("heroScreen chưa được khởi tạo!");
+                }
+            }
+        });
+
         this.menuContainer.add(btnPlay.container);
         this.menuContainer.add(btnInventory.container);
+        this.menuContainer.add(btnHeroes.container);
 
     }
 
