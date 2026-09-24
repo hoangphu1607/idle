@@ -1,6 +1,6 @@
 import BaseScene from "./base/BaseScene";
 import SaveManager from "../managers/SaveManager.js";
-import items from "../assets/data/item.js";
+import items, { getItemBackgroundKey } from "../assets/data/item.js";
 
 export default class InventoryScene extends BaseScene {
 
@@ -75,7 +75,7 @@ export default class InventoryScene extends BaseScene {
         this.saleQuantity = 1;
     }
 
-    showItemInfo(itemData) {
+    showItemInfo(itemData, inventoryItem = null) {
         this.hideActionMenu();
         this.hideConfirmModal();
 
@@ -83,6 +83,8 @@ export default class InventoryScene extends BaseScene {
         const modalHeight = 220;
         const x = this.scale.width / 2;
         const y = this.scale.height / 2;
+        const quality = inventoryItem?.quality ?? itemData.quality ?? "Nomal";
+        const qualityLabel = (quality && quality !== "undefined") ? (quality === "Nomal" ? "Nomal" : quality.charAt(0).toUpperCase() + quality.slice(1)) : "Nomal";
 
         this.infoModal = this.add.container(x, y);
 
@@ -102,7 +104,7 @@ export default class InventoryScene extends BaseScene {
             wordWrap: { width: modalWidth - 30 }
         }).setOrigin(0.5);
 
-        const meta = this.add.text(0, 18, `Loại: ${itemData.type || "-"}   |   Giá: ${Number(itemData.price ?? itemData.gold ?? 10)}`, {
+        const meta = this.add.text(0, 18, `Loại: ${itemData.type || "-"}   |   Quality: ${qualityLabel}   |   Giá: ${Number(itemData.price ?? itemData.gold ?? 10)}`, {
             fontSize: "13px",
             color: "#ffd76a",
             fontStyle: "bold"
@@ -124,10 +126,10 @@ export default class InventoryScene extends BaseScene {
         this.inventoryContainer.add(this.infoModal);
     }
 
-    sellItem(itemId, quantity = 1) {
+    sellItem(itemId, quantity = 1, quality = null) {
         const saveData = SaveManager.load();
         const inventory = saveData.inventory || [];
-        const itemIndex = inventory.findIndex(item => item.itemId === itemId);
+        const itemIndex = inventory.findIndex(item => item.itemId === itemId && (quality === null || quality === undefined || item.quality === quality));
 
         if (itemIndex === -1) {
             return;
@@ -252,7 +254,7 @@ export default class InventoryScene extends BaseScene {
             if (this.saleQuantity <= 0 || this.saleQuantity > maxQty) {
                 return;
             }
-            this.sellItem(itemData.id, this.saleQuantity);
+            this.sellItem(itemData.id, this.saleQuantity, inventoryItem.quality);
             this.hideConfirmModal();
             this.renderInventory();
             console.log(`Đã bán ${this.saleQuantity} ${itemData.name} với tổng ${total} gold`);
@@ -318,7 +320,7 @@ export default class InventoryScene extends BaseScene {
         }).setOrigin(0.5);
 
         infoBtn.on("pointerup", () => {
-            this.showItemInfo(itemData);
+            this.showItemInfo(itemData, inventoryItem);
         });
 
         sellBtn.on("pointerup", () => {
@@ -368,15 +370,9 @@ export default class InventoryScene extends BaseScene {
             const x = startX + col * (slotSize + gap) + slotSize / 2;
             const y = startY + row * (slotSize + gap) + slotSize / 2;
 
-            const bg = this.add.rectangle(
-                x,
-                y,
-                slotSize,
-                slotSize,
-                0xf3f6fb,
-                0.92
-            );
-            bg.setStrokeStyle(2, 0x8aa4bf, 0.9);
+            const bgKey = getItemBackgroundKey(inventoryItem.quality || "Nomal");
+            const bg = this.add.image(x, y, bgKey);
+            bg.setDisplaySize(slotSize, slotSize);
             bg.setInteractive({ useHandCursor: true });
 
             const itemImage = this.add.image(x, y, itemData.icon);
@@ -396,15 +392,18 @@ export default class InventoryScene extends BaseScene {
                 }
             ).setOrigin(1, 1);
 
+            const qualityValue = inventoryItem.quality || "Nomal";
+            const qualityLabel = qualityValue === "Nomal" ? "Nomal" : qualityValue.charAt(0).toUpperCase() + qualityValue.slice(1);
             const nameText = this.add.text(
                 x,
                 y + slotSize / 2 + 20,
-                itemData.name,
+                `${itemData.name}\n${qualityLabel}`,
                 {
-                    fontSize: "12px",
+                    fontSize: "11px",
                     color: "#ffffff",
                     fontStyle: "bold",
-                    wordWrap: { width: slotSize + 12 }
+                    wordWrap: { width: slotSize + 12 },
+                    align: "center"
                 }
             ).setOrigin(0.5);
 

@@ -50,8 +50,7 @@ export default class HeroCard {
         const name = this.scene.add.text(
             100,
             15,
-            this.hero.name,
-            {
+            this.hero.name, {
                 fontSize: "24px",
                 color: "#ffffff",
                 fontStyle: "bold"
@@ -62,8 +61,7 @@ export default class HeroCard {
         const level = this.scene.add.text(
             100,
             45,
-            `Lv. ${this.hero.level}`,
-            {
+            `Lv. ${this.hero.level}`, {
                 fontSize: "18px",
                 color: "#ffd700"
             }
@@ -73,8 +71,7 @@ export default class HeroCard {
         const hp = this.scene.add.text(
             100,
             70,
-            `HP : ${this.hero.hp}`,
-            {
+            `HP : ${this.hero.hp}`, {
                 fontSize: "16px",
                 color: "#7CFC00"
             }
@@ -85,8 +82,7 @@ export default class HeroCard {
         const experience = this.scene.add.text(
             360,
             70,
-            `EXP : ${this.hero.experience || 0}`,
-            {
+            `EXP : ${this.hero.experience || 0}`, {
                 fontSize: "16px",
                 color: "#87ceeb"
             }
@@ -97,8 +93,7 @@ export default class HeroCard {
         const atk = this.scene.add.text(
             220,
             70,
-            `ATK : ${this.hero.attack}`,
-            {
+            `ATK : ${Math.round(Number(this.hero.attack_physical || 0))}`, {
                 fontSize: "16px",
                 color: "#ff6666"
             }

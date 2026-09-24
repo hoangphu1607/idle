@@ -1,5 +1,5 @@
 import SaveManager from "../managers/SaveManager";
-import items from "../assets/data/item";
+import items, { getItemBackgroundKey } from "../assets/data/item";
 import Phaser from "phaser";
 import { HERO_SKILL_INFO, CLASS_LABELS, HERO_PASSIVE_INFO } from "../assets/data/heroSkills.js";
 export default class HeroDetailPopup {
@@ -85,11 +85,10 @@ export default class HeroDetailPopup {
         this.name = scene.add.text(
             this.cx - 115,
             this.cy - 435,
-            "",
-            {
-                fontSize: "18px",
-                color: "#000000"
-            }
+            "", {
+            fontSize: "18px",
+            color: "#000000"
+        }
         );
 
         // =========================
@@ -99,11 +98,10 @@ export default class HeroDetailPopup {
         this.role = scene.add.text(
             this.cx - 115,
             this.cy - 405,
-            "",
-            {
-                fontSize: "18px",
-                color: "#000000"
-            }
+            "", {
+            fontSize: "18px",
+            color: "#000000"
+        }
         );
 
         // =========================
@@ -113,11 +111,10 @@ export default class HeroDetailPopup {
         this.level = scene.add.text(
             this.cx - 115,
             this.cy - 375,
-            "",
-            {
-                fontSize: "16px",
-                color: "#000000"
-            }
+            "", {
+            fontSize: "16px",
+            color: "#000000"
+        }
         );
 
         // =========================
@@ -127,11 +124,10 @@ export default class HeroDetailPopup {
         this.exp = scene.add.text(
             this.cx - 115,
             this.cy - 345,
-            "",
-            {
-                fontSize: "16px",
-                color: "#000000"
-            }
+            "", {
+            fontSize: "16px",
+            color: "#000000"
+        }
         );
 
         // =========================
@@ -223,12 +219,11 @@ export default class HeroDetailPopup {
         const closeButton = scene.add.text(
             this.cx + this.panelWidth / 2 - 20,
             this.cy - this.panelHeight / 2 + 20,
-            "×",
-            {
-                fontSize: "30px",
-                color: "#000000",
-                fontStyle: "bold"
-            }
+            "×", {
+            fontSize: "30px",
+            color: "#000000",
+            fontStyle: "bold"
+        }
         ).setOrigin(0.5);
 
         closeButton.setInteractive({
@@ -308,12 +303,11 @@ export default class HeroDetailPopup {
             const label = this.scene.add.text(
                 x + tabWidth / 2,
                 y + tabHeight / 2,
-                def.label,
-                {
-                    fontSize: "16px",
-                    color: "#000000",
-                    fontStyle: "bold"
-                }
+                def.label, {
+                fontSize: "16px",
+                color: "#000000",
+                fontStyle: "bold"
+            }
             ).setOrigin(0.5);
 
             bg.on("pointerup", (pointer) => {
@@ -465,12 +459,11 @@ export default class HeroDetailPopup {
             this.scene.add.text(
                 startX,
                 startY,
-                `Class: ${classLabel}`,
-                {
-                    fontSize: "18px",
-                    color: "#000000",
-                    fontStyle: "bold"
-                }
+                `Class: ${classLabel}`, {
+                fontSize: "18px",
+                color: "#000000",
+                fontStyle: "bold"
+            }
             )
         );
 
@@ -481,8 +474,7 @@ export default class HeroDetailPopup {
                 this.scene.add.text(
                     startX,
                     startY + 34,
-                    "Class này chưa có skill",
-                    { fontSize: "16px", color: "#666666" }
+                    "Class này chưa có skill", { fontSize: "16px", color: "#666666" }
                 )
             );
             return;
@@ -534,33 +526,30 @@ export default class HeroDetailPopup {
             const name = this.scene.add.text(
                 startX + 100,
                 y + 10,
-                info.name,
-                {
-                    fontSize: "18px",
-                    color: "#000000",
-                    fontStyle: "bold"
-                }
+                info.name, {
+                fontSize: "18px",
+                color: "#000000",
+                fontStyle: "bold"
+            }
             );
 
             const cooldown = this.scene.add.text(
                 startX + rowWidth - 10,
                 y + 12,
-                `CD: ${skillData.cooldown ?? "-"}s`,
-                {
-                    fontSize: "14px",
-                    color: "#555555"
-                }
+                `CD: ${skillData.cooldown ?? "-"}s`, {
+                fontSize: "14px",
+                color: "#555555"
+            }
             ).setOrigin(1, 0);
 
             const description = this.scene.add.text(
                 startX + 100,
                 y + 38,
-                info.description,
-                {
-                    fontSize: "14px",
-                    color: "#333333",
-                    wordWrap: { width: rowWidth - 115 }
-                }
+                info.description, {
+                fontSize: "14px",
+                color: "#333333",
+                wordWrap: { width: rowWidth - 115 }
+            }
             );
 
             objects.push(name, cooldown, description);
@@ -585,12 +574,11 @@ export default class HeroDetailPopup {
             this.scene.add.text(
                 startX,
                 startY,
-                `Class Passive: ${CLASS_LABELS[hero.role] || hero.role || "-"}`,
-                {
-                    fontSize: "18px",
-                    color: "#000000",
-                    fontStyle: "bold"
-                }
+                `Class Passive: ${CLASS_LABELS[hero.role] || hero.role || "-"}`, {
+                fontSize: "18px",
+                color: "#000000",
+                fontStyle: "bold"
+            }
             )
         );
 
@@ -598,12 +586,11 @@ export default class HeroDetailPopup {
             this.scene.add.text(
                 startX + 260,
                 startY,
-                `Điểm còn: ${availablePoints}`,
-                {
-                    fontSize: "16px",
-                    color: availablePoints > 0 ? "#1d6f42" : "#7a1f1f",
-                    fontStyle: "bold"
-                }
+                `Điểm còn: ${availablePoints}`, {
+                fontSize: "16px",
+                color: availablePoints > 0 ? "#1d6f42" : "#7a1f1f",
+                fontStyle: "bold"
+            }
             )
         );
 
@@ -612,8 +599,7 @@ export default class HeroDetailPopup {
                 this.scene.add.text(
                     startX,
                     startY + 34,
-                    "Không có passive",
-                    { fontSize: "16px", color: "#666666" }
+                    "Không có passive", { fontSize: "16px", color: "#666666" }
                 )
             );
             return;
@@ -654,45 +640,41 @@ export default class HeroDetailPopup {
             const name = this.scene.add.text(
                 startX + 100,
                 y + 10,
-                info.name,
-                {
-                    fontSize: "18px",
-                    color: "#000000",
-                    fontStyle: "bold"
-                }
+                info.name, {
+                fontSize: "18px",
+                color: "#000000",
+                fontStyle: "bold"
+            }
             );
 
             const levelText = this.scene.add.text(
                 startX + rowWidth - 100,
                 y + 12,
-                `Lv ${passive.level}/${10}`,
-                {
-                    fontSize: "14px",
-                    color: "#333333",
-                    fontStyle: "bold"
-                }
+                `Lv ${passive.level}/${10}`, {
+                fontSize: "14px",
+                color: "#333333",
+                fontStyle: "bold"
+            }
             ).setOrigin(1, 0);
 
             const description = this.scene.add.text(
                 startX + 100,
                 y + 38,
-                info.description,
-                {
-                    fontSize: "14px",
-                    color: "#333333",
-                    wordWrap: { width: rowWidth - 120 }
-                }
+                info.description, {
+                fontSize: "14px",
+                color: "#333333",
+                wordWrap: { width: rowWidth - 120 }
+            }
             );
 
             const minusBtn = this.scene.add.text(
                 startX + rowWidth - 50,
                 y + 52,
-                "-",
-                {
-                    fontSize: "28px",
-                    color: passive.level > 0 ? "#000000" : "#999999",
-                    fontStyle: "bold"
-                }
+                "-", {
+                fontSize: "28px",
+                color: passive.level > 0 ? "#000000" : "#999999",
+                fontStyle: "bold"
+            }
             ).setInteractive({ useHandCursor: true });
             minusBtn.on("pointerup", () => this.updatePassiveLevel(hero, passive.id, -1));
             minusBtn.setAlpha(passive.level > 0 ? 1 : 0.45);
@@ -700,12 +682,11 @@ export default class HeroDetailPopup {
             const plusBtn = this.scene.add.text(
                 startX + rowWidth - 20,
                 y + 52,
-                "+",
-                {
-                    fontSize: "28px",
-                    color: availablePoints > 0 && passive.level < 10 ? "#000000" : "#999999",
-                    fontStyle: "bold"
-                }
+                "+", {
+                fontSize: "28px",
+                color: availablePoints > 0 && passive.level < 10 ? "#000000" : "#999999",
+                fontStyle: "bold"
+            }
             ).setInteractive({ useHandCursor: true });
             plusBtn.on("pointerup", () => this.updatePassiveLevel(hero, passive.id, 1));
             plusBtn.setAlpha(availablePoints > 0 && passive.level < 10 ? 1 : 0.45);
@@ -776,11 +757,10 @@ export default class HeroDetailPopup {
         const text = this.scene.add.text(
             x,
             y,
-            `${label} 0`,
-            {
-                fontSize: "15px",
-                color: "#000000"
-            }
+            `${label} 0`, {
+            fontSize: "15px",
+            color: "#000000"
+        }
         );
 
         this.statTexts[key] = text;
@@ -810,27 +790,27 @@ export default class HeroDetailPopup {
         );
 
         this.statTexts.attack_physical.setText(
-            `Physic Dame: ${effectiveHero.attack_physical || 0}`
+            `Physic Dame: ${Math.round(Number(effectiveHero.attack_physical || 0))}`
         );
 
         this.statTexts.attack_magic.setText(
-            `Mage Dame: ${effectiveHero.attack_magic || 0}`
+            `Mage Dame: ${Math.round(Number(effectiveHero.attack_magic || 0))}`
         );
 
         this.statTexts.defense.setText(
-            `Armor: ${effectiveHero.armor ?? effectiveHero.defense ?? 0}`
+            `Armor: ${Math.round(Number(effectiveHero.armor ?? effectiveHero.defense ?? 0))}`
         );
 
         this.statTexts.magic_resistance.setText(
-            `Magic resistance: ${effectiveHero.magic_resistance || 0}`
+            `Magic resistance: ${Math.round(Number(effectiveHero.magic_resistance || 0))}`
         );
 
         this.statTexts.hp.setText(
-            `HP: ${effectiveHero.hp || 0}`
+            `HP: ${Math.round(Number(effectiveHero.hp || 0))}`
         );
 
         this.statTexts.mp.setText(
-            `MP: ${effectiveHero.mp || 0}`
+            `MP: ${Math.round(Number(effectiveHero.mp || 0))}`
         );
     }
 
@@ -863,27 +843,27 @@ export default class HeroDetailPopup {
         );
 
         this.statTexts.attack_physical.setText(
-            `Physic Dame: ${effectiveHero.attack_physical || 0}`
+            `Physic Dame: ${Math.round(Number(effectiveHero.attack_physical || 0))}`
         );
 
         this.statTexts.attack_magic.setText(
-            `Mage Dame: ${effectiveHero.attack_magic || 0}`
+            `Mage Dame: ${Math.round(Number(effectiveHero.attack_magic || 0))}`
         );
 
         this.statTexts.defense.setText(
-            `Armor: ${effectiveHero.armor ?? effectiveHero.defense ?? 0}`
+            `Armor: ${Math.round(Number(effectiveHero.armor ?? effectiveHero.defense ?? 0))}`
         );
 
         this.statTexts.magic_resistance.setText(
-            `Magic resistance: ${effectiveHero.magic_resistance || 0}`
+            `Magic resistance: ${Math.round(Number(effectiveHero.magic_resistance || 0))}`
         );
 
         this.statTexts.hp.setText(
-            `HP: ${effectiveHero.hp || 0}`
+            `HP: ${Math.round(Number(effectiveHero.hp || 0))}`
         );
 
         this.statTexts.mp.setText(
-            `MP: ${effectiveHero.mp || 0}`
+            `MP: ${Math.round(Number(effectiveHero.mp || 0))}`
         );
 
         this.container.setVisible(true);
@@ -930,20 +910,23 @@ export default class HeroDetailPopup {
         if (typeof entry === "string") {
             return {
                 itemId: entry,
-                quantity: 1
+                quantity: 1,
+                quality: null
             };
         }
 
         if (entry && typeof entry === "object" && entry.itemId) {
             return {
                 itemId: entry.itemId,
-                quantity: Number(entry.quantity) > 0 ? Number(entry.quantity) : 1
+                quantity: Number(entry.quantity) > 0 ? Number(entry.quantity) : 1,
+                quality: entry.quality ?? null
             };
         }
 
         return {
             itemId: null,
-            quantity: 0
+            quantity: 0,
+            quality: null
         };
     }
 
@@ -985,6 +968,14 @@ export default class HeroDetailPopup {
             const x = startX + col * (slotSize + gap);
             const y = startY + row * (slotSize + gap);
 
+            const backgroundKey = getItemBackgroundKey(inventoryItem.quality || "Nomal");
+            const itemBackground = this.scene.add.image(
+                x + slotSize / 2,
+                y + slotSize / 2,
+                backgroundKey
+            );
+            itemBackground.setDisplaySize(slotSize, slotSize);
+
             const itemImage = this.scene.add.image(
                 x + slotSize / 2,
                 y + slotSize / 2,
@@ -1000,6 +991,7 @@ export default class HeroDetailPopup {
             // Tạm thời tắt kéo thả item
             // this.scene.input.setDraggable(itemImage);
             itemImage.itemId = inventoryItem.itemId;
+            itemImage.quality = inventoryItem.quality ?? null;
             itemImage.dragStartX = itemImage.x;
             itemImage.dragStartY = itemImage.y;
 
@@ -1016,24 +1008,24 @@ export default class HeroDetailPopup {
                     itemImage.y
                 );
                 if (dist < 5) {
-                    this.showItemMenu(itemImage.x, itemImage.y, slotSize, itemData, false);
+                    this.showItemMenu(itemImage.x, itemImage.y, slotSize, itemData, false, null, inventoryItem);
                 }
             });
 
             const quantity = this.scene.add.text(
                 x + slotSize - 3,
                 y + slotSize - 3,
-                `${inventoryItem.quantity}`,
-                {
-                    fontSize: "14px",
-                    color: "#ffffff",
-                    fontStyle: "bold",
-                    stroke: "#000000",
-                    strokeThickness: 3
-                }
+                `${inventoryItem.quantity}`, {
+                fontSize: "14px",
+                color: "#ffffff",
+                fontStyle: "bold",
+                stroke: "#000000",
+                strokeThickness: 3
+            }
             ).setOrigin(1, 1);
 
             this.inventoryContainer.add([
+                itemBackground,
                 itemImage,
                 quantity
             ]);
@@ -1104,14 +1096,13 @@ export default class HeroDetailPopup {
                 const quantityText = this.scene.add.text(
                     slot.x + 26,
                     slot.y + 22,
-                    `x${equippedQuantity}`,
-                    {
-                        fontSize: "12px",
-                        color: "#ffffff",
-                        fontStyle: "bold",
-                        stroke: "#000000",
-                        strokeThickness: 3
-                    }
+                    `x${equippedQuantity}`, {
+                    fontSize: "12px",
+                    color: "#ffffff",
+                    fontStyle: "bold",
+                    stroke: "#000000",
+                    strokeThickness: 3
+                }
                 ).setOrigin(1, 1);
 
                 this.container.add(quantityText);
@@ -1124,7 +1115,7 @@ export default class HeroDetailPopup {
     // Logic Menu Popup (Trang bị / Bán)
     // =====================================================
 
-    showItemMenu(targetX, targetY, cellSize, itemData, isEquipped = false, slotType = null) {
+    showItemMenu(targetX, targetY, cellSize, itemData, isEquipped = false, slotType = null, inventoryItem = null) {
         this.hideItemMenu();
 
         const menuWidth = 110;
@@ -1134,9 +1125,9 @@ export default class HeroDetailPopup {
         const panelRight = this.cx + this.panelWidth / 2;
         const fitsRight = (targetX + cellSize / 2 + margin + menuWidth) <= (panelRight - 10);
 
-        const menuX = fitsRight
-            ? targetX + cellSize / 2 + margin
-            : targetX - cellSize / 2 - margin - menuWidth;
+        const menuX = fitsRight ?
+            targetX + cellSize / 2 + margin :
+            targetX - cellSize / 2 - margin - menuWidth;
 
         const menuY = Phaser.Math.Clamp(
             targetY - cellSize / 2,
@@ -1166,10 +1157,10 @@ export default class HeroDetailPopup {
                     equipmentSlotType: slotType
                 });
             } else {
-                const targetSlot = itemData.type === "potion" || itemData.type === "consumable"
-                    ? "potion"
-                    : (itemData.type === "food" ? "food" : itemData.type);
-                this.equipItem(itemData, targetSlot);
+                const targetSlot = itemData.type === "potion" || itemData.type === "consumable" ?
+                    "potion" :
+                    (itemData.type === "food" ? "food" : itemData.type);
+                this.equipItem(itemData, targetSlot, inventoryItem);
             }
             this.hideItemMenu();
         });
@@ -1179,7 +1170,7 @@ export default class HeroDetailPopup {
 
         // Nút dưới: "Bán"
         const sellBtn = this.createMenuButton(0, 42, menuWidth, 40, "Bán", () => {
-            this.sellItem(itemData, isEquipped, slotType);
+            this.sellItem(itemData, isEquipped, slotType, inventoryItem);
             this.hideItemMenu();
         });
 
@@ -1220,7 +1211,7 @@ export default class HeroDetailPopup {
         }
     }
 
-    sellItem(itemData, isEquipped = false, slotType = null) {
+    sellItem(itemData, isEquipped = false, slotType = null, inventoryItem = null) {
         const saveData = SaveManager.load();
         const price = itemData.sell_price ? itemData.sell_price : 10; // Giá bán mặc định nếu không có sell_price
 
@@ -1233,7 +1224,8 @@ export default class HeroDetailPopup {
 
         const freshData = SaveManager.load();
         const inventory = freshData.inventory || [];
-        const index = inventory.findIndex(item => item.itemId === itemData.id);
+        const quality = inventoryItem?.quality ?? null;
+        const index = inventory.findIndex(item => item.itemId === itemData.id && (quality === null || quality === undefined || item.quality === quality));
 
         if (index !== -1) {
             if (inventory[index].quantity > 1) {
@@ -1324,7 +1316,7 @@ export default class HeroDetailPopup {
         this.equipItem(itemData, dropZone.slotType);
     }
 
-    equipItem(itemData, slotType) {
+    equipItem(itemData, slotType, inventoryItemContext = null) {
 
         if (!this.currentHero) {
             return;
@@ -1339,9 +1331,8 @@ export default class HeroDetailPopup {
 
         const isStackableSlot = this.isStackableEquipmentSlot(slotType);
 
-        const isCompatible = isStackableSlot
-            ? ["potion", "food", "consumable"].includes(itemData.type)
-            : itemData.type === slotType;
+        const isCompatible = isStackableSlot ? ["potion", "food", "consumable"].includes(itemData.type) :
+            itemData.type === slotType;
 
         if (!isCompatible) {
             return;
@@ -1357,9 +1348,10 @@ export default class HeroDetailPopup {
         saveData.inventory = saveData.inventory || [];
 
         const inventory = saveData.inventory;
-        const inventoryItem = inventory.find(
-            item => item.itemId === itemData.id
-        );
+        const inventoryItem = inventory.find((item) => {
+            const quality = inventoryItemContext?.quality ?? item.quality ?? null;
+            return item.itemId === itemData.id && (quality === null || item.quality === quality);
+        });
 
         if (!inventoryItem || inventoryItem.quantity < 1) {
             return;
@@ -1376,16 +1368,16 @@ export default class HeroDetailPopup {
         const isSameItem = previousItemId === itemData.id;
 
         // 2. Slot không xếp chồng mà đã mặc đúng món này -> không làm gì
-        if (!isStackableSlot && isSameItem) {
+        if (!isStackableSlot && isSameItem && (inventoryItemContext?.quality ?? currentEntry.quality ?? null) === (currentEntry.quality ?? inventoryItemContext?.quality ?? null)) {
             return;
         }
 
         const maxEquippedQuantity = isStackableSlot ? 10 : 1;
         const currentQuantity = isSameItem ? currentEntry.quantity : 0;
         const availableSpace = Math.max(0, maxEquippedQuantity - currentQuantity);
-        const transferQuantity = isStackableSlot
-            ? Math.min(inventoryItem.quantity, availableSpace)
-            : 1;
+        const transferQuantity = isStackableSlot ?
+            Math.min(inventoryItem.quantity, availableSpace) :
+            1;
 
         if (transferQuantity <= 0) {
             return;
@@ -1466,9 +1458,9 @@ export default class HeroDetailPopup {
         const inventoryItem = inventory.find(
             item => item.itemId === gameObject.itemId
         );
-        const quantityToReturn = this.isStackableEquipmentSlot(gameObject.equipmentSlotType)
-            ? currentEntry.quantity
-            : 1;
+        const quantityToReturn = this.isStackableEquipmentSlot(gameObject.equipmentSlotType) ?
+            currentEntry.quantity :
+            1;
 
         if (inventoryItem) {
             inventoryItem.quantity += quantityToReturn;

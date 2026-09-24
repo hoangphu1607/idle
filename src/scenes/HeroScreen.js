@@ -39,11 +39,13 @@ export default class HeroScreen {
         this.container.setVisible(false);
 
     }
-    
+
 
     createHeroList() {
 
-        const heroes = SaveManager.loadHeroes(HEROES);
+        const heroes = SaveManager
+            .loadHeroes(HEROES)
+            .map((hero) => SaveManager.getEffectiveHero(hero));
 
         heroes.forEach((hero, index) => {
 

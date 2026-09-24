@@ -296,9 +296,9 @@ export default class SaveManager {
         };
 
         Object.values(equipment).forEach((entry) => {
-            const itemId = typeof entry === "string"
-                ? entry
-                : entry?.itemId;
+            const itemId = typeof entry === "string" ?
+                entry :
+                entry?.itemId;
 
             if (!itemId) {
                 return;
@@ -332,27 +332,30 @@ export default class SaveManager {
             const baseHp = Number(hero.hp ?? 0);
 
             switch (passiveId) {
-                case "mace_passive": {
-                    // Defense Mastery tăng toàn bộ chỉ số phòng thủ hiện có, gồm cả
-                    // chỉ số gốc và chỉ số cộng từ trang bị.
-                    const armorBoost = (baseArmor + bonusStats.armor) * passiveLevel * (effect.increaseArmor ?? 0.01);
-                    const defenseBoost = (baseDefense + bonusStats.defense) * passiveLevel * (effect.increaseArmor ?? 0.01);
-                    const magicResBoost = (baseMagicResistance + bonusStats.magic_resistance) * passiveLevel * (effect.increaseMagicResistance ?? 0.01);
-                    bonusStats.armor += armorBoost;
-                    bonusStats.defense += defenseBoost;
-                    bonusStats.magic_resistance += magicResBoost;
-                    break;
-                }
-                case "mage_passive": {
-                    const attackMagicBoost = baseAttackMagic * passiveLevel * (effect.increaseAttackMagic ?? 0.01);
-                    bonusStats.attack_magic += attackMagicBoost;
-                    break;
-                }
-                case "nature_passive": {
-                    const hpBoost = baseHp * passiveLevel * (effect.increaseHp ?? 0.01);
-                    bonusStats.hp += hpBoost;
-                    break;
-                }
+                case "mace_passive":
+                    {
+                        // Defense Mastery tăng toàn bộ chỉ số phòng thủ hiện có, gồm cả
+                        // chỉ số gốc và chỉ số cộng từ trang bị.
+                        const armorBoost = (baseArmor + bonusStats.armor) * passiveLevel * (effect.increaseArmor ?? 0.01);
+                        const defenseBoost = (baseDefense + bonusStats.defense) * passiveLevel * (effect.increaseArmor ?? 0.01);
+                        const magicResBoost = (baseMagicResistance + bonusStats.magic_resistance) * passiveLevel * (effect.increaseMagicResistance ?? 0.01);
+                        bonusStats.armor += armorBoost;
+                        bonusStats.defense += defenseBoost;
+                        bonusStats.magic_resistance += magicResBoost;
+                        break;
+                    }
+                case "mage_passive":
+                    {
+                        const attackMagicBoost = baseAttackMagic * passiveLevel * (effect.increaseAttackMagic ?? 0.01);
+                        bonusStats.attack_magic += attackMagicBoost;
+                        break;
+                    }
+                case "nature_passive":
+                    {
+                        const hpBoost = baseHp * passiveLevel * (effect.increaseHp ?? 0.01);
+                        bonusStats.hp += hpBoost;
+                        break;
+                    }
                 default:
                     break;
             }
@@ -363,17 +366,17 @@ export default class SaveManager {
 
         return {
             ...hero,
-            attack_physical: Number(hero.attack_physical || 0) + bonusStats.attack_physical,
-            attack_magic: Number(hero.attack_magic || 0) + bonusStats.attack_magic,
-            armor: baseArmor + bonusStats.armor,
-            defense: baseDefense + bonusStats.defense,
-            magic_resistance: Number(hero.magic_resistance || 0) + bonusStats.magic_resistance,
-            hp: Number(hero.hp || 0) + bonusStats.hp,
-            maxHp: Number(hero.maxHp ?? hero.hp ?? 0) + bonusStats.hp,
-            mp: Number(hero.mp || 0) + bonusStats.mp,
-            maxMp: Number(hero.maxMp ?? hero.mp ?? 0) + bonusStats.mp,
-            speed: Number(hero.speed || 100) + bonusStats.speed,
-            threat: Number(hero.threat || 1) + bonusStats.threat,
+            attack_physical: Math.round(Number(hero.attack_physical || 0) + bonusStats.attack_physical),
+            attack_magic: Math.round(Number(hero.attack_magic || 0) + bonusStats.attack_magic),
+            armor: Math.round(baseArmor + bonusStats.armor),
+            defense: Math.round(baseDefense + bonusStats.defense),
+            magic_resistance: Math.round(Number(hero.magic_resistance || 0) + bonusStats.magic_resistance),
+            hp: Math.round(Number(hero.hp || 0) + bonusStats.hp),
+            maxHp: Math.round(Number(hero.maxHp ?? hero.hp ?? 0) + bonusStats.hp),
+            mp: Math.round(Number(hero.mp || 0) + bonusStats.mp),
+            maxMp: Math.round(Number(hero.maxMp ?? hero.mp ?? 0) + bonusStats.mp),
+            speed: Math.round(Number(hero.speed || 100) + bonusStats.speed),
+            threat: Math.round(Number(hero.threat || 1) + bonusStats.threat),
         };
     }
 

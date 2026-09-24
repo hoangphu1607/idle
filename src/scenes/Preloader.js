@@ -11,6 +11,11 @@ export default class Preloader extends Phaser.Scene {
         this.load.image("btnUI", "src/assets/system/btnUI.png");
         this.load.image("home", "src/assets/system/home.png");
         this.load.image("sky", "src/assets/bg/sky.png");
+        this.load.image("bg_item_nomal", "src/assets/bg/bg_item_nomal.png");
+        this.load.image("bg_item_good", "src/assets/bg/bg_item_good.png");
+        this.load.image("bg_item_outstanding", "src/assets/bg/bg_item_outstanding.png");
+        this.load.image("bg_item_excellent", "src/assets/bg/bg_item_excellent.png");
+        this.load.image("bg_item_masterpiece", "src/assets/bg/bg_item_masterpiece.png");
 
         //Load champ
         this.load.image("wizard", "src/assets/champ/wizard.png");
@@ -80,6 +85,10 @@ export default class Preloader extends Phaser.Scene {
         this.load.image("item_mace", "src/assets/item/item_mace.png");
         this.load.image("item_fire_staff", "src/assets/item/item_fire_staff.png");
         this.load.image("item_nature_staff", "src/assets/item/item_nature_staff.png");
+
+        // this.load.image("item_mace_lv1", "src/assets/item/item_mace_lv1.png");
+        // this.load.image("item_fire_staff_lv1", "src/assets/item/item_fire_staff_lv1.png");
+        // this.load.image("item_nature_staff_lv1", "src/assets/item/item_nature_staff_lv1.png");
 
         //effect
         this.load.image("effect_stun", "src/assets/effect/effect_stun.png");

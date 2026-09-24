@@ -1,17 +1,38 @@
+import { QUALITY_ITEMS, getRandomItemQuality } from "../assets/data/item.js";
+
 export default class Inventory {
 
     constructor(items = []) {
 
-        this.items = items;
+        this.items = (items || []).map((item) => this.normalizeItem(item));
 
     }
 
-    addItem(itemId, quantity = 1) {
+    normalizeItem(item) {
+        if (!item || typeof item !== "object") {
+            return item;
+        }
+
+        const normalized = {
+            ...item,
+            quantity: Number(item.quantity ?? 1)
+        };
+
+        if (normalized.quality === undefined) {
+            normalized.quality = QUALITY_ITEMS.has(normalized.itemId) ? "Nomal" : undefined;
+        }
+
+        return normalized;
+    }
+
+    addItem(itemId, quantity = 1, quality = null) {
 
         if (quantity <= 0) return;
 
+        const resolvedQuality = quality ?? (QUALITY_ITEMS.has(itemId) ? "Nomal" : undefined);
+
         const existingItem = this.items.find(
-            item => item.itemId === itemId
+            item => item.itemId === itemId && item.quality === resolvedQuality
         );
 
         if (existingItem) {
@@ -22,7 +43,8 @@ export default class Inventory {
 
             this.items.push({
                 itemId,
-                quantity
+                quantity,
+                ...(resolvedQuality ? { quality: resolvedQuality } : {})
             });
 
         }
@@ -46,17 +68,29 @@ export default class Inventory {
                 Math.random() * (maxQuantity - minQuantity + 1) + minQuantity
             );
 
-            this.addItem(drop.itemId, quantity);
+            const quality = QUALITY_ITEMS.has(drop.itemId)
+                ? getRandomItemQuality(drop.itemId)
+                : undefined;
+
+            this.addItem(drop.itemId, quantity, quality);
         });
 
         return this.items;
     }
 
-    removeItem(itemId, quantity = 1) {
+    removeItem(itemId, quantity = 1, quality = null) {
 
-        const item = this.items.find(
-            item => item.itemId === itemId
-        );
+        const item = this.items.find((entry) => {
+            if (entry.itemId !== itemId) {
+                return false;
+            }
+
+            if (quality === null || quality === undefined) {
+                return true;
+            }
+
+            return entry.quality === quality;
+        });
 
         if (!item) return false;
 
@@ -68,9 +102,7 @@ export default class Inventory {
 
         if (item.quantity <= 0) {
 
-            this.items = this.items.filter(
-                item => item.itemId !== itemId
-            );
+            this.items = this.items.filter((entry) => !(entry.itemId === itemId && entry.quality === item.quality));
 
         }
 
@@ -78,19 +110,17 @@ export default class Inventory {
 
     }
 
-    getItemQuantity(itemId) {
+    getItemQuantity(itemId, quality = null) {
 
-        const item = this.items.find(
-            item => item.itemId === itemId
-        );
-
-        return item ? item.quantity : 0;
+        return this.items
+            .filter((item) => item.itemId === itemId && (quality === null || quality === undefined || item.quality === quality))
+            .reduce((total, item) => total + Number(item.quantity || 0), 0);
 
     }
 
-    hasItem(itemId, quantity = 1) {
+    hasItem(itemId, quantity = 1, quality = null) {
 
-        return this.getItemQuantity(itemId) >= quantity;
+        return this.getItemQuantity(itemId, quality) >= quantity;
 
     }
 

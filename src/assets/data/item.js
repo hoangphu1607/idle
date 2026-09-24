@@ -1,5 +1,70 @@
-const items = [
-    {
+export const ITEM_QUALITIES = [
+    "Nomal",
+    "good",
+    "outstanding",
+    "excellent",
+    "masterpiece"
+];
+
+export const QUALITY_WEIGHTS = {
+    Nomal: 45,
+    good: 25,
+    outstanding: 15,
+    excellent: 10,
+    masterpiece: 5
+};
+
+export const QUALITY_ITEMS = new Set([
+    "mace",
+    "fire_staff",
+    "nature_staff"
+]);
+
+export const QUALITY_LABELS = {
+    Nomal: "Nomal",
+    good: "Good",
+    outstanding: "Outstanding",
+    excellent: "Excellent",
+    masterpiece: "Masterpiece"
+};
+
+export const QUALITY_BACKGROUND_KEYS = {
+    Nomal: "bg_item_nomal",
+    good: "bg_item_good",
+    outstanding: "bg_item_outstanding",
+    excellent: "bg_item_excellent",
+    masterpiece: "bg_item_masterpiece"
+};
+
+export function getQualityLabel(quality) {
+    return QUALITY_LABELS[quality] || QUALITY_LABELS.Nomal;
+}
+
+export function getItemBackgroundKey(quality) {
+    return QUALITY_BACKGROUND_KEYS[quality] || "bg_item_nomal";
+}
+
+export function getRandomItemQuality(itemId = null) {
+    if (!QUALITY_ITEMS.has(itemId)) {
+        return "Nomal";
+    }
+
+    const totalWeight = Object.values(QUALITY_WEIGHTS).reduce((sum, value) => sum + value, 0);
+    const randomValue = Math.random() * totalWeight;
+
+    let cumulative = 0;
+
+    for (const quality of ITEM_QUALITIES) {
+        cumulative += QUALITY_WEIGHTS[quality];
+        if (randomValue <= cumulative) {
+            return quality;
+        }
+    }
+
+    return "Nomal";
+}
+
+const items = [{
         id: "slime_essence",
         name: "Slime Essence",
         description: "Tinh chất Slime dùng để nâng cấp Hero.",
@@ -9,29 +74,7 @@ const items = [
         rarity: "common",
         sell_price: 10,
         maxStack: 999
-    },
-
-    {
-        id: "iron_sword",
-        name: "Iron Sword",
-        description: "Một thanh kiếm sắt cơ bản.",
-        icon: "item_iron_sword",
-
-        type: "weapon",
-        class: "Mace",
-        rarity: "common",
-        sell_price: 20,
-        maxStack: 1,
-
-        stats: {
-            attack_physical: 10,
-            hp: 50,
-            mp: 20,
-            armor: 5,
-            magic_resistance: 5
-
-        }
-    },
+    },    
 
     {
         id: "health_potion",
@@ -71,11 +114,10 @@ const items = [
         maxStack: 1,
 
         stats: {
-            attack_physical: 15,
-            hp: 50,
-            mp: 20,
-            armor: 5,
-            magic_resistance: 5
+            attack_physical: 5,
+            attack_magic: 0,
+            hp: 20,
+            mp: 10,
         }
     },
     {
@@ -90,7 +132,10 @@ const items = [
         maxStack: 1,
 
         stats: {
-            attack_magic: 15
+            attack_physical: 0,
+            attack_magic: 5,
+            hp: 10,
+            mp: 20,
         }
     },
     {
@@ -105,10 +150,12 @@ const items = [
         maxStack: 1,
 
         stats: {
-            attack_magic: 10
+            attack_physical: 0,
+            attack_magic: 5,
+            hp: 10,
+            mp: 20,
         }
     }
 ];
-
 
 export default items;
