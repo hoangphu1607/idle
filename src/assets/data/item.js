@@ -20,6 +20,58 @@ export const QUALITY_ITEMS = new Set([
     "nature_staff"
 ]);
 
+export const QUALITY_MULTIPLIERS = {
+    Nomal: 1,
+    good: 1.2,
+    outstanding: 1.4,
+    excellent: 1.6,
+    masterpiece: 1.8
+};
+
+export const ITEM_LEVEL_RANGES = {
+    easy: { minLevel: 1, maxLevel: 10 },
+    normal: { minLevel: 10, maxLevel: 20 },
+    hard: { minLevel: 20, maxLevel: 30 },
+    hell: { minLevel: 30, maxLevel: 30 }
+};
+
+export function getQualityMultiplier(quality) {
+    const normalizedQuality = String(quality ?? "Nomal").trim();
+    return QUALITY_MULTIPLIERS[normalizedQuality] ?? QUALITY_MULTIPLIERS.Nomal;
+}
+
+export function getItemRequiredLevel(item = {}) {
+    const value = Number(item?.requiredLevel ?? item?.level ?? 1);
+    return Number.isFinite(value) && value > 0 ? value : 1;
+}
+
+export function getItemLevelMultiplier(level = 1) {
+    const normalizedLevel = Number(level ?? 1);
+
+    if (!Number.isFinite(normalizedLevel) || normalizedLevel <= 1) {
+        return 1;
+    }
+
+    if (normalizedLevel >= 30) {
+        return 4;
+    }
+
+    if (normalizedLevel >= 20) {
+        return 3;
+    }
+
+    if (normalizedLevel >= 10) {
+        return 2;
+    }
+
+    return 1;
+}
+
+export function getDifficultyLevelRange(difficulty = "normal") {
+    const normalizedDifficulty = String(difficulty ?? "normal").trim().toLowerCase();
+    return ITEM_LEVEL_RANGES[normalizedDifficulty] ?? ITEM_LEVEL_RANGES.normal;
+}
+
 export const QUALITY_LABELS = {
     Nomal: "Nomal",
     good: "Good",
@@ -112,6 +164,8 @@ const items = [{
         rarity: "common",
         class: "Mace",
         maxStack: 1,
+        level: 1,
+        requiredLevel: 1,
 
         stats: {
             attack_physical: 5,
@@ -130,6 +184,8 @@ const items = [{
         rarity: "common",
         class: "Mage",
         maxStack: 1,
+        level: 1,
+        requiredLevel: 1,
 
         stats: {
             attack_physical: 0,
@@ -148,6 +204,8 @@ const items = [{
         rarity: "common",
         class: "Nature",
         maxStack: 1,
+        level: 1,
+        requiredLevel: 1,
 
         stats: {
             attack_physical: 0,

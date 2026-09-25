@@ -4,6 +4,7 @@ import BattleGrid from "../objects/BattleGrid.js";
 import { STAGES_BY_MAP } from "../assets/data/stages.js";
 import SaveManager from "../managers/SaveManager.js";
 import Inventory from "../managers/Inventory.js";
+import HeroDetailPopup from "./HeroDetailPopup.js";
 export default class BattleScene extends BaseScene {
     constructor() {
         super("BattleScene");
@@ -22,6 +23,7 @@ export default class BattleScene extends BaseScene {
         this.victoryShown = false;
     }
     create() {
+        this.heroDetailPopup = new HeroDetailPopup(this);
         this.createBackground();
 
         this.createBottomNavigation("battle");

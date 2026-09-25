@@ -1,3 +1,5 @@
+import { getDifficultyLevelRange as getRangeByDifficulty } from "./item.js";
+
 export const MONSTER_DROPS = {
 
     slime: [
@@ -11,19 +13,22 @@ export const MONSTER_DROPS = {
             itemId: "mace",
             chance: 1,
             minQuantity: 1,
-            maxQuantity: 1
+            maxQuantity: 1,
+            level: 1
         },
         {
             itemId: "fire_staff",
             chance: 1,
             minQuantity: 1,
-            maxQuantity: 1
+            maxQuantity: 1,
+            level: 10
         },
         {
             itemId: "nature_staff",
             chance: 1,
             minQuantity: 1,
-            maxQuantity: 1
+            maxQuantity: 1,
+            level: 20
         },
         {
             itemId: "rare_gem",
@@ -34,34 +39,76 @@ export const MONSTER_DROPS = {
     ],
 
     wolf: [
-        // {
-        //     itemId: "wolf_fang",
-        //     chance: 0.2,
-        //     minQuantity: 1,
-        //     maxQuantity: 2
-        // },
         {
             itemId: "health_potion",
             chance: 0.05,
             minQuantity: 1,
             maxQuantity: 1
         },
-        
+        {
+            itemId: "mace",
+            chance: 0.4,
+            minQuantity: 1,
+            maxQuantity: 1,
+            level: 10
+        },
+        {
+            itemId: "fire_staff",
+            chance: 0.35,
+            minQuantity: 1,
+            maxQuantity: 1,
+            level: 10
+        },
+        {
+            itemId: "nature_staff",
+            chance: 0.35,
+            minQuantity: 1,
+            maxQuantity: 1,
+            level: 10
+        }
     ],
 
     orc: [
-        // {
-        //     itemId: "orc_heart",
-        //     chance: 0.15,
-        //     minQuantity: 1,
-        //     maxQuantity: 2
-        // },
-        // {
-        //     itemId: "iron_sword",
-        //     chance: 0.1,
-        //     minQuantity: 1,
-        //     maxQuantity: 1
-        // }
+        {
+            itemId: "mace",
+            chance: 0.35,
+            minQuantity: 1,
+            maxQuantity: 1,
+            level: 20
+        },
+        {
+            itemId: "fire_staff",
+            chance: 0.35,
+            minQuantity: 1,
+            maxQuantity: 1,
+            level: 20
+        },
+        {
+            itemId: "nature_staff",
+            chance: 0.35,
+            minQuantity: 1,
+            maxQuantity: 1,
+            level: 20
+        }
     ]
 
 };
+
+export function getMonsterDropPool(monsterId, difficulty = "normal") {
+    const pool = MONSTER_DROPS[monsterId] || [];
+    const { minLevel, maxLevel } = getRangeByDifficulty(difficulty);
+
+    return pool
+        .filter((drop) => {
+            if (!drop.itemId) {
+                return false;
+            }
+
+            const dropLevel = Number(drop.level ?? minLevel ?? 1);
+            return dropLevel >= minLevel && dropLevel <= maxLevel;
+        })
+        .map((drop) => ({
+            ...drop,
+            level: Number(drop.level ?? minLevel ?? 1)
+        }));
+}

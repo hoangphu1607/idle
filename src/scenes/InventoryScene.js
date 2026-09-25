@@ -379,6 +379,20 @@ export default class InventoryScene extends BaseScene {
             itemImage.setDisplaySize(slotSize - 16, slotSize - 16);
             itemImage.setInteractive({ useHandCursor: true });
 
+            const levelValue = Number(inventoryItem.level ?? itemData.level ?? itemData.requiredLevel ?? 1);
+            const levelText = this.add.text(
+                x - slotSize / 2 + 8,
+                y + slotSize / 2 - 8,
+                `Lv.${levelValue}`,
+                {
+                    fontSize: "10px",
+                    color: "#ffffff",
+                    fontStyle: "bold",
+                    stroke: "#000000",
+                    strokeThickness: 3,
+                }
+            ).setOrigin(0, 1);
+
             const quantityText = this.add.text(
                 x + slotSize / 2 - 6,
                 y + slotSize / 2 - 6,
@@ -415,7 +429,7 @@ export default class InventoryScene extends BaseScene {
                 this.showActionMenu(itemData, inventoryItem, x, y);
             });
 
-            this.inventoryContainer.add([bg, itemImage, quantityText, nameText]);
+            this.inventoryContainer.add([bg, itemImage, levelText, quantityText, nameText]);
         });
     }
 }

@@ -1,4 +1,4 @@
-import items from "../assets/data/item.js";
+import items, { getQualityMultiplier, getItemLevelMultiplier } from "../assets/data/item.js";
 import { HERO_SKILL_INFO, CLASS_LABELS, HERO_PASSIVE_INFO } from "../assets/data/heroSkills.js";
 
 export default class SaveManager {
@@ -296,9 +296,11 @@ export default class SaveManager {
         };
 
         Object.values(equipment).forEach((entry) => {
-            const itemId = typeof entry === "string" ?
-                entry :
-                entry?.itemId;
+            const normalizedEntry = typeof entry === "string"
+                ? { itemId: entry, quality: "Nomal" }
+                : (entry || {});
+
+            const itemId = normalizedEntry.itemId;
 
             if (!itemId) {
                 return;
@@ -310,9 +312,13 @@ export default class SaveManager {
                 return;
             }
 
+            const qualityMultiplier = getQualityMultiplier(normalizedEntry.quality ?? "Nomal");
+            const itemLevel = Number(normalizedEntry.level ?? itemData.level ?? itemData.requiredLevel ?? 1);
+            const itemLevelMultiplier = getItemLevelMultiplier(itemLevel);
+
             Object.entries(itemData.stats).forEach(([key, value]) => {
                 if (bonusStats[key] !== undefined) {
-                    bonusStats[key] += Number(value) || 0;
+                    bonusStats[key] += (Number(value) || 0) * qualityMultiplier * itemLevelMultiplier;
                 }
             });
         });

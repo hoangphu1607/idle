@@ -1,5 +1,5 @@
 import Phaser from "phaser";
-import SaveManager from "../managers/SaveManager";
+import SaveManager from "../managers/SaveManager.js";
 
 export default class UnitView {
 
@@ -121,6 +121,11 @@ export default class UnitView {
             const unitInfo = this.unit.team === "player"
                 ? SaveManager.getEffectiveHero(this.unit)
                 : this.unit;
+
+            if (this.scene.heroDetailPopup && typeof this.scene.heroDetailPopup.show === "function") {
+                this.scene.heroDetailPopup.show(unitInfo);
+                return;
+            }
 
             console.log("Hero info:", {
                 id: unitInfo.id,

@@ -1,4 +1,4 @@
-import { QUALITY_ITEMS, getRandomItemQuality } from "../assets/data/item.js";
+import { QUALITY_ITEMS, getRandomItemQuality, getItemRequiredLevel } from "../assets/data/item.js";
 
 export default class Inventory {
 
@@ -8,6 +8,22 @@ export default class Inventory {
 
     }
 
+    matchesItem(entry, itemId, quality = null, level = null) {
+        if (!entry || entry.itemId !== itemId) {
+            return false;
+        }
+
+        if (quality !== null && quality !== undefined && entry.quality !== quality) {
+            return false;
+        }
+
+        if (level !== null && level !== undefined && Number(entry.level ?? 1) !== Number(level)) {
+            return false;
+        }
+
+        return true;
+    }
+
     normalizeItem(item) {
         if (!item || typeof item !== "object") {
             return item;
@@ -15,7 +31,8 @@ export default class Inventory {
 
         const normalized = {
             ...item,
-            quantity: Number(item.quantity ?? 1)
+            quantity: Number(item.quantity ?? 1),
+            level: Number(item.level ?? item.requiredLevel ?? getItemRequiredLevel(item))
         };
 
         if (normalized.quality === undefined) {
@@ -25,14 +42,15 @@ export default class Inventory {
         return normalized;
     }
 
-    addItem(itemId, quantity = 1, quality = null) {
+    addItem(itemId, quantity = 1, quality = null, level = null) {
 
         if (quantity <= 0) return;
 
         const resolvedQuality = quality ?? (QUALITY_ITEMS.has(itemId) ? "Nomal" : undefined);
+        const resolvedLevel = Number(level ?? 1);
 
         const existingItem = this.items.find(
-            item => item.itemId === itemId && item.quality === resolvedQuality
+            item => this.matchesItem(item, itemId, resolvedQuality, resolvedLevel)
         );
 
         if (existingItem) {
@@ -44,6 +62,7 @@ export default class Inventory {
             this.items.push({
                 itemId,
                 quantity,
+                level: resolvedLevel,
                 ...(resolvedQuality ? { quality: resolvedQuality } : {})
             });
 
@@ -72,24 +91,23 @@ export default class Inventory {
                 ? getRandomItemQuality(drop.itemId)
                 : undefined;
 
-            this.addItem(drop.itemId, quantity, quality);
+            this.addItem(drop.itemId, quantity, quality, Number(drop.level ?? 1));
         });
 
         return this.items;
     }
 
-    removeItem(itemId, quantity = 1, quality = null) {
+    removeItem(itemId, quantity = 1, quality = null, level = null) {
 
         const item = this.items.find((entry) => {
             if (entry.itemId !== itemId) {
                 return false;
             }
 
-            if (quality === null || quality === undefined) {
-                return true;
-            }
+            const matchesQuality = quality === null || quality === undefined || entry.quality === quality;
+            const matchesLevel = level === null || level === undefined || Number(entry.level ?? 1) === Number(level);
 
-            return entry.quality === quality;
+            return matchesQuality && matchesLevel;
         });
 
         if (!item) return false;
@@ -102,7 +120,7 @@ export default class Inventory {
 
         if (item.quantity <= 0) {
 
-            this.items = this.items.filter((entry) => !(entry.itemId === itemId && entry.quality === item.quality));
+            this.items = this.items.filter((entry) => !(entry.itemId === itemId && entry.quality === item.quality && Number(entry.level ?? 1) === Number(item.level ?? 1)));
 
         }
 
@@ -110,17 +128,19 @@ export default class Inventory {
 
     }
 
-    getItemQuantity(itemId, quality = null) {
+    getItemQuantity(itemId, quality = null, level = null) {
 
         return this.items
-            .filter((item) => item.itemId === itemId && (quality === null || quality === undefined || item.quality === quality))
+            .filter((item) => item.itemId === itemId &&
+                (quality === null || quality === undefined || item.quality === quality) &&
+                (level === null || level === undefined || Number(item.level ?? 1) === Number(level)))
             .reduce((total, item) => total + Number(item.quantity || 0), 0);
 
     }
 
-    hasItem(itemId, quantity = 1, quality = null) {
+    hasItem(itemId, quantity = 1, quality = null, level = null) {
 
-        return this.getItemQuantity(itemId, quality) >= quantity;
+        return this.getItemQuantity(itemId, quality, level) >= quantity;
 
     }
 
