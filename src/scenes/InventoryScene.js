@@ -393,33 +393,33 @@ export default class InventoryScene extends BaseScene {
                 }
             ).setOrigin(0, 1);
 
-            const quantityText = this.add.text(
-                x + slotSize / 2 - 6,
-                y + slotSize / 2 - 6,
-                `${inventoryItem.quantity}`,
-                {
-                    fontSize: "14px",
-                    color: "#ffffff",
-                    fontStyle: "bold",
-                    stroke: "#000000",
-                    strokeThickness: 3,
-                }
-            ).setOrigin(1, 1);
+            // const quantityText = this.add.text(
+            //     x + slotSize / 2 - 6,
+            //     y + slotSize / 2 - 6,
+            //     `${inventoryItem.quantity}`,
+            //     {
+            //         fontSize: "14px",
+            //         color: "#ffffff",
+            //         fontStyle: "bold",
+            //         stroke: "#000000",
+            //         strokeThickness: 3,
+            //     }
+            // ).setOrigin(1, 1);
 
             const qualityValue = inventoryItem.quality || "Nomal";
             const qualityLabel = qualityValue === "Nomal" ? "Nomal" : qualityValue.charAt(0).toUpperCase() + qualityValue.slice(1);
-            const nameText = this.add.text(
-                x,
-                y + slotSize / 2 + 20,
-                `${itemData.name}\n${qualityLabel}`,
-                {
-                    fontSize: "11px",
-                    color: "#ffffff",
-                    fontStyle: "bold",
-                    wordWrap: { width: slotSize + 12 },
-                    align: "center"
-                }
-            ).setOrigin(0.5);
+            // const nameText = this.add.text(
+            //     x,
+            //     y + slotSize / 2 + 20,
+            //     `${itemData.name}\n${qualityLabel}`,
+            //     {
+            //         fontSize: "11px",
+            //         color: "#ffffff",
+            //         fontStyle: "bold",
+            //         wordWrap: { width: slotSize + 12 },
+            //         align: "center"
+            //     }
+            // ).setOrigin(0.5);
 
             bg.on("pointerup", () => {
                 this.showActionMenu(itemData, inventoryItem, x, y);
@@ -429,7 +429,7 @@ export default class InventoryScene extends BaseScene {
                 this.showActionMenu(itemData, inventoryItem, x, y);
             });
 
-            this.inventoryContainer.add([bg, itemImage, levelText, quantityText, nameText]);
+            this.inventoryContainer.add([bg, itemImage, levelText]);
         });
     }
 }

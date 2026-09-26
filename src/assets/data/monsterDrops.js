@@ -8,34 +8,7 @@ export const MONSTER_DROPS = {
             chance: 0.1,
             minQuantity: 1,
             maxQuantity: 3
-        },
-        {
-            itemId: "mace",
-            chance: 1,
-            minQuantity: 1,
-            maxQuantity: 1,
-            level: 1
-        },
-        {
-            itemId: "fire_staff",
-            chance: 1,
-            minQuantity: 1,
-            maxQuantity: 1,
-            level: 10
-        },
-        {
-            itemId: "nature_staff",
-            chance: 1,
-            minQuantity: 1,
-            maxQuantity: 1,
-            level: 20
-        },
-        {
-            itemId: "rare_gem",
-            chance: 0.01,
-            minQuantity: 1,
-            maxQuantity: 1
-        }
+        },        
     ],
 
     wolf: [

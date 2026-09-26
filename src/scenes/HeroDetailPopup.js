@@ -1114,16 +1114,16 @@ export default class HeroDetailPopup {
                 }
             });
 
-            const quantity = this.scene.add.text(
-                x + slotSize - 3,
-                y + slotSize - 3,
-                `${inventoryItem.quantity}`, {
-                fontSize: "14px",
-                color: "#ffffff",
-                fontStyle: "bold",
-                stroke: "#000000",
-                strokeThickness: 3
-            }).setOrigin(1, 1);
+            // const quantity = this.scene.add.text(
+            //     x + slotSize - 3,
+            //     y + slotSize - 3,
+            //     `${inventoryItem.quantity}`, {
+            //     fontSize: "14px",
+            //     color: "#ffffff",
+            //     fontStyle: "bold",
+            //     stroke: "#000000",
+            //     strokeThickness: 3
+            // }).setOrigin(1, 1);
 
             const levelText = this.scene.add.text(
                 x + 6,
@@ -1142,13 +1142,13 @@ export default class HeroDetailPopup {
             this.inventoryContainer.add([
                 itemBackground,
                 itemImage,
-                quantity,
+                //quantity,
                 levelText
             ]);
 
             this.inventoryItemViews.push({
                 y: y,
-                elements: [itemBackground, itemImage, quantity, levelText]
+                elements: [itemBackground, itemImage, levelText]
             });
         });
 
