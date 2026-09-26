@@ -187,7 +187,7 @@ export default class HeroDetailPopup {
         this.viewX = this.cx - 245;
         const tabAreaTop = this.cy - 217;
         const tabHeight = 30;
-        this.viewY = tabAreaTop + tabHeight + 4; 
+        this.viewY = tabAreaTop + tabHeight + 4;
         this.viewWidth = 510;
 
         const panelBottom = this.cy + this.panelHeight / 2;
@@ -199,10 +199,11 @@ export default class HeroDetailPopup {
         this.viewHeight = maxFittingRows * slotTotalHeight;
 
         // Tạo GeometryMask để cắt xén phẳng các ô cuộn
-        const maskShape = scene.make.graphics();
-        maskShape.fillStyle(0xffffff);
-        maskShape.fillRect(this.viewX, this.viewY, this.viewWidth, this.viewHeight);
-        this.inventoryMask = maskShape.createGeometryMask();
+        // const maskShape = scene.make.graphics();
+        // maskShape.fillStyle(0xffffff);
+        // maskShape.fillRect(this.viewX, this.viewY, this.viewWidth, this.viewHeight);
+        // this.inventoryMask = maskShape.createGeometryMask();
+        this.inventoryMask = null;
 
         // Vùng nhận tương tác cuộn
         this.scrollZone = scene.add.zone(
@@ -933,8 +934,13 @@ export default class HeroDetailPopup {
         this.container.setVisible(false);
     }
 
+    normalizeEquipmentType(value) {
+        return String(value ?? "").trim().toLowerCase();
+    }
+
     isStackableEquipmentSlot(slotType) {
-        return slotType === "potion" || slotType === "food";
+        const normalizedSlotType = this.normalizeEquipmentType(slotType);
+        return normalizedSlotType === "potion" || normalizedSlotType === "food";
     }
 
     isWeaponClassCompatible(itemData, hero = this.currentHero) {
@@ -942,7 +948,7 @@ export default class HeroDetailPopup {
             return true;
         }
 
-        if (itemData.type !== "weapon") {
+        if (this.normalizeEquipmentType(itemData.type) !== "weapon") {
             return true;
         }
 
@@ -958,9 +964,9 @@ export default class HeroDetailPopup {
             hero.role,
             hero.heroClass,
             hero.class,
-        ].filter(Boolean).map(value => String(value).trim());
+        ].filter(Boolean).map(value => String(value).trim().toLowerCase());
 
-        return candidateClasses.some(className => className.toLowerCase() === requiredClass.toLowerCase());
+        return candidateClasses.some(className => className === requiredClass.toLowerCase());
     }
 
     getEquipmentEntry(equipment = {}, slotType) {
@@ -1078,16 +1084,12 @@ export default class HeroDetailPopup {
 
             itemImage.setInteractive({ useHandCursor: true });
             itemImage.itemId = inventoryItem.itemId;
-            itemImage.quality = inventoryItem.quality ?? null;
+            itemImage.quality = inventoryItem.quality ?? "Nomal";
             itemImage.level = Number(inventoryItem.level ?? itemData.level ?? getItemRequiredLevel(itemData));
             itemImage.dragStartX = itemImage.x;
             itemImage.dragStartY = itemImage.y;
 
-            itemImage.on("pointerdown", (pointer) => {
-                itemImage.downX = pointer.x;
-                itemImage.downY = pointer.y;
-            });
-
+            // Chỉ gắn 1 lần pointerdown để ghi nhận tọa độ nhấn
             itemImage.on("pointerdown", (pointer) => {
                 itemImage.downX = pointer.x;
                 itemImage.downY = pointer.y;
@@ -1103,7 +1105,7 @@ export default class HeroDetailPopup {
                     pointer.y
                 );
 
-                // Dưới 8px mới tính là thao tác Click mở Menu
+                // Dưới 8px xem là thao tác Click mở Menu
                 if (dist < 8) {
                     const screenY = itemImage.y + this.inventoryContainer.y;
                     if (screenY >= this.viewY && screenY <= this.viewY + this.viewHeight) {
@@ -1134,13 +1136,8 @@ export default class HeroDetailPopup {
                 strokeThickness: 3
             }).setOrigin(0, 1);
 
-            // Gán mask để cắt rìa chuẩn xác
-            if (this.inventoryMask) {
-                itemBackground.setMask(this.inventoryMask);
-                itemImage.setMask(this.inventoryMask);
-                quantity.setMask(this.inventoryMask);
-                levelText.setMask(this.inventoryMask);
-            }
+            // KHÔNG GỌI setMask LÊN CÁC ELEMENT CON Ở ĐÂY NỮA
+            // Việc ẩn/hiện đã do hàm updateInventoryViewportVisibility xử lý chuẩn xác
 
             this.inventoryContainer.add([
                 itemBackground,
@@ -1305,9 +1302,10 @@ export default class HeroDetailPopup {
                     level: equippedLevel ?? Number(itemData.level ?? itemData.requiredLevel ?? 1)
                 });
             } else {
-                const targetSlot = itemData.type === "potion" || itemData.type === "consumable" ?
+                const normalType = this.normalizeEquipmentType(itemData.type);
+                const targetSlot = normalType === "potion" || normalType === "consumable" ?
                     "potion" :
-                    (itemData.type === "food" ? "food" : itemData.type);
+                    (normalType === "food" ? "food" : normalType);
                 this.equipItem(itemData, targetSlot, inventoryItem);
             }
             this.hideItemMenu();
@@ -1660,13 +1658,15 @@ export default class HeroDetailPopup {
         }
 
         const itemData = items.find(item => item.id === gameObject.itemId);
-        const isStackableSlot = this.isStackableEquipmentSlot(dropZone.slotType);
+        const normalizedType = this.normalizeEquipmentType(itemData?.type);
+        const normalizedSlotType = this.normalizeEquipmentType(dropZone.slotType);
+        const isStackableSlot = this.isStackableEquipmentSlot(normalizedSlotType);
         const isCompatibleType = itemData && (
-            itemData.type === dropZone.slotType ||
+            normalizedType === normalizedSlotType ||
             (isStackableSlot && (
-                itemData.type === "potion" ||
-                itemData.type === "food" ||
-                itemData.type === "consumable"
+                normalizedType === "potion" ||
+                normalizedType === "food" ||
+                normalizedType === "consumable"
             ))
         );
 
@@ -1681,28 +1681,27 @@ export default class HeroDetailPopup {
     }
 
     equipItem(itemData, slotType, inventoryItemContext = null) {
-
         if (!this.currentHero) {
             return false;
         }
 
-        const validSlotTypes = this.equipmentSlots.map(slot => slot.slotType);
-
-        if (!validSlotTypes.includes(slotType)) {
+        const normalizedSlotType = this.normalizeEquipmentType(slotType);
+        const validSlotTypes = this.equipmentSlots.map(slot => this.normalizeEquipmentType(slot.slotType));
+        if (!validSlotTypes.includes(normalizedSlotType)) {
             return false;
         }
 
-        const isStackableSlot = this.isStackableEquipmentSlot(slotType);
-
-        const isCompatible = isStackableSlot ? ["potion", "food", "consumable"].includes(itemData.type) :
-            itemData.type === slotType;
+        const normalizedItemType = this.normalizeEquipmentType(itemData?.type);
+        const isStackableSlot = this.isStackableEquipmentSlot(normalizedSlotType);
+        const isCompatible = isStackableSlot ? ["potion", "food", "consumable"].includes(normalizedItemType) :
+            normalizedItemType === normalizedSlotType;
 
         if (!isCompatible) {
+            this.showToast(`Trang bị không phù hợp ô ${normalizedSlotType}`);
             return false;
         }
 
-        if (slotType === "weapon" && !this.isWeaponClassCompatible(itemData, this.currentHero)) {
-            console.warn(`Vũ khí ${itemData.name} không phù hợp với hero ${this.currentHero.name}`);
+        if (normalizedSlotType === "weapon" && !this.isWeaponClassCompatible(itemData, this.currentHero)) {
             this.showToast(`${itemData.name || itemData.id} không phù hợp với class ${this.currentHero.name}`);
             return false;
         }
@@ -1710,29 +1709,30 @@ export default class HeroDetailPopup {
         const saveData = SaveManager.load();
         saveData.heroes = saveData.heroes || {};
         saveData.inventory = saveData.inventory || [];
-
         const inventory = saveData.inventory;
-        const selectedQuality = inventoryItemContext?.quality ?? inventory.find((item) => item.itemId === itemData.id && item.quality)?.quality ?? "Nomal";
+
+        // Chuẩn hóa phẩm chất và cấp độ cần tìm
+        const targetQuality = inventoryItemContext?.quality || "Nomal";
+        const targetLevel = Number(inventoryItemContext?.level ?? itemData.level ?? getItemRequiredLevel(itemData));
+
+        // Tìm item trong kho (xử lý linh hoạt cả item chưa có trường quality)
         const inventoryItem = inventory.find((item) => {
-            const matchedLevel = Number(item.level ?? getItemRequiredLevel(itemData));
-            const quality = inventoryItemContext?.quality ?? item.quality ?? null;
-            return item.itemId === itemData.id && matchedLevel === Number(inventoryItemContext?.level ?? item.level ?? getItemRequiredLevel(itemData)) && (quality === null || item.quality === quality);
-        });
+            const itemLvl = Number(item.level ?? getItemRequiredLevel(itemData));
+            const itemQ = item.quality || "Nomal";
+            return item.itemId === itemData.id && itemLvl === targetLevel && itemQ === targetQuality;
+        }) || inventory.find(item => item.itemId === itemData.id && item.quantity > 0);
 
         if (!inventoryItem || inventoryItem.quantity < 1) {
+            this.showToast("Không tìm thấy vật phẩm trong túi đồ!");
             return false;
         }
 
-        // =========================
-        // Kiểm tra level: dùng level THỰC của vật phẩm sắp mặc (inventoryItem),
-        // KHÔNG dùng level tĩnh của item.js (luôn = 1)
-        // =========================
-        const requiredLevel = Number(inventoryItem.level ?? inventoryItemContext?.level ?? getItemRequiredLevel(itemData));
+        // Kiểm tra cấp độ yêu cầu
+        const requiredLevel = Number(inventoryItem.level ?? targetLevel);
         const heroLevel = Number(this.getHeroLevel(this.currentHero) || 1);
 
         if (heroLevel < requiredLevel) {
-            console.warn(`Hero level ${heroLevel} không đủ để trang bị ${itemData.name || itemData.id} (cần Lv.${requiredLevel})`);
-            this.showToast(`Cần đạt Lv.${requiredLevel} để trang bị ${itemData.name || itemData.id} (hiện tại Lv.${heroLevel})`);
+            this.showToast(`Cần đạt Lv.${requiredLevel} để trang bị (hiện tại Lv.${heroLevel})`);
             return false;
         }
 
@@ -1746,61 +1746,55 @@ export default class HeroDetailPopup {
         const previousItemId = currentEntry.itemId;
         const isSameItem = previousItemId === itemData.id;
 
-        if (!isStackableSlot && isSameItem && (inventoryItemContext?.quality ?? currentEntry.quality ?? null) === (currentEntry.quality ?? inventoryItemContext?.quality ?? null)) {
+        // Nếu đã mặc đúng món này rồi thì bỏ qua
+        if (!isStackableSlot && isSameItem && (currentEntry.quality || "Nomal") === targetQuality) {
             return false;
         }
 
         const maxEquippedQuantity = isStackableSlot ? 10 : 1;
         const currentQuantity = isSameItem ? currentEntry.quantity : 0;
         const availableSpace = Math.max(0, maxEquippedQuantity - currentQuantity);
-        const transferQuantity = isStackableSlot ?
-            Math.min(inventoryItem.quantity, availableSpace) :
-            1;
+        const transferQuantity = isStackableSlot ? Math.min(inventoryItem.quantity, availableSpace) : 1;
 
         if (transferQuantity <= 0) {
             return false;
         }
 
+        // Giảm số lượng trong túi
         inventoryItem.quantity -= transferQuantity;
-
         if (inventoryItem.quantity <= 0) {
-            saveData.inventory = inventory.filter(
-                item => item !== inventoryItem
-            );
+            saveData.inventory = inventory.filter(item => item !== inventoryItem);
         }
 
+        // Trả món cũ đang mặc về lại kho (nếu có)
         if (previousItemId && !isSameItem) {
-            const previousInventoryItem = saveData.inventory.find(
-                item => item.itemId === previousItemId && item.quality === (currentEntry.quality ?? "Nomal") && Number(item.level ?? 1) === Number(currentEntry.level ?? 1)
+            const prevQuality = currentEntry.quality || "Nomal";
+            const prevLevel = Number(currentEntry.level ?? 1);
+            const prevItemInInv = saveData.inventory.find(item =>
+                item.itemId === previousItemId &&
+                (item.quality || "Nomal") === prevQuality &&
+                Number(item.level ?? 1) === prevLevel
             );
 
-            if (previousInventoryItem) {
-                previousInventoryItem.quantity += currentEntry.quantity;
+            if (prevItemInInv) {
+                prevItemInInv.quantity += currentEntry.quantity;
             } else {
                 saveData.inventory.push({
                     itemId: previousItemId,
                     quantity: currentEntry.quantity,
-                    quality: currentEntry.quality ?? "Nomal",
-                    level: Number(currentEntry.level ?? getItemRequiredLevel({ level: 1 }))
+                    quality: prevQuality,
+                    level: prevLevel
                 });
             }
         }
 
-        if (isStackableSlot) {
-            equipment[slotType] = {
-                itemId: itemData.id,
-                quantity: currentQuantity + transferQuantity,
-                quality: selectedQuality,
-                level: Number(inventoryItemContext?.level ?? inventoryItem.level ?? getItemRequiredLevel(itemData))
-            };
-        } else {
-            equipment[slotType] = {
-                itemId: itemData.id,
-                quantity: 1,
-                quality: selectedQuality,
-                level: Number(inventoryItemContext?.level ?? inventoryItem.level ?? getItemRequiredLevel(itemData))
-            };
-        }
+        // Lưu thông tin món mới vào slot trang bị
+        equipment[slotType] = {
+            itemId: itemData.id,
+            quantity: isStackableSlot ? (currentQuantity + transferQuantity) : 1,
+            quality: targetQuality,
+            level: targetLevel
+        };
 
         saveData.heroes[heroKey] = {
             ...savedHero,
@@ -1809,7 +1803,6 @@ export default class HeroDetailPopup {
 
         SaveManager.save(saveData);
         this.refreshStats();
-
         return true;
     }
 
@@ -1900,17 +1893,13 @@ export default class HeroDetailPopup {
         const gap = 4;
         const columns = 6;
 
-        // Tính số hàng hiển thị vừa viewport
         const visibleRows = Math.ceil(this.viewHeight / (slotSize + gap));
         const itemRows = Math.ceil(totalItemsCount / columns);
-        // Đảm bảo luôn có đủ số hàng để cuộn (tối thiểu lớn hơn visibleRows ít nhất 2 hàng)
-        const rows = Math.max(visibleRows + 3, itemRows + 2, 99);
+        const rows = Math.max(visibleRows + 3, itemRows + 2, 10);
 
         const totalContentHeight = rows * (slotSize + gap);
 
-        // maxScrollY = 0 (vị trí đầu danh sách)
         this.maxScrollY = 0;
-        // minScrollY là khoảng âm tối đa được phép cuộn lên
         this.minScrollY = Math.min(0, this.viewHeight - totalContentHeight);
 
         for (let row = 0; row < rows; row++) {
@@ -1925,6 +1914,8 @@ export default class HeroDetailPopup {
                     slotSize,
                     0xf0f0f0
                 ).setOrigin(0).setStrokeStyle(1, 0x888888);
+
+                // ĐÃ XÓA: slot.setMask(this.inventoryMask) để tránh lỗi WebGL
 
                 this.inventorySlots.push(slot);
                 this.inventoryContainer.add(slot);
@@ -1977,53 +1968,50 @@ export default class HeroDetailPopup {
         let isPointerDown = false;
         let startY = 0;
         let startScrollY = 0;
+        let dragStarted = false;
+        const DRAG_THRESHOLD = 6; // px - dưới ngưỡng này coi là click, KHÔNG cuộn lưới
 
-        // Lắng nghe thao tác chạm xuống
-        this.scene.input.on("pointerdown", (pointer) => {
-            if (this.activeTab !== "inventory" || !this.container.visible) return;
-
-            // Kiểm tra con trỏ có nằm trong vùng nhìn của Inventory hay không
-            if (
-                pointer.x >= this.viewX &&
-                pointer.x <= this.viewX + this.viewWidth &&
-                pointer.y >= this.viewY &&
-                pointer.y <= this.viewY + this.viewHeight
-            ) {
-                isPointerDown = true;
-                startY = pointer.y;
-                startScrollY = this.scrollY;
-                this.hideItemMenu();
-            }
+        this.scrollZone.on("pointerdown", (pointer) => {
+            isPointerDown = true;
+            dragStarted = false;
+            startY = pointer.y;
+            startScrollY = this.scrollY;
+            this.hideItemMenu();
         });
 
-        // Lắng nghe thao tác vuốt / kéo rê
         this.scene.input.on("pointermove", (pointer) => {
-            if (!isPointerDown || this.activeTab !== "inventory" || !this.container.visible) return;
+            if (!isPointerDown || this.activeTab !== "inventory") return;
 
             const deltaY = pointer.y - startY;
-            // Chỉ cuộn khi người dùng rê chuột/ngón tay một đoạn > 4px
-            if (Math.abs(deltaY) > 4) {
-                this.setInventoryScroll(startScrollY + deltaY);
+
+            // Chưa vượt ngưỡng -> giữ nguyên lưới, để pointerup rơi đúng item đã nhấn
+            if (!dragStarted) {
+                if (Math.abs(deltaY) < DRAG_THRESHOLD) {
+                    return;
+                }
+                dragStarted = true;
             }
+
+            this.setInventoryScroll(startScrollY + deltaY);
         });
 
         const stopDrag = () => {
             isPointerDown = false;
+            dragStarted = false;
         };
         this.scene.input.on("pointerup", stopDrag);
         this.scene.input.on("pointerupoutside", stopDrag);
 
-        // Hỗ trợ con lăn chuột (Mouse Wheel)
+        // Hỗ trợ lăn chuột máy tính (Mouse Wheel)
         this.scene.input.on("wheel", (pointer, gameObjects, deltaX, deltaY) => {
             if (this.activeTab !== "inventory" || !this.container.visible) return;
-
             if (
                 pointer.x >= this.viewX &&
                 pointer.x <= this.viewX + this.viewWidth &&
                 pointer.y >= this.viewY &&
                 pointer.y <= this.viewY + this.viewHeight
             ) {
-                this.setInventoryScroll(this.scrollY - deltaY * 0.6);
+                this.setInventoryScroll(this.scrollY - deltaY * 0.5);
                 this.hideItemMenu();
             }
         });

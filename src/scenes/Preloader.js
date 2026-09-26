@@ -43,12 +43,21 @@ export default class Preloader extends Phaser.Scene {
         this.load.image("text-3", "src/assets/ui/text-3.png");
         this.load.image("icon_bag", "src/assets/ui/bag.png");
         this.load.image("icon_hero", "src/assets/ui/hero_icon.png");
-
+        this.load.image("icon_coin", "src/assets/icon/icon_coin.png");
 
         //Monster
         this.load.image("monster_slime", "src/assets/monster/monster_slime.png");
         this.load.image("monster_wolf", "src/assets/monster/monster_wolf.png");
         this.load.image("monster_orc", "src/assets/monster/monster_orc.png");
+
+        this.load.image("monster_thief_dagger", "src/assets/monster/monster_thief_dagger.png");
+        this.load.image("monster_thief_bow", "src/assets/monster/monster_thief_bow.png");
+        this.load.image("monster_thief_sword", "src/assets/monster/monster_thief_sword.png");
+        this.load.image("monster_thief_mage", "src/assets/monster/monster_thief_mage.png");
+        this.load.image("monster_thief_miner", "src/assets/monster/monster_thief_miner.png");
+
+        this.load.image("monster_wood_lv10", "src/assets/monster/monster_wood_lv10.png");
+        
 
         //Hero Skills
         //*------------Mace------------

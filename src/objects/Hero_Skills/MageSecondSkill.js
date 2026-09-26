@@ -136,9 +136,9 @@ export default class MageSecondSkill extends Skill {
                     gridContainer.add(area);
                     gridContainer.sendToBack(area);
                 }
-
-                const tickDamage = Math.max(1, (caster.attack_magic ?? caster.auto_attack ?? 0) * 0.5);
-
+                const bonusDamage = 80;
+                const tickDamage = Math.max(1, (caster.attack_magic ?? caster.auto_attack ?? 0) * 0.5) + bonusDamage;
+                const damageMultiplier = 1; //100% sát thương
                 const damageInArea = () => {
                     if (!area || !area.active) {
                         return;
@@ -158,7 +158,7 @@ export default class MageSecondSkill extends Skill {
                             return;
                         }
 
-                        unit.takeDamage(tickDamage, caster, "magic");
+                        unit.takeDamage(tickDamage, caster, "magic", { multiplier: damageMultiplier });
 
                         if (unit.dead) {
                             battle.removeUnit(unit);
@@ -174,7 +174,7 @@ export default class MageSecondSkill extends Skill {
                     callback: damageInArea,
                 });
 
-                battle.time.delayedCall(4000, () => {
+                battle.time.delayedCall(2000, () => {
                     damageTimer.remove(false);
                     area.destroy();
                 });

@@ -3,6 +3,7 @@ import MenuUI from "../ui/MenuUI.js";
 import HeroScreen from "./HeroScreen.js";
 import HeroDetailPopup from "./HeroDetailPopup.js";
 import BaseScene from "./base/BaseScene.js";
+import SaveManager from "../managers/SaveManager.js";
 
 
 import MenuButton from "../objects/MenuButton.js";
@@ -70,9 +71,17 @@ export default class MenuScene extends BaseScene  {
             }
         });
 
+        const iconCoin = this.add.image(width_device - 15, 35, "icon_coin").setOrigin(1, 0).setScale(0.5);
+        const coinText = this.add.text(width_device - 50, 40, SaveManager.get("player.gold").toString(), { fontSize: "24px", fill: "#fff" }).setOrigin(1, 0);
+        this.events.on("updateCoin", (newCoinValue) => {
+            coinText.setText(newCoinValue.toString());
+        });
+
         this.menuContainer.add(btnPlay.container);
         this.menuContainer.add(btnInventory.container);
         this.menuContainer.add(btnHeroes.container);
+        this.menuContainer.add(iconCoin);
+        this.menuContainer.add(coinText);
 
     }
 

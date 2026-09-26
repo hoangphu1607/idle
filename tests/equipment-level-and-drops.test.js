@@ -1,9 +1,19 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-globalThis.window = globalThis;
-globalThis.navigator = { userAgent: "node", platform: "linux" };
+Object.defineProperty(globalThis, "window", {
+  value: globalThis,
+  configurable: true,
+  writable: true,
+});
+Object.defineProperty(globalThis, "navigator", {
+  value: { userAgent: "node", platform: "linux", maxTouchPoints: 0 },
+  configurable: true,
+  writable: true,
+});
+globalThis.window.navigator = globalThis.navigator;
 globalThis.document = {
+  documentElement: { style: {} },
   createElement: () => ({
     style: {},
     width: 0,
@@ -27,13 +37,20 @@ globalThis.document = {
       rotate() {},
       setTransform() {},
       fillText() {},
-      measureText() { return { width: 0 }; }
+      strokeText() {},
+      measureText() { return { width: 0 }; },
+      getImageData() { return { data: new Uint8ClampedArray(4), width: 1, height: 1 }; },
+      putImageData() {},
+      createImageData() { return { data: new Uint8ClampedArray(4), width: 1, height: 1 }; },
+      createLinearGradient() { return { addColorStop() {} }; },
+      createRadialGradient() { return { addColorStop() {} }; }
     })
   }),
   createElementNS: () => ({ style: {} }),
   body: { appendChild() {}, removeChild() {} },
   head: { appendChild() {}, removeChild() {} }
 };
+globalThis.window.document = globalThis.document;
 globalThis.HTMLCanvasElement = class {};
 globalThis.Image = class { constructor() { this.width = 0; this.height = 0; this.style = {}; } set src(_) {} };
 
@@ -100,6 +117,50 @@ test("unequipping a higher-level item keeps it in the matching level stack", asy
   const inventory = SaveManager.load().inventory;
   assert.deepEqual(inventory, [{ itemId: "mace", quantity: 1, quality: "good", level: 10 }]);
   assert.equal(SaveManager.load().heroes[7].equipment.weapon, undefined);
+});
+
+test("equipping a weapon accepts case-variant item types and class names", async () => {
+  const saveStore = new Map();
+  const storage = {
+    getItem(key) { return saveStore.has(key) ? JSON.stringify(saveStore.get(key)) : null; },
+    setItem(key, value) { saveStore.set(key, JSON.parse(value)); },
+    removeItem(key) { saveStore.delete(key); }
+  };
+
+  globalThis.localStorage = storage;
+  saveStore.clear();
+  saveStore.set("idle_game_save", {
+    version: 1,
+    heroes: {
+      1: {
+        id: 1,
+        name: "Mace",
+        role: "tank",
+        level: 1,
+        equipment: {},
+      },
+    },
+    inventory: [{ itemId: "mace", quantity: 1, quality: "Nomal", level: 1 }],
+    player: { gold: 0 },
+  });
+
+  const { default: HeroDetailPopup } = await import("../src/scenes/HeroDetailPopup.js");
+  const SaveManager = (await import("../src/managers/SaveManager.js")).default;
+
+  const popup = Object.create(HeroDetailPopup.prototype);
+  popup.currentHero = { id: 1, name: "Mace", role: "tank", level: 1 };
+  popup.refreshStats = () => {};
+  popup.renderInventory = () => {};
+  popup.renderEquipment = () => {};
+  popup.hideItemMenu = () => {};
+  popup.showToast = () => {};
+  popup.equipmentSlots = [{ slotType: "weapon" }];
+
+  const itemData = { id: "mace", name: "Mace", type: "Weapon", class: "Mace", level: 1, requiredLevel: 1 };
+  const result = popup.equipItem(itemData, "weapon", { itemId: "mace", quantity: 1, quality: "Nomal", level: 1 });
+
+  assert.equal(result, true);
+  assert.equal(SaveManager.load().heroes[1].equipment.weapon.itemId, "mace");
 });
 
 test("easy difficulty equipment drop range stays within level 1-10", () => {
