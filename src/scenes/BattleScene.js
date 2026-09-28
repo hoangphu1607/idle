@@ -5,6 +5,8 @@ import { STAGES_BY_MAP } from "../assets/data/stages.js";
 import SaveManager from "../managers/SaveManager.js";
 import Inventory from "../managers/Inventory.js";
 import HeroDetailPopup from "./HeroDetailPopup.js";
+import { MAP_BACKGROUNDS } from "../assets/data/mapConfigs.js";
+
 export default class BattleScene extends BaseScene {
     constructor() {
         super("BattleScene");
@@ -60,13 +62,13 @@ export default class BattleScene extends BaseScene {
         );
 
         // Divider
-        this.add.rectangle(
-            this.scale.width / 2,
-            dividerY,
-            this.scale.width - 80,
-            dividerHeight,
-            0x666666,
-        );
+        // this.add.rectangle(
+        //     this.scale.width / 2,
+        //     dividerY,
+        //     this.scale.width - 80,
+        //     dividerHeight,
+        //     0x666666,
+        // );
 
         // Player
         this.playerGrid = new BattleGrid(
@@ -586,23 +588,7 @@ export default class BattleScene extends BaseScene {
             .setInteractive({ useHandCursor: true });
     }
 
-    findRandomTarget(grid) {
-        const units = [];
-
-        grid.grid.forEach((row) => {
-            row.forEach((unit) => {
-                if (unit && !unit.dead) {
-                    units.push(unit);
-                }
-            });
-        });
-
-        if (units.length === 0) {
-            return null;
-        }
-
-        return Phaser.Utils.Array.GetRandom(units);
-    }
+    
 
     findNearestTarget(grid, attacker) {
         const units = this.getAllUnits(grid);
@@ -699,6 +685,35 @@ export default class BattleScene extends BaseScene {
         }
 
         return Phaser.Utils.Array.GetRandom(this.stages);
+    }
+
+    /**
+     * Lấy key asset background tương ứng với mapId
+     */
+    getMapBackgroundKey(mapId) {
+        const normalizedId = String(mapId || "").toLowerCase();
+        return MAP_BACKGROUNDS[normalizedId] || MAP_BACKGROUNDS.default;
+    }
+
+    /**
+     * Tạo hình nền trận đấu phù hợp theo mapId
+     */
+    createBackground() {
+        const bgKey = this.getMapBackgroundKey(this.mapId);
+        // Kiểm tra xem texture đã được load vào Phaser chưa, nếu chưa thì fallback
+        const finalKey = this.textures.exists(bgKey) ? bgKey : MAP_BACKGROUNDS.default;
+
+        const background = this.add.image(
+            this.scale.width / 2,
+            this.scale.height / 2,
+            finalKey
+        );
+
+        // Co dãn vừa vặn màn hình hiển thị
+        background.setDisplaySize(this.scale.width, this.scale.height);
+        background.setDepth(-100);
+
+        return background;
     }
 
 

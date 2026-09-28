@@ -11,10 +11,10 @@ export default class BattleCell {
             y,
             size,
             size,
-            0xdddddd
+            //0xdddddd
         )
         .setOrigin(0)
-        .setStrokeStyle(2, 0x999999);
+        //.setStrokeStyle(2, 0x999999);
 
     }
 

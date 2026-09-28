@@ -16,6 +16,12 @@ export default class Preloader extends Phaser.Scene {
         this.load.image("bg_item_outstanding", "src/assets/bg/bg_item_outstanding.png");
         this.load.image("bg_item_excellent", "src/assets/bg/bg_item_excellent.png");
         this.load.image("bg_item_masterpiece", "src/assets/bg/bg_item_masterpiece.png");
+        this.load.image("bg-map-forest", "src/assets/bg/bg-map-forest.png");
+        this.load.image("bg-map-snow", "src/assets/bg/bg-map-snow.png");
+        this.load.image("bg-map-desert", "src/assets/bg/bg-map-desert.png");
+        this.load.image("bg-map-swamp", "src/assets/bg/bg-map-swamp.png");
+        this.load.image("bg-map-plateau", "src/assets/bg/bg-map-plateau.png");
+        this.load.image("bg-map-dungeon", "src/assets/bg/bg-map-dungeon.png");
 
         //Load champ
         this.load.image("wizard", "src/assets/champ/wizard.png");

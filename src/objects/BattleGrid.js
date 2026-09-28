@@ -268,13 +268,13 @@ export default class BattleGrid {
         this.hpBar.width = this.scene.playerGrid.cellSize * percent;
     }
 
-    takeDamage(value) {
-        this.hp -= value;
+    // takeDamage(value) {
+    //     this.hp -= value;
 
-        if (this.hp < 0) this.hp = 0;
+    //     if (this.hp < 0) this.hp = 0;
 
-        if (this.view) {
-            this.view.refresh();
-        }
-    }
+    //     if (this.view) {
+    //         this.view.refresh();
+    //     }
+    // }
 }
