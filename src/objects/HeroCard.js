@@ -43,7 +43,6 @@ export default class HeroCard {
             50,
             this.hero.avatar
         );
-
         avatar.setDisplaySize(64, 64);
 
         // Name
@@ -76,7 +75,6 @@ export default class HeroCard {
                 color: "#7CFC00"
             }
         );
-        //console.log("Hero EXP:", this.hero.experience);
 
         // Experience
         const experience = this.scene.add.text(
@@ -87,7 +85,6 @@ export default class HeroCard {
                 color: "#87ceeb"
             }
         );
-
 
         // Attack
         const atk = this.scene.add.text(
@@ -108,6 +105,17 @@ export default class HeroCard {
             experience,
             atk
         ]);
+
+        // Đặt icon_lock ở chính giữa thẻ card nếu chưa unlock
+        if (!this.hero.unlocked) {
+            const cardCenterX = (width - 40) / 2;
+            const cardCenterY = 50;
+
+            const lock = this.scene.add.image(cardCenterX, cardCenterY, "icon_lock");
+            lock.setDisplaySize(48, 48);
+            lock.setDepth(10);
+            this.container.add(lock);
+        }
 
     }
 

@@ -1,18 +1,18 @@
 import SaveManager from "../managers/SaveManager.js";
-import items, { getItemBackgroundKey, getItemRequiredLevel } from "../assets/data/item.js";
+import items, { getItemBackgroundKey, getItemRequiredLevel, getDecomposeMaterials } from "../assets/data/item.js";
+import ItemActionMenu from "../ui/ItemActionMenu.js";
 import Phaser from "phaser";
 import { HERO_SKILL_INFO, CLASS_LABELS, HERO_PASSIVE_INFO } from "../assets/data/heroSkills.js";
+
 export default class HeroDetailPopup {
 
     constructor(scene) {
-
         this.scene = scene;
         this.currentHero = null;
         this.equipmentItemImages = {};
         this.equipmentItemQuantityTexts = {};
         this.equipmentItemLevelTexts = {};
         this.inventoryItemViews = [];
-        this.actionMenu = null;
         this.toastText = null;
         this.toastTimer = null;
 
@@ -20,165 +20,44 @@ export default class HeroDetailPopup {
         this.container.setVisible(false);
         this.container.setDepth(9999);
 
-        this.activeTab = "inventory";
+        // Khởi tạo ItemActionMenu và gán cha là this.container
+        this.itemMenu = new ItemActionMenu(scene, this.container);
 
-        // =========================
-        // Kích thước Popup
-        // =========================
+        this.activeTab = "inventory";
 
         this.panelWidth = scene.scale.width * 0.8;
         this.panelHeight = scene.scale.height * 0.8;
-
         this.cx = scene.scale.width / 2;
         this.cy = scene.scale.height / 2;
 
-        // =========================
-        // Overlay
-        // =========================
-
         const overlay = scene.add.rectangle(
-            0,
-            0,
-            scene.scale.width,
-            scene.scale.height,
-            0x000000,
-            0.65
-        ).setOrigin(0);
+            0, 0, scene.scale.width, scene.scale.height, 0x000000, 0.65
+        ).setOrigin(0).setInteractive();
 
-        overlay.setInteractive();
-
-        overlay.on("pointerup", () => {
-            this.hide();
-        });
-
-        // =========================
-        // Panel
-        // =========================
+        overlay.on("pointerup", () => this.hide());
 
         const panel = scene.add.rectangle(
-            this.cx,
-            this.cy,
-            this.panelWidth,
-            this.panelHeight,
-            0xffffff
-        );
+            this.cx, this.cy, this.panelWidth, this.panelHeight, 0xffffff
+        ).setInteractive();
 
-        panel.setInteractive();
-        panel.on("pointerup", pointer => {
+        panel.on("pointerup", (pointer) => {
             pointer.event.stopPropagation();
-            this.hideItemMenu();
+            this.itemMenu.hideAll();
         });
 
-        // =========================
-        // Avatar
-        // =========================
+        this.avatar = scene.add.image(this.cx - 185, this.cy - 410, "wizard").setDisplaySize(70, 70);
+        this.name = scene.add.text(this.cx - 115, this.cy - 435, "", { fontSize: "18px", color: "#000000" });
+        this.role = scene.add.text(this.cx - 115, this.cy - 405, "", { fontSize: "18px", color: "#000000" });
+        this.level = scene.add.text(this.cx - 115, this.cy - 375, "", { fontSize: "16px", color: "#000000" });
 
-        this.avatar = scene.add.image(
-            this.cx - 185,
-            this.cy - 410,
-            "wizard"
-        );
-
-        this.avatar.setDisplaySize(70, 70);
-
-        // =========================
-        // Name
-        // =========================
-
-        this.name = scene.add.text(
-            this.cx - 115,
-            this.cy - 435,
-            "", {
-            fontSize: "18px",
-            color: "#000000"
-        }
-        );
-
-        // =========================
-        // Class
-        // =========================
-
-        this.role = scene.add.text(
-            this.cx - 115,
-            this.cy - 405,
-            "", {
-            fontSize: "18px",
-            color: "#000000"
-        }
-        );
-
-        // =========================
-        // Level
-        // =========================
-
-        this.level = scene.add.text(
-            this.cx - 115,
-            this.cy - 375,
-            "", {
-            fontSize: "16px",
-            color: "#000000"
-        }
-        );
-
-        // =========================
-        // Experience
-        // =========================
-
-        // this.exp = scene.add.text(
-        //     this.cx - 115,
-        //     this.cy - 345,
-        //     "", {
-        //     fontSize: "16px",
-        //     color: "#000000"
-        // }
-        // );
-
-        this.expBarBg = scene.add.rectangle(
-            this.cx - 185,
-            this.cy - 305,
-            170,
-            12,
-            0x2b3240
-        );
-
-        this.expBarFill = scene.add.rectangle(
-            this.cx - 185 - 85,
-            this.cy - 305,
-            0,
-            10,
-            0x4ec2ff
-        ).setOrigin(0, 0.5);
-
-        this.expBarText = scene.add.text(
-            this.cx - 185,
-            this.cy - 330,
-            "",
-            {
-                fontSize: "12px",
-                color: "#111111",
-                fontStyle: "bold"
-            }
-        ).setOrigin(0.5);
-
-        // =========================
-        // Equipment Slots
-        // =========================
+        this.expBarBg = scene.add.rectangle(this.cx - 185, this.cy - 305, 170, 12, 0x2b3240);
+        this.expBarFill = scene.add.rectangle(this.cx - 185 - 85, this.cy - 305, 0, 10, 0x4ec2ff).setOrigin(0, 0.5);
+        this.expBarText = scene.add.text(this.cx - 185, this.cy - 330, "", { fontSize: "12px", color: "#111111", fontStyle: "bold" }).setOrigin(0.5);
 
         this.equipmentSlots = [];
-
         this.createEquipmentSlots();
 
-        // Tạm thời tắt drag item để tránh tương tác kéo thả khi đang test UI
-        // this.scene.input.on("dragstart", this.handleDragStart, this);
-        // this.scene.input.on("drag", this.handleDrag, this);
-        // this.scene.input.on("dragend", this.handleDragEnd, this);
-        // this.scene.input.on("drop", this.handleDrop, this);
-
-        // =========================
-        // Inventory (Viewport tinh chỉnh chuẩn)
-        // =========================
         this.inventoryContainer = scene.add.container(0, 0);
-
         this.inventorySlots = [];
         this.scrollY = 0;
         this.minScrollY = 0;
@@ -191,21 +70,11 @@ export default class HeroDetailPopup {
         this.viewWidth = 510;
 
         const panelBottom = this.cy + this.panelHeight / 2;
-        // Chừa lề đáy popup khoảng 15px để khung nhìn đẹp mắt
         const availableHeight = panelBottom - 15 - this.viewY;
-        const slotTotalHeight = 80 + 4; // slotSize + gap
-        // Tính chiều cao bằng đúng số hàng hiển thị vừa vặn
+        const slotTotalHeight = 80 + 4;
         const maxFittingRows = Math.floor(availableHeight / slotTotalHeight);
         this.viewHeight = maxFittingRows * slotTotalHeight;
 
-        // Tạo GeometryMask để cắt xén phẳng các ô cuộn
-        // const maskShape = scene.make.graphics();
-        // maskShape.fillStyle(0xffffff);
-        // maskShape.fillRect(this.viewX, this.viewY, this.viewWidth, this.viewHeight);
-        // this.inventoryMask = maskShape.createGeometryMask();
-        this.inventoryMask = null;
-
-        // Vùng nhận tương tác cuộn
         this.scrollZone = scene.add.zone(
             this.viewX + this.viewWidth / 2,
             this.viewY + this.viewHeight / 2,
@@ -217,17 +86,11 @@ export default class HeroDetailPopup {
         this.tabs = {};
         this.tabObjects = [];
 
-        this.skillContainer = scene.add.container(0, 0);
-        this.skillContainer.setVisible(false);
-
-        this.passiveContainer = scene.add.container(0, 0);
-        this.passiveContainer.setVisible(false);
+        this.skillContainer = scene.add.container(0, 0).setVisible(false);
+        this.passiveContainer = scene.add.container(0, 0).setVisible(false);
         this.createTabs();
         this.setupInventoryScrollEvents();
 
-        // =========================
-        // Stats
-        // =========================
         this.statTexts = {};
         this.createStatText("attack_physical", "Physic Dame:", this.cx - 225, this.cy - 300);
         this.createStatText("attack_magic", "Mage Dame:", this.cx + 25, this.cy - 300);
@@ -236,10 +99,8 @@ export default class HeroDetailPopup {
         this.createStatText("hp", "HP:", this.cx - 225, this.cy - 240);
         this.createStatText("mp", "MP:", this.cx + 25, this.cy - 240);
 
-        // Phân cấp depth rõ ràng
         this.inventoryContainer.setDepth(5);
 
-        // Tấm che phần trên (Avatar & Chỉ số & 3 Tab)
         const topCover = scene.add.rectangle(
             this.cx,
             this.cy - 305,
@@ -248,41 +109,22 @@ export default class HeroDetailPopup {
             0xffffff
         ).setOrigin(0.5).setDepth(15);
 
-        // [MỚI] Tấm che phần đáy popup: che kín các ô đồ vượt quá viền dưới
-        // const bottomCoverHeight = 120;
-        // const bottomCoverY = (this.cy + this.panelHeight / 2) + bottomCoverHeight / 2 - 2;
-        // const bottomCover = scene.add.rectangle(
-        //     this.cx,
-        //     bottomCoverY,
-        //     this.panelWidth + 10,
-        //     bottomCoverHeight,
-        //     0xffffff
-        // ).setOrigin(0.5).setDepth(15);
-
-        // Nút đóng
         const closeButton = scene.add.text(
             this.cx + this.panelWidth / 2 - 20,
             this.cy - this.panelHeight / 2 + 20,
-            "×", {
-            fontSize: "30px",
-            color: "#000000",
-            fontStyle: "bold"
-        }).setOrigin(0.5).setDepth(100);
+            "×", { fontSize: "30px", color: "#000000", fontStyle: "bold" }
+        ).setOrigin(0.5).setDepth(100);
 
         closeButton.setInteractive({ useHandCursor: true });
         closeButton.on("pointerup", () => this.hide());
         closeButton.on("pointerover", () => closeButton.setColor("#ff0000"));
         closeButton.on("pointerout", () => closeButton.setColor("#000000"));
 
-        // =========================
-        // Add Container
-        // =========================
         this.container.add([
             overlay,
             panel,
-            this.inventoryContainer, // Nằm dưới lớp che (Depth 5)
-            topCover,                // Che mép trên (Depth 15)
-            //bottomCover,             // [MỚI] Che mép dưới (Depth 15)
+            this.inventoryContainer,
+            topCover,
             this.avatar,
             this.name,
             this.role,
@@ -299,16 +141,10 @@ export default class HeroDetailPopup {
         ]);
     }
 
-    // =====================================================
-    // Tabs
-    // =====================================================
-
     createTabs() {
-
         const tabWidth = 120;
         const tabHeight = 30;
         const gap = 6;
-
         const startX = this.cx - 240;
         const y = this.cy - 217;
 
@@ -319,37 +155,19 @@ export default class HeroDetailPopup {
         ];
 
         defs.forEach((def, index) => {
-
             const x = startX + index * (tabWidth + gap);
+            const bg = this.scene.add.rectangle(x, y, tabWidth, tabHeight, 0xdddddd)
+                .setOrigin(0).setStrokeStyle(1, 0x888888).setInteractive({ useHandCursor: true });
 
-            const bg = this.scene.add.rectangle(
-                x,
-                y,
-                tabWidth,
-                tabHeight,
-                0xdddddd
-            )
-                .setOrigin(0)
-                .setStrokeStyle(1, 0x888888)
-                .setInteractive({ useHandCursor: true });
-
-            const label = this.scene.add.text(
-                x + tabWidth / 2,
-                y + tabHeight / 2,
-                def.label, {
-                fontSize: "16px",
-                color: "#000000",
-                fontStyle: "bold"
-            }
-            ).setOrigin(0.5);
+            const label = this.scene.add.text(x + tabWidth / 2, y + tabHeight / 2, def.label, {
+                fontSize: "16px", color: "#000000", fontStyle: "bold"
+            }).setOrigin(0.5);
 
             bg.setDepth(50);
             label.setDepth(51);
 
             bg.on("pointerup", (pointer) => {
-                if (pointer.event) {
-                    pointer.event.stopPropagation();
-                }
+                if (pointer.event) pointer.event.stopPropagation();
                 this.setTab(def.id);
             });
 
@@ -361,18 +179,15 @@ export default class HeroDetailPopup {
     }
 
     setTab(tabId) {
-
         this.activeTab = tabId;
-        this.hideItemMenu();
+        this.itemMenu.hideAll();
 
         Object.entries(this.tabs).forEach(([id, tab]) => {
             const active = id === tabId;
-
             tab.bg.setFillStyle(active ? 0x3366cc : 0xdddddd);
             tab.label.setColor(active ? "#ffffff" : "#000000");
         });
 
-        // Container ẩn thì các object bên trong cũng không nhận click/drop
         this.inventoryContainer.setVisible(tabId === "inventory");
         this.inventoryContainer.setDepth(tabId === "inventory" ? 5 : 1);
         this.scrollZone.setVisible(tabId === "inventory");
@@ -397,32 +212,21 @@ export default class HeroDetailPopup {
 
         return [{
             id: passiveId,
-            info: HERO_PASSIVE_INFO[passiveId] || {
-                name: passiveId,
-                description: "Passive",
-                icon: null,
-            },
+            info: HERO_PASSIVE_INFO[passiveId] || { name: passiveId, description: "Passive", icon: null },
             level: this.getPassiveLevel(hero, passiveId),
         }];
     }
 
     getPassiveLevel(hero, passiveId) {
-        if (!hero) {
-            return 0;
-        }
-
+        if (!hero) return 0;
         const savedHero = SaveManager.loadHero(hero.id) || {};
         const savedPassives = savedHero.passives || {};
         const value = Number(savedPassives[passiveId] ?? 0);
-
         return Number.isFinite(value) ? Math.max(0, Math.min(10, value)) : 0;
     }
 
     getHeroLevel(hero) {
-        if (!hero) {
-            return 1;
-        }
-
+        if (!hero) return 1;
         const savedHero = SaveManager.loadHero(hero.id) || {};
         return Math.max(1, Number(savedHero.level ?? hero.level ?? 1) || 1);
     }
@@ -440,9 +244,7 @@ export default class HeroDetailPopup {
     }
 
     updatePassiveLevel(hero, passiveId, delta) {
-        if (!hero || !passiveId) {
-            return;
-        }
+        if (!hero || !passiveId) return;
 
         const saveData = SaveManager.load();
         const heroKey = String(hero.id);
@@ -453,23 +255,15 @@ export default class HeroDetailPopup {
 
         if (delta > 0) {
             const availablePoints = this.getAvailablePassivePoints(hero);
-            if (availablePoints <= 0 || currentLevel >= 10) {
-                return;
-            }
+            if (availablePoints <= 0 || currentLevel >= 10) return;
         }
 
-        if (delta < 0 && currentLevel <= 0) {
-            return;
-        }
+        if (delta < 0 && currentLevel <= 0) return;
 
         const nextLevel = Math.max(0, Math.min(10, currentLevel + delta));
-
-        if (nextLevel === currentLevel) {
-            return;
-        }
+        if (nextLevel === currentLevel) return;
 
         currentPassives[passiveId] = nextLevel;
-
         saveData.heroes = saveData.heroes || {};
         saveData.heroes[heroKey] = {
             ...currentHeroSave,
@@ -482,7 +276,6 @@ export default class HeroDetailPopup {
     }
 
     renderSkills(hero) {
-
         this.skillContainer.removeAll(true);
 
         const startX = this.cx - 240;
@@ -490,109 +283,41 @@ export default class HeroDetailPopup {
         const rowWidth = 504;
         const rowHeight = 96;
         const gap = 8;
-
-        // Tiêu đề class
         const classLabel = CLASS_LABELS[hero.role] || hero.role || "-";
 
         this.skillContainer.add(
             this.scene.add.text(
-                startX,
-                startY,
-                `Class: ${classLabel}`, {
-                fontSize: "18px",
-                color: "#000000",
-                fontStyle: "bold"
-            }
+                startX, startY, `Class: ${classLabel}`, { fontSize: "18px", color: "#000000", fontStyle: "bold" }
             )
         );
 
         const skills = hero.skills || [];
-
         if (skills.length === 0) {
             this.skillContainer.add(
-                this.scene.add.text(
-                    startX,
-                    startY + 34,
-                    "Class này chưa có skill", { fontSize: "16px", color: "#666666" }
-                )
+                this.scene.add.text(startX, startY + 34, "Class này chưa có skill", { fontSize: "16px", color: "#666666" })
             );
             return;
         }
 
         skills.forEach((skillData, index) => {
-
-            const info = HERO_SKILL_INFO[skillData.id] || {
-                name: skillData.id,
-                icon: null,
-                description: ""
-            };
-
+            const info = HERO_SKILL_INFO[skillData.id] || { name: skillData.id, icon: null, description: "" };
             const y = startY + 34 + index * (rowHeight + gap);
 
-            const bg = this.scene.add.rectangle(
-                startX,
-                y,
-                rowWidth,
-                rowHeight,
-                0xf0f0f0
-            )
-                .setOrigin(0)
-                .setStrokeStyle(1, 0x888888);
-
-            const iconFrame = this.scene.add.rectangle(
-                startX + 10,
-                y + 10,
-                76,
-                76,
-                0xffffff
-            )
-                .setOrigin(0)
-                .setStrokeStyle(2, 0xe5c07b);
-
+            const bg = this.scene.add.rectangle(startX, y, rowWidth, rowHeight, 0xf0f0f0).setOrigin(0).setStrokeStyle(1, 0x888888);
+            const iconFrame = this.scene.add.rectangle(startX + 10, y + 10, 76, 76, 0xffffff).setOrigin(0).setStrokeStyle(2, 0xe5c07b);
             const objects = [bg, iconFrame];
 
             if (info.icon && this.scene.textures.exists(info.icon)) {
-                const icon = this.scene.add.image(
-                    startX + 48,
-                    y + 48,
-                    info.icon
-                );
-
+                const icon = this.scene.add.image(startX + 48, y + 48, info.icon);
                 icon.setDisplaySize(64, 64);
                 objects.push(icon);
             }
 
-            const name = this.scene.add.text(
-                startX + 100,
-                y + 10,
-                info.name, {
-                fontSize: "18px",
-                color: "#000000",
-                fontStyle: "bold"
-            }
-            );
-
-            const cooldown = this.scene.add.text(
-                startX + rowWidth - 10,
-                y + 12,
-                `CD: ${skillData.cooldown ?? "-"}s`, {
-                fontSize: "14px",
-                color: "#555555"
-            }
-            ).setOrigin(1, 0);
-
-            const description = this.scene.add.text(
-                startX + 100,
-                y + 38,
-                info.description, {
-                fontSize: "14px",
-                color: "#333333",
-                wordWrap: { width: rowWidth - 115 }
-            }
-            );
+            const name = this.scene.add.text(startX + 100, y + 10, info.name, { fontSize: "18px", color: "#000000", fontStyle: "bold" });
+            const cooldown = this.scene.add.text(startX + rowWidth - 10, y + 12, `CD: ${skillData.cooldown ?? "-"}s`, { fontSize: "14px", color: "#555555" }).setOrigin(1, 0);
+            const description = this.scene.add.text(startX + 100, y + 38, info.description, { fontSize: "14px", color: "#333333", wordWrap: { width: rowWidth - 115 } });
 
             objects.push(name, cooldown, description);
-
             this.skillContainer.add(objects);
         });
     }
@@ -610,36 +335,20 @@ export default class HeroDetailPopup {
         const availablePoints = this.getAvailablePassivePoints(hero);
 
         this.passiveContainer.add(
-            this.scene.add.text(
-                startX,
-                startY,
-                `Class Passive: ${CLASS_LABELS[hero.role] || hero.role || "-"}`, {
-                fontSize: "18px",
-                color: "#000000",
-                fontStyle: "bold"
-            }
-            )
+            this.scene.add.text(startX, startY, `Class Passive: ${CLASS_LABELS[hero.role] || hero.role || "-"}`, {
+                fontSize: "18px", color: "#000000", fontStyle: "bold"
+            })
         );
 
         this.passiveContainer.add(
-            this.scene.add.text(
-                startX + 260,
-                startY,
-                `Điểm còn: ${availablePoints}`, {
-                fontSize: "16px",
-                color: availablePoints > 0 ? "#1d6f42" : "#7a1f1f",
-                fontStyle: "bold"
-            }
-            )
+            this.scene.add.text(startX + 260, startY, `Điểm còn: ${availablePoints}`, {
+                fontSize: "16px", color: availablePoints > 0 ? "#1d6f42" : "#7a1f1f", fontStyle: "bold"
+            })
         );
 
         if (passives.length === 0) {
             this.passiveContainer.add(
-                this.scene.add.text(
-                    startX,
-                    startY + 34,
-                    "Không có passive", { fontSize: "16px", color: "#666666" }
-                )
+                this.scene.add.text(startX, startY + 34, "Không có passive", { fontSize: "16px", color: "#666666" })
             );
             return;
         }
@@ -648,26 +357,8 @@ export default class HeroDetailPopup {
             const info = passive.info || { name: passive.id, icon: null, description: "" };
             const y = startY + 34 + index * (rowHeight + gap);
 
-            const bg = this.scene.add.rectangle(
-                startX,
-                y,
-                rowWidth,
-                rowHeight,
-                0xf0f0f0
-            )
-                .setOrigin(0)
-                .setStrokeStyle(1, 0x888888);
-
-            const iconFrame = this.scene.add.rectangle(
-                startX + 10,
-                y + 10,
-                76,
-                76,
-                0xffffff
-            )
-                .setOrigin(0)
-                .setStrokeStyle(2, 0xe5c07b);
-
+            const bg = this.scene.add.rectangle(startX, y, rowWidth, rowHeight, 0xf0f0f0).setOrigin(0).setStrokeStyle(1, 0x888888);
+            const iconFrame = this.scene.add.rectangle(startX + 10, y + 10, 76, 76, 0xffffff).setOrigin(0).setStrokeStyle(2, 0xe5c07b);
             const objects = [bg, iconFrame];
 
             if (info.icon && this.scene.textures.exists(info.icon)) {
@@ -676,57 +367,19 @@ export default class HeroDetailPopup {
                 objects.push(icon);
             }
 
-            const name = this.scene.add.text(
-                startX + 100,
-                y + 10,
-                info.name, {
-                fontSize: "18px",
-                color: "#000000",
-                fontStyle: "bold"
-            }
-            );
+            const name = this.scene.add.text(startX + 100, y + 10, info.name, { fontSize: "18px", color: "#000000", fontStyle: "bold" });
+            const levelText = this.scene.add.text(startX + rowWidth - 100, y + 12, `Lv ${passive.level}/${10}`, { fontSize: "14px", color: "#333333", fontStyle: "bold" }).setOrigin(1, 0);
+            const description = this.scene.add.text(startX + 100, y + 38, info.description, { fontSize: "14px", color: "#333333", wordWrap: { width: rowWidth - 120 } });
 
-            const levelText = this.scene.add.text(
-                startX + rowWidth - 100,
-                y + 12,
-                `Lv ${passive.level}/${10}`, {
-                fontSize: "14px",
-                color: "#333333",
-                fontStyle: "bold"
-            }
-            ).setOrigin(1, 0);
-
-            const description = this.scene.add.text(
-                startX + 100,
-                y + 38,
-                info.description, {
-                fontSize: "14px",
-                color: "#333333",
-                wordWrap: { width: rowWidth - 120 }
-            }
-            );
-
-            const minusBtn = this.scene.add.text(
-                startX + rowWidth - 50,
-                y + 52,
-                "-", {
-                fontSize: "28px",
-                color: passive.level > 0 ? "#000000" : "#999999",
-                fontStyle: "bold"
-            }
-            ).setInteractive({ useHandCursor: true });
+            const minusBtn = this.scene.add.text(startX + rowWidth - 50, y + 52, "-", {
+                fontSize: "28px", color: passive.level > 0 ? "#000000" : "#999999", fontStyle: "bold"
+            }).setInteractive({ useHandCursor: true });
             minusBtn.on("pointerup", () => this.updatePassiveLevel(hero, passive.id, -1));
             minusBtn.setAlpha(passive.level > 0 ? 1 : 0.45);
 
-            const plusBtn = this.scene.add.text(
-                startX + rowWidth - 20,
-                y + 52,
-                "+", {
-                fontSize: "28px",
-                color: availablePoints > 0 && passive.level < 10 ? "#000000" : "#999999",
-                fontStyle: "bold"
-            }
-            ).setInteractive({ useHandCursor: true });
+            const plusBtn = this.scene.add.text(startX + rowWidth - 20, y + 52, "+", {
+                fontSize: "28px", color: availablePoints > 0 && passive.level < 10 ? "#000000" : "#999999", fontStyle: "bold"
+            }).setInteractive({ useHandCursor: true });
             plusBtn.on("pointerup", () => this.updatePassiveLevel(hero, passive.id, 1));
             plusBtn.setAlpha(availablePoints > 0 && passive.level < 10 ? 1 : 0.45);
 
@@ -734,74 +387,41 @@ export default class HeroDetailPopup {
             this.passiveContainer.add(objects);
         });
     }
-    createEquipmentSlots() {
 
+    createEquipmentSlots() {
         const startX = this.cx + 25;
         const startY = this.cy - 435;
-
         const slotSize = 48;
         const gap = 4;
-
         const columns = 4;
         const rows = 2;
 
         const slotFrames = [
-            "slot_weapon",
-            "slot_shield",
-            "slot_helmet",
-            "slot_armor",
-            "slot_boots",
-            "slot_cloak",
-            "slot_potion",
-            "slot_food"
+            "slot_weapon", "slot_shield", "slot_helmet", "slot_armor",
+            "slot_boots", "slot_cloak", "slot_potion", "slot_food"
         ];
-
         const slotTypes = [
-            "weapon",
-            "shield",
-            "helmet",
-            "armor",
-            "boots",
-            "cloak",
-            "potion",
-            "food"
+            "weapon", "shield", "helmet", "armor",
+            "boots", "cloak", "potion", "food"
         ];
 
         for (let row = 0; row < rows; row++) {
-
             for (let col = 0; col < columns; col++) {
-
                 const x = startX + col * (slotSize + gap);
                 const y = startY + row * (slotSize + gap);
 
-                const slot = this.scene.add.image(
-                    x,
-                    y,
-                    "inventory_slots",
-                    slotFrames[row * columns + col]
-                );
-
+                const slot = this.scene.add.image(x, y, "inventory_slots", slotFrames[row * columns + col]);
                 slot.setDisplaySize(slotSize, slotSize);
                 slot.slotType = slotTypes[row * columns + col];
                 slot.setInteractive();
                 slot.input.dropZone = true;
-
                 this.equipmentSlots.push(slot);
             }
         }
     }
 
     createStatText(key, label, x, y) {
-
-        const text = this.scene.add.text(
-            x,
-            y,
-            `${label} 0`, {
-            fontSize: "15px",
-            color: "#000000"
-        }
-        );
-
+        const text = this.scene.add.text(x, y, `${label} 0`, { fontSize: "15px", color: "#000000" });
         this.statTexts[key] = text;
     }
 
@@ -810,9 +430,7 @@ export default class HeroDetailPopup {
     }
 
     updateExpBar() {
-        if (!this.currentHero) {
-            return;
-        }
+        if (!this.currentHero) return;
 
         const savedHero = SaveManager.loadHero(this.currentHero.id) || {};
         const heroLevel = Number(savedHero.level ?? this.currentHero.level ?? 1);
@@ -823,16 +441,10 @@ export default class HeroDetailPopup {
 
         this.expBarFill.width = barWidth * fillRatio;
         this.expBarText.setText(`${currentExp}/${requiredExp}`);
-
-        // this.exp.setText(
-        //     `Exp: ${currentExp}/${requiredExp}`
-        // );
     }
 
     refreshStats() {
-        if (!this.currentHero) {
-            return;
-        }
+        if (!this.currentHero) return;
 
         const savedHero = SaveManager.loadHero(this.currentHero.id) || {};
         const saveData = SaveManager.load();
@@ -844,41 +456,20 @@ export default class HeroDetailPopup {
         this.renderSkills(this.currentHero);
         this.renderPassives(this.currentHero);
 
-        this.level.setText(
-            `Lv: ${savedHero.level ?? this.currentHero.level ?? 1}`
-        );
-
+        this.level.setText(`Lv: ${savedHero.level ?? this.currentHero.level ?? 1}`);
         this.updateExpBar();
 
-        this.statTexts.attack_physical.setText(
-            `Physic Dame: ${Math.round(Number(effectiveHero.attack_physical || 0))}`
-        );
-
-        this.statTexts.attack_magic.setText(
-            `Mage Dame: ${Math.round(Number(effectiveHero.attack_magic || 0))}`
-        );
-
-        this.statTexts.defense.setText(
-            `Armor: ${Math.round(Number(effectiveHero.armor ?? effectiveHero.defense ?? 0))}`
-        );
-
-        this.statTexts.magic_resistance.setText(
-            `Magic resistance: ${Math.round(Number(effectiveHero.magic_resistance || 0))}`
-        );
-
-        this.statTexts.hp.setText(
-            `HP: ${Math.round(Number(effectiveHero.hp || 0))}`
-        );
-
-        this.statTexts.mp.setText(
-            `MP: ${Math.round(Number(effectiveHero.mp || 0))}`
-        );
+        this.statTexts.attack_physical.setText(`Physic Dame: ${Math.round(Number(effectiveHero.attack_physical || 0))}`);
+        this.statTexts.attack_magic.setText(`Mage Dame: ${Math.round(Number(effectiveHero.attack_magic || 0))}`);
+        this.statTexts.defense.setText(`Armor: ${Math.round(Number(effectiveHero.armor ?? effectiveHero.defense ?? 0))}`);
+        this.statTexts.magic_resistance.setText(`Magic resistance: ${Math.round(Number(effectiveHero.magic_resistance || 0))}`);
+        this.statTexts.hp.setText(`HP: ${Math.round(Number(effectiveHero.hp || 0))}`);
+        this.statTexts.mp.setText(`MP: ${Math.round(Number(effectiveHero.mp || 0))}`);
     }
 
     show(hero) {
-
         this.currentHero = hero;
-        this.hideItemMenu();
+        this.itemMenu.hideAll();
 
         const savedHero = SaveManager.loadHero(hero.id) || {};
         const saveData = SaveManager.load();
@@ -894,43 +485,23 @@ export default class HeroDetailPopup {
         this.avatar.setTexture(hero.avatar);
         this.name.setText(hero.name || "Unknown");
         this.role.setText(hero.role || "-");
-
-        this.level.setText(
-            `Lv: ${savedHero.level ?? hero.level ?? 1}`
-        );
+        this.level.setText(`Lv: ${savedHero.level ?? hero.level ?? 1}`);
 
         this.updateExpBar();
-
-        this.statTexts.attack_physical.setText(
-            `Physic Dame: ${Math.round(Number(effectiveHero.attack_physical || 0))}`
-        );
-
-        this.statTexts.attack_magic.setText(
-            `Mage Dame: ${Math.round(Number(effectiveHero.attack_magic || 0))}`
-        );
-
-        this.statTexts.defense.setText(
-            `Armor: ${Math.round(Number(effectiveHero.armor ?? effectiveHero.defense ?? 0))}`
-        );
-
-        this.statTexts.magic_resistance.setText(
-            `Magic resistance: ${Math.round(Number(effectiveHero.magic_resistance || 0))}`
-        );
-
-        this.statTexts.hp.setText(
-            `HP: ${Math.round(Number(effectiveHero.hp || 0))}`
-        );
-
-        this.statTexts.mp.setText(
-            `MP: ${Math.round(Number(effectiveHero.mp || 0))}`
-        );
+        this.statTexts.attack_physical.setText(`Physic Dame: ${Math.round(Number(effectiveHero.attack_physical || 0))}`);
+        this.statTexts.attack_magic.setText(`Mage Dame: ${Math.round(Number(effectiveHero.attack_magic || 0))}`);
+        this.statTexts.defense.setText(`Armor: ${Math.round(Number(effectiveHero.armor ?? effectiveHero.defense ?? 0))}`);
+        this.statTexts.magic_resistance.setText(`Magic resistance: ${Math.round(Number(effectiveHero.magic_resistance || 0))}`);
+        this.statTexts.hp.setText(`HP: ${Math.round(Number(effectiveHero.hp || 0))}`);
+        this.statTexts.mp.setText(`MP: ${Math.round(Number(effectiveHero.mp || 0))}`);
 
         this.container.setVisible(true);
-        this.setInventoryScroll(0); // Đưa thanh cuộn về vị trí đầu danh sách khi mở popup
+        this.setInventoryScroll(0);
     }
 
     hide() {
-        this.hideItemMenu();
+        this.itemMenu.hideAll();
+        this.hideToast();
         this.container.setVisible(false);
     }
 
@@ -944,26 +515,14 @@ export default class HeroDetailPopup {
     }
 
     isWeaponClassCompatible(itemData, hero = this.currentHero) {
-        if (!itemData || !hero) {
-            return true;
-        }
-
-        if (this.normalizeEquipmentType(itemData.type) !== "weapon") {
-            return true;
-        }
+        if (!itemData || !hero) return true;
+        if (this.normalizeEquipmentType(itemData.type) !== "weapon") return true;
 
         const requiredClass = String(itemData.weaponClass || itemData.class || itemData.heroClass || "").trim();
-
-        if (!requiredClass) {
-            return true;
-        }
+        if (!requiredClass) return true;
 
         const candidateClasses = [
-            hero.name,
-            hero.className,
-            hero.role,
-            hero.heroClass,
-            hero.class,
+            hero.name, hero.className, hero.role, hero.heroClass, hero.class
         ].filter(Boolean).map(value => String(value).trim().toLowerCase());
 
         return candidateClasses.some(className => className === requiredClass.toLowerCase());
@@ -971,16 +530,9 @@ export default class HeroDetailPopup {
 
     getEquipmentEntry(equipment = {}, slotType) {
         const entry = equipment?.[slotType];
-
         if (typeof entry === "string") {
-            return {
-                itemId: entry,
-                quantity: 1,
-                quality: "Nomal",
-                level: 1
-            };
+            return { itemId: entry, quantity: 1, quality: "Nomal", level: 1 };
         }
-
         if (entry && typeof entry === "object" && entry.itemId) {
             return {
                 itemId: entry.itemId,
@@ -989,13 +541,7 @@ export default class HeroDetailPopup {
                 level: Number(entry.level ?? entry.requiredLevel ?? 1)
             };
         }
-
-        return {
-            itemId: null,
-            quantity: 0,
-            quality: "Nomal",
-            level: 1
-        };
+        return { itemId: null, quantity: 0, quality: "Nomal", level: 1 };
     }
 
     updateInventoryViewportVisibility() {
@@ -1004,33 +550,24 @@ export default class HeroDetailPopup {
         const viewportBottom = this.viewY + this.viewHeight;
         const slotSize = 80;
 
-        // Chỉ hiển thị ô nền khi ô đó nằm trọn trong khung nhìn cho phép
         this.inventorySlots.forEach((slot) => {
             const slotTop = slot.y + containerY;
             const slotBottom = slotTop + slotSize;
-
-            // ĐIỀU KIỆN CHUẨN: 
-            // - Mép dưới phải lớn hơn viền trên (đã vào viewport)
-            // - Mép dưới không được vượt quá viền đáy (không thò ra ngoài popup)
             const isVisible = (slotBottom > viewportTop) && (slotBottom <= viewportBottom + 4);
             slot.setVisible(isVisible);
         });
 
-        // Chỉ hiển thị vật phẩm và chữ đi kèm khi ô đó hợp lệ
         this.inventoryItemViews.forEach((group) => {
             const itemTop = group.y + containerY;
             const itemBottom = itemTop + slotSize;
-
             const isVisible = (itemBottom > viewportTop) && (itemBottom <= viewportBottom + 4);
             group.elements.forEach(el => {
-                if (el && el.setVisible) {
-                    el.setVisible(isVisible);
-                }
+                if (el && el.setVisible) el.setVisible(isVisible);
             });
         });
     }
-    renderInventory(inventory = []) {
 
+    renderInventory(inventory = []) {
         this.inventoryContainer.removeAll(true);
         this.inventorySlots = [];
         this.inventoryItemViews = [];
@@ -1040,56 +577,31 @@ export default class HeroDetailPopup {
         const slotSize = 80;
         const gap = 4;
         const columns = 6;
-
         const startX = this.cx - 240;
         const startY = this.viewY + 4;
 
         inventory.forEach((inventoryItem, index) => {
+            if (index >= this.inventorySlots.length) return;
 
-            if (index >= this.inventorySlots.length) {
-                return;
-            }
-
-            const itemData = items.find(
-                item => item.id === inventoryItem.itemId
-            );
-
-            if (!itemData) {
-                console.warn(
-                    `Item not found: ${inventoryItem.itemId}`
-                );
-                return;
-            }
+            const itemData = items.find(item => item.id === inventoryItem.itemId);
+            if (!itemData) return;
 
             const row = Math.floor(index / columns);
             const col = index % columns;
-
             const x = startX + col * (slotSize + gap);
             const y = startY + row * (slotSize + gap);
 
             const backgroundKey = getItemBackgroundKey(inventoryItem.quality || "Nomal");
-            const itemBackground = this.scene.add.image(
-                x + slotSize / 2,
-                y + slotSize / 2,
-                backgroundKey
-            );
+            const itemBackground = this.scene.add.image(x + slotSize / 2, y + slotSize / 2, backgroundKey);
             itemBackground.setDisplaySize(slotSize, slotSize);
 
-            const itemImage = this.scene.add.image(
-                x + slotSize / 2,
-                y + slotSize / 2,
-                itemData.icon
-            );
+            const itemImage = this.scene.add.image(x + slotSize / 2, y + slotSize / 2, itemData.icon);
             itemImage.setDisplaySize(slotSize - 6, slotSize - 6);
-
             itemImage.setInteractive({ useHandCursor: true });
             itemImage.itemId = inventoryItem.itemId;
             itemImage.quality = inventoryItem.quality ?? "Nomal";
             itemImage.level = Number(inventoryItem.level ?? itemData.level ?? getItemRequiredLevel(itemData));
-            itemImage.dragStartX = itemImage.x;
-            itemImage.dragStartY = itemImage.y;
 
-            // Chỉ gắn 1 lần pointerdown để ghi nhận tọa độ nhấn
             itemImage.on("pointerdown", (pointer) => {
                 itemImage.downX = pointer.x;
                 itemImage.downY = pointer.y;
@@ -1097,7 +609,6 @@ export default class HeroDetailPopup {
 
             itemImage.on("pointerup", (pointer) => {
                 if (pointer.event) pointer.event.stopPropagation();
-
                 const dist = Phaser.Math.Distance.Between(
                     itemImage.downX || pointer.x,
                     itemImage.downY || pointer.y,
@@ -1105,47 +616,23 @@ export default class HeroDetailPopup {
                     pointer.y
                 );
 
-                // Dưới 8px xem là thao tác Click mở Menu
                 if (dist < 8) {
                     const screenY = itemImage.y + this.inventoryContainer.y;
                     if (screenY >= this.viewY && screenY <= this.viewY + this.viewHeight) {
-                        this.showItemMenu(itemImage.x, screenY, slotSize, itemData, false, null, inventoryItem);
+                        this.openItemMenu(itemImage.x, screenY, slotSize, itemData, false, null, inventoryItem);
                     }
                 }
             });
 
-            // const quantity = this.scene.add.text(
-            //     x + slotSize - 3,
-            //     y + slotSize - 3,
-            //     `${inventoryItem.quantity}`, {
-            //     fontSize: "14px",
-            //     color: "#ffffff",
-            //     fontStyle: "bold",
-            //     stroke: "#000000",
-            //     strokeThickness: 3
-            // }).setOrigin(1, 1);
+            const quantity = this.scene.add.text(x + slotSize - 3, y + slotSize - 3, `${inventoryItem.quantity}`, {
+                fontSize: "14px", color: "#ffffff", fontStyle: "bold", stroke: "#000000", strokeThickness: 3
+            }).setOrigin(1, 1);
 
-            const levelText = this.scene.add.text(
-                x + 6,
-                y + slotSize - 12,
-                `Lv.${itemImage.level}`, {
-                fontSize: "10px",
-                color: "#ffffff",
-                fontStyle: "bold",
-                stroke: "#000000",
-                strokeThickness: 3
+            const levelText = this.scene.add.text(x + 6, y + slotSize - 12, `Lv.${itemImage.level}`, {
+                fontSize: "10px", color: "#ffffff", fontStyle: "bold", stroke: "#000000", strokeThickness: 3
             }).setOrigin(0, 1);
 
-            // KHÔNG GỌI setMask LÊN CÁC ELEMENT CON Ở ĐÂY NỮA
-            // Việc ẩn/hiện đã do hàm updateInventoryViewportVisibility xử lý chuẩn xác
-
-            this.inventoryContainer.add([
-                itemBackground,
-                itemImage,
-                //quantity,
-                levelText
-            ]);
-
+            this.inventoryContainer.add([itemBackground, itemImage, quantity, levelText]);
             this.inventoryItemViews.push({
                 y: y,
                 elements: [itemBackground, itemImage, levelText]
@@ -1156,18 +643,9 @@ export default class HeroDetailPopup {
     }
 
     renderEquipment(equipment = {}) {
-
-        Object.values(this.equipmentItemImages).forEach(image => {
-            image.destroy();
-        });
-
-        Object.values(this.equipmentItemQuantityTexts).forEach(text => {
-            text.destroy();
-        });
-
-        Object.values(this.equipmentItemLevelTexts).forEach(text => {
-            text.destroy();
-        });
+        Object.values(this.equipmentItemImages).forEach(image => image.destroy());
+        Object.values(this.equipmentItemQuantityTexts).forEach(text => text.destroy());
+        Object.values(this.equipmentItemLevelTexts).forEach(text => text.destroy());
 
         this.equipmentItemImages = {};
         this.equipmentItemQuantityTexts = {};
@@ -1179,74 +657,34 @@ export default class HeroDetailPopup {
             const equippedQuantity = slotEntry.quantity;
             const itemData = items.find(item => item.id === itemId);
 
-            if (!itemData || !this.scene.textures.exists(itemData.icon)) {
-                return;
-            }
+            if (!itemData || !this.scene.textures.exists(itemData.icon)) return;
 
-            const itemImage = this.scene.add.image(
-                slot.x,
-                slot.y,
-                itemData.icon
-            );
-
+            const itemImage = this.scene.add.image(slot.x, slot.y, itemData.icon);
             itemImage.setDisplaySize(38, 38);
             itemImage.setDepth(slot.depth + 1);
             itemImage.setInteractive({ useHandCursor: true });
-            // Tạm thời tắt kéo thả item
-            // this.scene.input.setDraggable(itemImage);
             itemImage.itemId = itemId;
             itemImage.quality = slotEntry.quality ?? "Nomal";
             itemImage.level = Number(slotEntry.level ?? itemData.level ?? getItemRequiredLevel(itemData));
             itemImage.equipmentSlotType = slot.slotType;
-            itemImage.dragStartX = itemImage.x;
-            itemImage.dragStartY = itemImage.y;
 
-            // Click vào trang bị đang mặc để mở menu
             itemImage.on("pointerup", (pointer) => {
-                if (pointer.event) {
-                    pointer.event.stopPropagation();
-                }
-                const dist = Phaser.Math.Distance.Between(
-                    itemImage.dragStartX,
-                    itemImage.dragStartY,
-                    itemImage.x,
-                    itemImage.y
-                );
-                if (dist < 5) {
-                    this.showItemMenu(itemImage.x, itemImage.y, 48, itemData, true, slot.slotType, null, itemImage.quality, itemImage.level);
-                }
+                if (pointer.event) pointer.event.stopPropagation();
+                this.openItemMenu(itemImage.x, itemImage.y, 48, itemData, true, slot.slotType, null, itemImage.quality, itemImage.level);
             });
 
-            const levelText = this.scene.add.text(
-                slot.x - 18,
-                slot.y + 18,
-                `Lv.${itemImage.level}`,
-                {
-                    fontSize: "10px",
-                    color: "#ffffff",
-                    fontStyle: "bold",
-                    stroke: "#000000",
-                    strokeThickness: 3
-                }
-            ).setOrigin(0, 1);
+            const levelText = this.scene.add.text(slot.x - 18, slot.y + 18, `Lv.${itemImage.level}`, {
+                fontSize: "10px", color: "#ffffff", fontStyle: "bold", stroke: "#000000", strokeThickness: 3
+            }).setOrigin(0, 1);
 
-            this.container.add(itemImage);
-            this.container.add(levelText);
+            this.container.add([itemImage, levelText]);
             this.equipmentItemImages[slot.slotType] = itemImage;
             this.equipmentItemLevelTexts[slot.slotType] = levelText;
 
             if (this.isStackableEquipmentSlot(slot.slotType) && equippedQuantity > 0) {
-                const quantityText = this.scene.add.text(
-                    slot.x + 26,
-                    slot.y + 22,
-                    `x${equippedQuantity}`, {
-                    fontSize: "12px",
-                    color: "#ffffff",
-                    fontStyle: "bold",
-                    stroke: "#000000",
-                    strokeThickness: 3
-                }
-                ).setOrigin(1, 1);
+                const quantityText = this.scene.add.text(slot.x + 26, slot.y + 22, `x${equippedQuantity}`, {
+                    fontSize: "12px", color: "#ffffff", fontStyle: "bold", stroke: "#000000", strokeThickness: 3
+                }).setOrigin(1, 1);
 
                 this.container.add(quantityText);
                 this.equipmentItemQuantityTexts[slot.slotType] = quantityText;
@@ -1255,73 +693,152 @@ export default class HeroDetailPopup {
     }
 
     // =====================================================
-    // Logic Menu Popup (Trang bị / Bán)
+    // Logic Phân tách trang bị trong Popup
     // =====================================================
+    decomposeItem(itemData, isEquipped = false, slotType = null, inventoryItem = null, equippedQuality = null, equippedLevel = null) {
+        const saveData = SaveManager.load();
+        const targetLevel = Number(inventoryItem?.level ?? equippedLevel ?? itemData.level ?? getItemRequiredLevel(itemData));
+        const targetQuality = inventoryItem?.quality ?? equippedQuality ?? "Nomal";
 
-    showItemMenu(targetX, targetY, cellSize, itemData, isEquipped = false, slotType = null, inventoryItem = null, equippedQuality = null, equippedLevel = null) {
-        this.hideItemMenu();
+        if (isEquipped && slotType && this.currentHero) {
+            // Trường hợp 1: Món đồ đang được Hero trang bị trên người
+            const heroKey = String(this.currentHero.id);
+            const savedHero = saveData.heroes?.[heroKey] || this.currentHero;
+            const equipment = { ...(savedHero.equipment || {}) };
+            const currentEntry = this.getEquipmentEntry(equipment, slotType);
 
-        const menuWidth = 110;
-        const menuHeight = 84;
-        const margin = 8;
-
-        const panelRight = this.cx + this.panelWidth / 2;
-        const fitsRight = (targetX + cellSize / 2 + margin + menuWidth) <= (panelRight - 10);
-
-        const menuX = fitsRight ?
-            targetX + cellSize / 2 + margin :
-            targetX - cellSize / 2 - margin - menuWidth;
-
-        const menuY = Phaser.Math.Clamp(
-            targetY - cellSize / 2,
-            this.cy - this.panelHeight / 2 + 10,
-            this.cy + this.panelHeight / 2 - menuHeight - 10
-        );
-
-        this.actionMenu = this.scene.add.container(menuX, menuY);
-        this.actionMenu.setDepth(10005);
-
-        // Nền Menu
-        const bg = this.scene.add.rectangle(0, 0, menuWidth, menuHeight, 0x18212b, 0.96)
-            .setOrigin(0, 0)
-            .setStrokeStyle(2, 0xe5c07b, 0.9)
-            .setInteractive();
-
-        bg.on("pointerup", pointer => {
-            if (pointer.event) pointer.event.stopPropagation();
-        });
-
-        // Nút trên: "Tháo trang bị" nếu đang mặc, hoặc "Trang bị" nếu trong inventory
-        const firstActionText = isEquipped ? "Tháo ra" : "Trang bị";
-        const firstBtn = this.createMenuButton(0, 0, menuWidth, 40, firstActionText, () => {
-            if (isEquipped) {
-                this.unequipItem({
-                    itemId: itemData.id,
-                    equipmentSlotType: slotType,
-                    quality: equippedQuality ?? "Nomal",
-                    level: equippedLevel ?? Number(itemData.level ?? itemData.requiredLevel ?? 1)
-                });
+            if (this.isStackableEquipmentSlot(slotType)) {
+                const nextQty = Number(currentEntry.quantity || 0) - 1;
+                if (nextQty <= 0) {
+                    delete equipment[slotType];
+                } else {
+                    equipment[slotType] = { ...currentEntry, quantity: nextQty };
+                }
             } else {
-                const normalType = this.normalizeEquipmentType(itemData.type);
-                const targetSlot = normalType === "potion" || normalType === "consumable" ?
-                    "potion" :
-                    (normalType === "food" ? "food" : normalType);
-                this.equipItem(itemData, targetSlot, inventoryItem);
+                delete equipment[slotType];
             }
-            this.hideItemMenu();
+
+            saveData.heroes = saveData.heroes || {};
+            saveData.heroes[heroKey] = { ...savedHero, equipment };
+        } else {
+            // Trường hợp 2: Món đồ nằm trong danh sách Inventory của Popup
+            const inventory = saveData.inventory || [];
+            const itemIndex = inventory.findIndex(item =>
+                item.itemId === itemData.id &&
+                (item.quality || "Nomal") === targetQuality &&
+                Number(item.level ?? getItemRequiredLevel(itemData)) === targetLevel
+            );
+
+            if (itemIndex !== -1) {
+                if (inventory[itemIndex].quantity > 1) {
+                    inventory[itemIndex].quantity -= 1;
+                } else {
+                    inventory.splice(itemIndex, 1);
+                }
+            }
+            saveData.inventory = inventory;
+        }
+
+        // Lấy danh sách nguyên liệu nhận được (kế thừa đúng level)
+        const materials = getDecomposeMaterials(itemData, targetLevel);
+        const inventory = saveData.inventory || [];
+
+        materials.forEach(mat => {
+            const existingMat = inventory.find(i =>
+                i.itemId === mat.itemId &&
+                Number(i.level ?? 1) === mat.level &&
+                (i.quality || "Nomal") === mat.quality
+            );
+
+            if (existingMat) {
+                existingMat.quantity = Number(existingMat.quantity || 0) + mat.quantity;
+            } else {
+                inventory.push({
+                    itemId: mat.itemId,
+                    quantity: mat.quantity,
+                    level: mat.level,
+                    quality: mat.quality
+                });
+            }
         });
 
-        // Đường phân cách
-        const divider = this.scene.add.line(0, 41, 6, 0, menuWidth - 6, 0, 0x3e4f66).setOrigin(0);
+        saveData.inventory = inventory;
+        SaveManager.save(saveData);
 
-        // Nút dưới: "Bán"
-        const sellBtn = this.createMenuButton(0, 42, menuWidth, 40, "Bán", () => {
-            this.showSellQuantityMenu(targetX, targetY, cellSize, itemData, isEquipped, slotType, inventoryItem, equippedQuality, equippedLevel);
+        // Cập nhật lại UI sau khi phân tách
+        this.refreshStats();
+        this.showToast(`Đã phân tách thành công ${itemData.name}!`, false);
+    }
 
+    // =====================================================
+    // Gọi ItemActionMenu để mở Menu
+    // =====================================================
+    openItemMenu(targetX, targetY, cellSize, itemData, isEquipped = false, slotType = null, inventoryItem = null, equippedQuality = null, equippedLevel = null) {
+        const firstActionText = isEquipped ? "Tháo ra" : "Trang bị";
+        const maxSellQty = this.getSellableQuantity(itemData, isEquipped, slotType, inventoryItem, equippedQuality, equippedLevel);
+
+        const actions = [
+            {
+                label: firstActionText,
+                onClick: () => {
+                    if (isEquipped) {
+                        this.unequipItem({
+                            itemId: itemData.id,
+                            equipmentSlotType: slotType,
+                            quality: equippedQuality ?? "Nomal",
+                            level: equippedLevel ?? Number(itemData.level ?? itemData.requiredLevel ?? 1)
+                        });
+                    } else {
+                        const normalType = this.normalizeEquipmentType(itemData.type);
+                        const targetSlot = normalType === "potion" || normalType === "consumable" ?
+                            "potion" : (normalType === "food" ? "food" : normalType);
+                        this.equipItem(itemData, targetSlot, inventoryItem);
+                    }
+                }
+            }
+        ];
+
+        // Nếu item có decomposition thì thêm action Phân tách
+        if (itemData.decomposition) {
+            actions.push({
+                label: "Phân tách",
+                onClick: () => {
+                    this.itemMenu.showDecomposeConfirmModal({
+                        itemData,
+                        inventoryItem: inventoryItem || { level: equippedLevel, quality: equippedQuality },
+                        onConfirm: () => {
+                            this.decomposeItem(itemData, isEquipped, slotType, inventoryItem, equippedQuality, equippedLevel);
+                        }
+                    });
+                }
+            });
+        }
+
+        // Action Bán
+        actions.push({
+            label: "Bán",
+            onClick: () => {
+                this.itemMenu.showSellConfirmModal({
+                    targetX,
+                    targetY,
+                    cellSize,
+                    itemData,
+                    maxQuantity: maxSellQty,
+                    onConfirm: (qty) => {
+                        this.sellItem(itemData, isEquipped, slotType, inventoryItem, qty, equippedQuality, equippedLevel);
+                    }
+                });
+            }
         });
 
-        this.actionMenu.add([bg, firstBtn, divider, sellBtn]);
-        this.container.add(this.actionMenu);
+        this.itemMenu.showActionMenu({
+            targetX,
+            targetY,
+            cellSize,
+            itemData,
+            inventoryItem,
+            actions
+        });
     }
 
     getSellableQuantity(itemData, isEquipped = false, slotType = null, inventoryItem = null, equippedQuality = null, equippedLevel = null) {
@@ -1333,205 +850,11 @@ export default class HeroDetailPopup {
             }
             return 1;
         }
-
-        const quantity = Number(inventoryItem?.quantity ?? 1);
-        return Math.max(1, quantity);
-    }
-
-    showSellQuantityMenu(targetX, targetY, cellSize, itemData, isEquipped = false, slotType = null, inventoryItem = null, equippedQuality = null, equippedLevel = null) {
-        this.hideItemMenu();
-
-        const maxQuantity = this.getSellableQuantity(itemData, isEquipped, slotType, inventoryItem, equippedQuality, equippedLevel);
-        const unitPrice = Number(itemData.sell_price || 10);
-        let selectedQuantity = 1;
-
-        const menuWidth = 220;
-        const menuHeight = 190;
-        const margin = 8;
-
-        const panelLeft = this.cx - this.panelWidth / 2;
-        const panelRight = this.cx + this.panelWidth / 2;
-        const panelTop = this.cy - this.panelHeight / 2;
-        const panelBottom = this.cy + this.panelHeight / 2;
-
-        const fitsRight = (targetX + cellSize / 2 + margin + menuWidth) <= (panelRight - 10);
-
-        const menuX = Phaser.Math.Clamp(
-            fitsRight ? targetX + cellSize / 2 + margin : targetX - cellSize / 2 - margin - menuWidth,
-            panelLeft + 10,
-            panelRight - menuWidth - 10
-        );
-
-        const menuY = Phaser.Math.Clamp(
-            targetY - cellSize / 2,
-            panelTop + 10,
-            panelBottom - menuHeight - 10
-        );
-
-        this.actionMenu = this.scene.add.container(menuX, menuY);
-        this.actionMenu.setDepth(10005);
-
-        // Nền menu — theo phong cách Inventory
-        const bg = this.scene.add.rectangle(menuWidth / 2, menuHeight / 2, menuWidth, menuHeight, 0x101820, 0.96)
-            .setStrokeStyle(3, 0xf4b942, 1)
-            .setInteractive();
-
-        bg.on("pointerup", pointer => {
-            if (pointer.event) pointer.event.stopPropagation();
-        });
-
-        const title = this.scene.add.text(menuWidth / 2, 14, `Bán ${itemData.name || itemData.id}`, {
-            fontSize: "15px",
-            color: "#ffffff",
-            fontStyle: "bold",
-            align: "center",
-            wordWrap: { width: menuWidth - 20 }
-        }).setOrigin(0.5, 0);
-
-        const priceText = this.scene.add.text(menuWidth / 2, 44, `${unitPrice} vàng / 1 cái`, {
-            fontSize: "14px",
-            color: "#ffd76a",
-            fontStyle: "bold"
-        }).setOrigin(0.5);
-
-        const quantityLabel = this.scene.add.text(menuWidth / 2, 68, "Số lượng bán:", {
-            fontSize: "14px",
-            color: "#dfe6ee"
-        }).setOrigin(0.5);
-
-        // Nút trừ
-        const minusBtn = this.scene.add.rectangle(menuWidth / 2 - 62, 100, 38, 28, 0x434d60, 1)
-            .setInteractive({ useHandCursor: true });
-        const minusText = this.scene.add.text(menuWidth / 2 - 62, 100, "-", {
-            fontSize: "20px",
-            color: "#ffffff",
-            fontStyle: "bold"
-        }).setOrigin(0.5);
-
-        // Ô số lượng
-        const qtyBox = this.scene.add.rectangle(menuWidth / 2, 100, 90, 28, 0xf3f6fb, 1)
-            .setStrokeStyle(2, 0x8aa4bf, 0.9);
-        const qtyText = this.scene.add.text(menuWidth / 2, 100, `${selectedQuantity}`, {
-            fontSize: "16px",
-            color: "#1b1b1b",
-            fontStyle: "bold"
-        }).setOrigin(0.5);
-
-        // Nút cộng
-        const plusBtn = this.scene.add.rectangle(menuWidth / 2 + 62, 100, 38, 28, 0x434d60, 1)
-            .setInteractive({ useHandCursor: true });
-        const plusText = this.scene.add.text(menuWidth / 2 + 62, 100, "+", {
-            fontSize: "20px",
-            color: "#ffffff",
-            fontStyle: "bold"
-        }).setOrigin(0.5);
-
-        const totalText = this.scene.add.text(menuWidth / 2, 130, `Nhận: ${unitPrice * selectedQuantity} vàng`, {
-            fontSize: "14px",
-            color: "#ffd700",
-            fontStyle: "bold"
-        }).setOrigin(0.5);
-
-        // Nút Đồng ý
-        const confirmBtn = this.scene.add.rectangle(menuWidth / 2 - 56, 164, 100, 32, 0x4caf50, 1)
-            .setInteractive({ useHandCursor: true });
-        const confirmText = this.scene.add.text(menuWidth / 2 - 56, 164, "Đồng ý", {
-            fontSize: "14px",
-            color: "#ffffff",
-            fontStyle: "bold"
-        }).setOrigin(0.5);
-
-        // Nút Hủy
-        const cancelBtn = this.scene.add.rectangle(menuWidth / 2 + 56, 164, 100, 32, 0xe74c3c, 1)
-            .setInteractive({ useHandCursor: true });
-        const cancelText = this.scene.add.text(menuWidth / 2 + 56, 164, "Hủy", {
-            fontSize: "14px",
-            color: "#ffffff",
-            fontStyle: "bold"
-        }).setOrigin(0.5);
-
-        const updateQuantityViews = () => {
-            qtyText.setText(`${selectedQuantity}`);
-            totalText.setText(`Nhận: ${unitPrice * selectedQuantity} vàng`);
-
-            minusBtn.setFillStyle(selectedQuantity > 1 ? 0x434d60 : 0x2a2f3a);
-            plusBtn.setFillStyle(selectedQuantity < maxQuantity ? 0x434d60 : 0x2a2f3a);
-        };
-
-        minusBtn.on("pointerup", (pointer) => {
-            if (pointer.event) pointer.event.stopPropagation();
-            if (selectedQuantity > 1) {
-                selectedQuantity -= 1;
-                updateQuantityViews();
-            }
-        });
-
-        plusBtn.on("pointerup", (pointer) => {
-            if (pointer.event) pointer.event.stopPropagation();
-            if (selectedQuantity < maxQuantity) {
-                selectedQuantity += 1;
-                updateQuantityViews();
-            }
-        });
-
-        confirmBtn.on("pointerup", (pointer) => {
-            if (pointer.event) pointer.event.stopPropagation();
-            this.sellItem(itemData, isEquipped, slotType, inventoryItem, selectedQuantity, equippedQuality, equippedLevel);
-            this.hideItemMenu();
-        });
-
-        cancelBtn.on("pointerup", (pointer) => {
-            if (pointer.event) pointer.event.stopPropagation();
-            this.hideItemMenu();
-        });
-
-        updateQuantityViews();
-
-        this.actionMenu.add([
-            bg, title, priceText, quantityLabel,
-            minusBtn, minusText, qtyBox, qtyText, plusBtn, plusText,
-            totalText, confirmBtn, confirmText, cancelBtn, cancelText
-        ]);
-        this.container.add(this.actionMenu);
-    }
-
-    createMenuButton(x, y, btnWidth, btnHeight, textStr, onClick) {
-        const container = this.scene.add.container(x, y);
-
-        const hitArea = this.scene.add.rectangle(0, 0, btnWidth, btnHeight, 0x000000, 0.001)
-            .setOrigin(0, 0)
-            .setInteractive({ useHandCursor: true });
-
-        const label = this.scene.add.text(btnWidth / 2, btnHeight / 2, textStr, {
-            fontSize: "15px",
-            color: "#ffffff",
-            fontStyle: "bold"
-        }).setOrigin(0.5);
-
-        hitArea.on("pointerover", () => label.setColor("#ffd700"));
-        hitArea.on("pointerout", () => label.setColor("#ffffff"));
-        hitArea.on("pointerup", (pointer) => {
-            if (pointer.event) {
-                pointer.event.stopPropagation();
-            }
-            onClick();
-        });
-
-        container.add([hitArea, label]);
-        container.labelText = label; // MỚI: cho phép sửa lại chữ nút từ bên ngoài
-        return container;
-    }
-
-    hideItemMenu() {
-        if (this.actionMenu) {
-            this.actionMenu.destroy();
-            this.actionMenu = null;
-        }
+        return Math.max(1, Number(inventoryItem?.quantity ?? 1));
     }
 
     sellItem(itemData, isEquipped = false, slotType = null, inventoryItem = null, quantity = 1, equippedQuality = null, equippedLevel = null) {
         const saleQuantity = Math.max(1, Number(quantity || 1));
-        const saveData = SaveManager.load();
         const price = itemData.sell_price ? itemData.sell_price : 10;
 
         if (isEquipped && slotType) {
@@ -1540,49 +863,19 @@ export default class HeroDetailPopup {
             const currentQuality = equippedQuality ?? equippedEntry.quality ?? "Nomal";
             const currentLevel = Number(equippedLevel ?? equippedEntry.level ?? itemData.level ?? getItemRequiredLevel(itemData));
 
-            const itemInInventory = saveData.inventory.find(item =>
-                item.itemId === itemData.id &&
-                item.quality === currentQuality &&
-                Number(item.level ?? getItemRequiredLevel(itemData)) === currentLevel
-            );
-
-            if (this.isStackableEquipmentSlot(slotType)) {
-                const nextQuantity = Math.max(0, Number(equippedEntry.quantity || 0) - saleQuantity);
-                if (nextQuantity <= 0) {
-                    delete savedHero.equipment[slotType];
-                } else {
-                    savedHero.equipment[slotType] = {
-                        ...equippedEntry,
-                        quantity: nextQuantity,
-                        quality: currentQuality,
-                        level: currentLevel
-                    };
-                }
-
-                if (itemInInventory) {
-                    itemInInventory.quantity = Number(itemInInventory.quantity || 0) + saleQuantity;
-                } else {
-                    saveData.inventory.push({
-                        itemId: itemData.id,
-                        quantity: saleQuantity,
-                        quality: currentQuality,
-                        level: currentLevel
-                    });
-                }
-            } else {
-                this.unequipItem({
-                    itemId: itemData.id,
-                    equipmentSlotType: slotType,
-                    quality: currentQuality,
-                    level: currentLevel
-                });
-            }
+            this.unequipItem({
+                itemId: itemData.id,
+                equipmentSlotType: slotType,
+                quality: currentQuality,
+                level: currentLevel
+            });
         }
 
         const freshData = SaveManager.load();
         const inventory = freshData.inventory || [];
         const quality = inventoryItem?.quality ?? equippedQuality ?? null;
         const targetLevel = Number(inventoryItem?.level ?? equippedLevel ?? itemData.level ?? getItemRequiredLevel(itemData));
+
         const index = inventory.findIndex(item =>
             item.itemId === itemData.id &&
             (quality === null || quality === undefined || item.quality === quality) &&
@@ -1606,90 +899,12 @@ export default class HeroDetailPopup {
         }
     }
 
-    handleDragStart(pointer, gameObject) {
-
-        if (!gameObject.itemId) {
-            return;
-        }
-
-        this.hideItemMenu();
-        gameObject.setDepth(10001);
-        this.draggedItem = gameObject;
-        gameObject.wasEquipped = false;
-        gameObject.wasUnequipped = false;
-    }
-
-    handleDrag(pointer, gameObject, dragX, dragY) {
-
-        if (gameObject === this.draggedItem) {
-            gameObject.x = dragX;
-            gameObject.y = dragY;
-        }
-    }
-
-    handleDragEnd(pointer, gameObject) {
-
-        if (gameObject !== this.draggedItem) {
-            return;
-        }
-
-        if (!gameObject.wasEquipped && !gameObject.wasUnequipped) {
-            gameObject.x = gameObject.dragStartX;
-            gameObject.y = gameObject.dragStartY;
-            gameObject.setDepth(this.inventoryContainer.depth + 1);
-        }
-
-        this.draggedItem = null;
-    }
-
-    handleDrop(pointer, gameObject, dropZone) {
-
-        if (gameObject !== this.draggedItem) {
-            return;
-        }
-
-        if (gameObject.equipmentSlotType && dropZone.inventorySlot) {
-            gameObject.wasUnequipped = this.unequipItem(gameObject);
-            return;
-        }
-
-        if (!dropZone.slotType || gameObject.equipmentSlotType) {
-            return;
-        }
-
-        const itemData = items.find(item => item.id === gameObject.itemId);
-        const normalizedType = this.normalizeEquipmentType(itemData?.type);
-        const normalizedSlotType = this.normalizeEquipmentType(dropZone.slotType);
-        const isStackableSlot = this.isStackableEquipmentSlot(normalizedSlotType);
-        const isCompatibleType = itemData && (
-            normalizedType === normalizedSlotType ||
-            (isStackableSlot && (
-                normalizedType === "potion" ||
-                normalizedType === "food" ||
-                normalizedType === "consumable"
-            ))
-        );
-
-        const isClassCompatible = this.isWeaponClassCompatible(itemData, this.currentHero);
-
-        if (!isCompatibleType || !isClassCompatible) {
-            return;
-        }
-
-        gameObject.wasEquipped = true;
-        this.equipItem(itemData, dropZone.slotType);
-    }
-
     equipItem(itemData, slotType, inventoryItemContext = null) {
-        if (!this.currentHero) {
-            return false;
-        }
+        if (!this.currentHero) return false;
 
         const normalizedSlotType = this.normalizeEquipmentType(slotType);
         const validSlotTypes = this.equipmentSlots.map(slot => this.normalizeEquipmentType(slot.slotType));
-        if (!validSlotTypes.includes(normalizedSlotType)) {
-            return false;
-        }
+        if (!validSlotTypes.includes(normalizedSlotType)) return false;
 
         const normalizedItemType = this.normalizeEquipmentType(itemData?.type);
         const isStackableSlot = this.isStackableEquipmentSlot(normalizedSlotType);
@@ -1711,11 +926,9 @@ export default class HeroDetailPopup {
         saveData.inventory = saveData.inventory || [];
         const inventory = saveData.inventory;
 
-        // Chuẩn hóa phẩm chất và cấp độ cần tìm
         const targetQuality = inventoryItemContext?.quality || "Nomal";
         const targetLevel = Number(inventoryItemContext?.level ?? itemData.level ?? getItemRequiredLevel(itemData));
 
-        // Tìm item trong kho (xử lý linh hoạt cả item chưa có trường quality)
         const inventoryItem = inventory.find((item) => {
             const itemLvl = Number(item.level ?? getItemRequiredLevel(itemData));
             const itemQ = item.quality || "Nomal";
@@ -1727,7 +940,6 @@ export default class HeroDetailPopup {
             return false;
         }
 
-        // Kiểm tra cấp độ yêu cầu
         const requiredLevel = Number(inventoryItem.level ?? targetLevel);
         const heroLevel = Number(this.getHeroLevel(this.currentHero) || 1);
 
@@ -1738,15 +950,12 @@ export default class HeroDetailPopup {
 
         const heroKey = String(this.currentHero.id);
         const savedHero = saveData.heroes[heroKey] || this.currentHero;
-        const equipment = {
-            ...(savedHero.equipment || {})
-        };
+        const equipment = { ...(savedHero.equipment || {}) };
 
         const currentEntry = this.getEquipmentEntry(equipment, slotType);
         const previousItemId = currentEntry.itemId;
         const isSameItem = previousItemId === itemData.id;
 
-        // Nếu đã mặc đúng món này rồi thì bỏ qua
         if (!isStackableSlot && isSameItem && (currentEntry.quality || "Nomal") === targetQuality) {
             return false;
         }
@@ -1756,17 +965,13 @@ export default class HeroDetailPopup {
         const availableSpace = Math.max(0, maxEquippedQuantity - currentQuantity);
         const transferQuantity = isStackableSlot ? Math.min(inventoryItem.quantity, availableSpace) : 1;
 
-        if (transferQuantity <= 0) {
-            return false;
-        }
+        if (transferQuantity <= 0) return false;
 
-        // Giảm số lượng trong túi
         inventoryItem.quantity -= transferQuantity;
         if (inventoryItem.quantity <= 0) {
             saveData.inventory = inventory.filter(item => item !== inventoryItem);
         }
 
-        // Trả món cũ đang mặc về lại kho (nếu có)
         if (previousItemId && !isSameItem) {
             const prevQuality = currentEntry.quality || "Nomal";
             const prevLevel = Number(currentEntry.level ?? 1);
@@ -1788,7 +993,6 @@ export default class HeroDetailPopup {
             }
         }
 
-        // Lưu thông tin món mới vào slot trang bị
         equipment[slotType] = {
             itemId: itemData.id,
             quantity: isStackableSlot ? (currentQuantity + transferQuantity) : 1,
@@ -1796,21 +1000,14 @@ export default class HeroDetailPopup {
             level: targetLevel
         };
 
-        saveData.heroes[heroKey] = {
-            ...savedHero,
-            equipment
-        };
-
+        saveData.heroes[heroKey] = { ...savedHero, equipment };
         SaveManager.save(saveData);
         this.refreshStats();
         return true;
     }
 
     unequipItem(gameObject) {
-
-        if (!this.currentHero) {
-            return false;
-        }
+        if (!this.currentHero) return false;
 
         const saveData = SaveManager.load();
         const inventory = saveData.inventory || [];
@@ -1821,29 +1018,21 @@ export default class HeroDetailPopup {
         );
         const inventoryCapacity = 6 * 4;
 
-        if (!hasExistingStack && inventory.length >= inventoryCapacity) {
-            return false;
-        }
+        if (!hasExistingStack && inventory.length >= inventoryCapacity) return false;
 
         const heroKey = String(this.currentHero.id);
         const savedHero = saveData.heroes[heroKey] || this.currentHero;
-        const equipment = {
-            ...(savedHero.equipment || {})
-        };
+        const equipment = { ...(savedHero.equipment || {}) };
         const currentEntry = this.getEquipmentEntry(equipment, gameObject.equipmentSlotType);
 
-        if (currentEntry.itemId !== gameObject.itemId) {
-            return false;
-        }
+        if (currentEntry.itemId !== gameObject.itemId) return false;
 
         const currentQuality = currentEntry.quality ?? targetQuality ?? "Nomal";
         const currentLevel = Number(currentEntry.level ?? gameObject.level ?? targetLevel ?? 1);
         const matchingInventoryItem = inventory.find(
             item => item.itemId === gameObject.itemId && item.quality === currentQuality && Number(item.level ?? 1) === currentLevel
         );
-        const quantityToReturn = this.isStackableEquipmentSlot(gameObject.equipmentSlotType) ?
-            currentEntry.quantity :
-            1;
+        const quantityToReturn = this.isStackableEquipmentSlot(gameObject.equipmentSlotType) ? currentEntry.quantity : 1;
 
         if (matchingInventoryItem) {
             matchingInventoryItem.quantity += quantityToReturn;
@@ -1858,7 +1047,6 @@ export default class HeroDetailPopup {
 
         if (this.isStackableEquipmentSlot(gameObject.equipmentSlotType)) {
             const nextQuantity = currentEntry.quantity - quantityToReturn;
-
             if (nextQuantity > 0) {
                 equipment[gameObject.equipmentSlotType] = {
                     itemId: gameObject.itemId,
@@ -1874,21 +1062,15 @@ export default class HeroDetailPopup {
         }
 
         saveData.inventory = inventory;
-        saveData.heroes[heroKey] = {
-            ...savedHero,
-            equipment
-        };
-
+        saveData.heroes[heroKey] = { ...savedHero, equipment };
         SaveManager.save(saveData);
         this.refreshStats();
-
         return true;
     }
 
     createInventoryGrid(totalItemsCount = 0) {
         const startX = this.cx - 240;
         const startY = this.viewY + 4;
-
         const slotSize = 80;
         const gap = 4;
         const columns = 6;
@@ -1896,7 +1078,6 @@ export default class HeroDetailPopup {
         const visibleRows = Math.ceil(this.viewHeight / (slotSize + gap));
         const itemRows = Math.ceil(totalItemsCount / columns);
         const rows = Math.max(visibleRows + 3, itemRows + 2, 10);
-
         const totalContentHeight = rows * (slotSize + gap);
 
         this.maxScrollY = 0;
@@ -1908,23 +1089,17 @@ export default class HeroDetailPopup {
                 const y = startY + row * (slotSize + gap);
 
                 const slot = this.scene.add.rectangle(
-                    x,
-                    y,
-                    slotSize,
-                    slotSize,
-                    0xf0f0f0
+                    x, y, slotSize, slotSize, 0xf0f0f0
                 ).setOrigin(0).setStrokeStyle(1, 0x888888);
-
-                // ĐÃ XÓA: slot.setMask(this.inventoryMask) để tránh lỗi WebGL
 
                 this.inventorySlots.push(slot);
                 this.inventoryContainer.add(slot);
             }
         }
     }
+
     showToast(message, isError = true) {
         this.hideToast();
-
         this.toastText = this.scene.add.text(
             this.cx,
             this.cy - this.panelHeight / 2 + 55,
@@ -1941,10 +1116,7 @@ export default class HeroDetailPopup {
         ).setOrigin(0.5).setDepth(10010);
 
         this.container.add(this.toastText);
-
-        this.toastTimer = this.scene.time.delayedCall(1800, () => {
-            this.hideToast();
-        });
+        this.toastTimer = this.scene.time.delayedCall(1800, () => this.hideToast());
     }
 
     hideToast() {
@@ -1952,16 +1124,10 @@ export default class HeroDetailPopup {
             this.toastTimer.remove(false);
             this.toastTimer = null;
         }
-
         if (this.toastText) {
             this.toastText.destroy();
             this.toastText = null;
         }
-    }
-    hide() {
-        this.hideItemMenu();
-        this.hideToast();
-        this.container.setVisible(false);
     }
 
     setupInventoryScrollEvents() {
@@ -1969,26 +1135,22 @@ export default class HeroDetailPopup {
         let startY = 0;
         let startScrollY = 0;
         let dragStarted = false;
-        const DRAG_THRESHOLD = 6; // px - dưới ngưỡng này coi là click, KHÔNG cuộn lưới
+        const DRAG_THRESHOLD = 6;
 
         this.scrollZone.on("pointerdown", (pointer) => {
             isPointerDown = true;
             dragStarted = false;
             startY = pointer.y;
             startScrollY = this.scrollY;
-            this.hideItemMenu();
+            this.itemMenu.hideAll();
         });
 
         this.scene.input.on("pointermove", (pointer) => {
             if (!isPointerDown || this.activeTab !== "inventory") return;
 
             const deltaY = pointer.y - startY;
-
-            // Chưa vượt ngưỡng -> giữ nguyên lưới, để pointerup rơi đúng item đã nhấn
             if (!dragStarted) {
-                if (Math.abs(deltaY) < DRAG_THRESHOLD) {
-                    return;
-                }
+                if (Math.abs(deltaY) < DRAG_THRESHOLD) return;
                 dragStarted = true;
             }
 
@@ -2002,7 +1164,6 @@ export default class HeroDetailPopup {
         this.scene.input.on("pointerup", stopDrag);
         this.scene.input.on("pointerupoutside", stopDrag);
 
-        // Hỗ trợ lăn chuột máy tính (Mouse Wheel)
         this.scene.input.on("wheel", (pointer, gameObjects, deltaX, deltaY) => {
             if (this.activeTab !== "inventory" || !this.container.visible) return;
             if (
@@ -2012,25 +1173,14 @@ export default class HeroDetailPopup {
                 pointer.y <= this.viewY + this.viewHeight
             ) {
                 this.setInventoryScroll(this.scrollY - deltaY * 0.5);
-                this.hideItemMenu();
+                this.itemMenu.hideAll();
             }
         });
-    }
-
-    updateInventoryScrollBar() {
-        // Luôn ẩn thanh cuộn (Track và Thumb)
-        if (this.inventoryScrollTrack) {
-            this.inventoryScrollTrack.setVisible(false);
-        }
-        if (this.inventoryScrollThumb) {
-            this.inventoryScrollThumb.setVisible(false);
-        }
     }
 
     setInventoryScroll(targetY) {
         this.scrollY = Phaser.Math.Clamp(targetY, this.minScrollY, this.maxScrollY);
         this.inventoryContainer.y = this.scrollY;
-        this.updateInventoryScrollBar();
         this.updateInventoryViewportVisibility();
     }
 }

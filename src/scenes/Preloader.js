@@ -21,7 +21,7 @@ export default class Preloader extends Phaser.Scene {
         this.load.image("bg-map-desert", "src/assets/bg/bg-map-desert.png");
         this.load.image("bg-map-swamp", "src/assets/bg/bg-map-swamp.png");
         this.load.image("bg-map-plateau", "src/assets/bg/bg-map-plateau.png");
-        this.load.image("bg-map-dungeon", "src/assets/bg/bg-map-dungeon.png");
+        // this.load.image("bg-map-dungeon", "src/assets/bg/bg-map-dungeon.png");
 
         //Load champ
         this.load.image("wizard", "src/assets/champ/wizard.png");
@@ -50,6 +50,7 @@ export default class Preloader extends Phaser.Scene {
         this.load.image("icon_bag", "src/assets/ui/bag.png");
         this.load.image("icon_hero", "src/assets/ui/hero_icon.png");
         this.load.image("icon_coin", "src/assets/icon/icon_coin.png");
+        this.load.image("icon_lock", "src/assets/icon/icon_lock.png");
 
         //Monster
         this.load.image("monster_slime", "src/assets/monster/monster_slime.png");
@@ -100,6 +101,8 @@ export default class Preloader extends Phaser.Scene {
         this.load.image("item_mace", "src/assets/item/item_mace.png");
         this.load.image("item_fire_staff", "src/assets/item/item_fire_staff.png");
         this.load.image("item_nature_staff", "src/assets/item/item_nature_staff.png");
+
+        this.load.image("item_plank", "src/assets/item/item_plank.png");
 
         // this.load.image("item_mace_lv1", "src/assets/item/item_mace_lv1.png");
         // this.load.image("item_fire_staff_lv1", "src/assets/item/item_fire_staff_lv1.png");

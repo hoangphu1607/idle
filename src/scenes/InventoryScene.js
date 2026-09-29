@@ -1,22 +1,20 @@
 import BaseScene from "./base/BaseScene";
 import SaveManager from "../managers/SaveManager.js";
-import items, { getItemBackgroundKey } from "../assets/data/item.js";
+import items, { getItemBackgroundKey, getItemRequiredLevel, getDecomposeMaterials } from "../assets/data/item.js";
+import ItemActionMenu from "../ui/ItemActionMenu.js";
+import Phaser from "phaser";
 
 export default class InventoryScene extends BaseScene {
 
     constructor() {
         super("InventoryScene");
-        this.actionMenu = null;
-        this.infoModal = null;
-        this.confirmModal = null;
-        this.saleQuantity = 1;
+        this.itemMenu = null;
     }
 
     create() {
         const width = this.scale.width;
-        const height = this.scale.height;
-
         this.createBackground();
+        this.createBackButton();
 
         this.add.text(width / 2, 70, "Inventory", {
             fontSize: "42px",
@@ -24,106 +22,64 @@ export default class InventoryScene extends BaseScene {
             fontStyle: "bold"
         }).setOrigin(0.5);
 
-        this.input.on("pointerdown", (pointer) => {
-            const containers = [
-                { container: this.actionMenu, hide: () => this.hideActionMenu() },
-                { container: this.infoModal, hide: () => this.hideInfoModal() },
-                { container: this.confirmModal, hide: () => this.hideConfirmModal() }
-            ];
-
-            containers.forEach(({ container, hide }) => {
-                if (!container) {
-                    return;
-                }
-
-                const bounds = container.getBounds();
-                const inside = pointer.x >= bounds.x &&
-                    pointer.x <= bounds.right &&
-                    pointer.y >= bounds.y &&
-                    pointer.y <= bounds.bottom;
-
-                if (!inside) {
-                    hide();
-                }
-            });
-        });
+        this.itemMenu = new ItemActionMenu(this);
 
         this.renderInventory();
-
         this.createBottomNavigation("Inventory");
     }
 
-    hideActionMenu() {
-        if (this.actionMenu) {
-            this.actionMenu.destroy(true);
-            this.actionMenu = null;
+    /**
+     * Logic Phân tách trang bị
+     */
+    decomposeItem(inventoryItem, itemData) {
+        const saveData = SaveManager.load();
+        const inventory = saveData.inventory || [];
+
+        const targetLevel = Number(inventoryItem.level ?? itemData.level ?? getItemRequiredLevel(itemData));
+        const targetQuality = inventoryItem.quality || "Nomal";
+
+        // Tìm vị trí của item bị phân tách
+        const itemIndex = inventory.findIndex(item =>
+            item.itemId === inventoryItem.itemId &&
+            (item.quality || "Nomal") === targetQuality &&
+            Number(item.level ?? getItemRequiredLevel(itemData)) === targetLevel
+        );
+
+        if (itemIndex === -1) return;
+
+        // Trừ 1 số lượng item đang phân tách
+        if (inventory[itemIndex].quantity > 1) {
+            inventory[itemIndex].quantity -= 1;
+        } else {
+            inventory.splice(itemIndex, 1);
         }
-    }
 
-    hideInfoModal() {
-        if (this.infoModal) {
-            this.infoModal.destroy(true);
-            this.infoModal = null;
-        }
-    }
+        // Lấy nguyên liệu nhận được (kế thừa đúng level của trang bị bị tách)
+        const materials = getDecomposeMaterials(itemData, targetLevel);
 
-    hideConfirmModal() {
-        if (this.confirmModal) {
-            this.confirmModal.destroy(true);
-            this.confirmModal = null;
-        }
-        this.saleQuantity = 1;
-    }
+        // Thêm các nguyên liệu vào inventory
+        materials.forEach(mat => {
+            const existingMat = inventory.find(i =>
+                i.itemId === mat.itemId &&
+                Number(i.level ?? 1) === mat.level &&
+                (i.quality || "Nomal") === mat.quality
+            );
 
-    showItemInfo(itemData, inventoryItem = null) {
-        this.hideActionMenu();
-        this.hideConfirmModal();
-
-        const modalWidth = 320;
-        const modalHeight = 220;
-        const x = this.scale.width / 2;
-        const y = this.scale.height / 2;
-        const quality = inventoryItem?.quality ?? itemData.quality ?? "Nomal";
-        const qualityLabel = (quality && quality !== "undefined") ? (quality === "Nomal" ? "Nomal" : quality.charAt(0).toUpperCase() + quality.slice(1)) : "Nomal";
-
-        this.infoModal = this.add.container(x, y);
-
-        const bg = this.add.rectangle(0, 0, modalWidth, modalHeight, 0x101820, 0.96)
-            .setStrokeStyle(3, 0x5ec5ff, 1);
-
-        const title = this.add.text(0, -78, itemData.name, {
-            fontSize: "22px",
-            color: "#ffffff",
-            fontStyle: "bold"
-        }).setOrigin(0.5);
-
-        const desc = this.add.text(0, -32, itemData.description || "Không có mô tả.", {
-            fontSize: "14px",
-            color: "#dfe6ee",
-            align: "center",
-            wordWrap: { width: modalWidth - 30 }
-        }).setOrigin(0.5);
-
-        const meta = this.add.text(0, 18, `Loại: ${itemData.type || "-"}   |   Quality: ${qualityLabel}   |   Giá: ${Number(itemData.price ?? itemData.gold ?? 10)}`, {
-            fontSize: "13px",
-            color: "#ffd76a",
-            fontStyle: "bold"
-        }).setOrigin(0.5);
-
-        const closeBtn = this.add.rectangle(0, 78, 120, 32, 0x4d90ff, 1)
-            .setInteractive({ useHandCursor: true });
-        const closeText = this.add.text(0, 78, "Đóng", {
-            fontSize: "15px",
-            color: "#ffffff",
-            fontStyle: "bold"
-        }).setOrigin(0.5);
-
-        closeBtn.on("pointerup", () => {
-            this.hideInfoModal();
+            if (existingMat) {
+                existingMat.quantity = Number(existingMat.quantity || 0) + mat.quantity;
+            } else {
+                inventory.push({
+                    itemId: mat.itemId,
+                    quantity: mat.quantity,
+                    level: mat.level,
+                    quality: mat.quality
+                });
+            }
         });
 
-        this.infoModal.add([bg, title, desc, meta, closeBtn, closeText]);
-        this.inventoryContainer.add(this.infoModal);
+        saveData.inventory = inventory;
+        SaveManager.save(saveData);
+        this.renderInventory();
     }
 
     sellItem(itemId, quantity = 1, quality = null) {
@@ -131,9 +87,7 @@ export default class InventoryScene extends BaseScene {
         const inventory = saveData.inventory || [];
         const itemIndex = inventory.findIndex(item => item.itemId === itemId && (quality === null || quality === undefined || item.quality === quality));
 
-        if (itemIndex === -1) {
-            return;
-        }
+        if (itemIndex === -1) return;
 
         const itemData = items.find(item => item.id === itemId);
         const price = Number(itemData?.sell_price ?? itemData?.price ?? itemData?.gold ?? 10);
@@ -141,7 +95,6 @@ export default class InventoryScene extends BaseScene {
         const actualQuantity = Math.min(safeQuantity, inventory[itemIndex].quantity || 0);
 
         const remaining = inventory[itemIndex].quantity - actualQuantity;
-
         if (remaining > 0) {
             inventory[itemIndex].quantity = remaining;
         } else {
@@ -153,182 +106,7 @@ export default class InventoryScene extends BaseScene {
         saveData.inventory = inventory;
 
         SaveManager.save(saveData);
-        this.hideConfirmModal();
         this.renderInventory();
-    }
-
-    showSellConfirmModal(itemData, inventoryItem) {
-        this.hideActionMenu();
-        this.hideInfoModal();
-        this.hideConfirmModal();
-
-        const maxQty = Number(inventoryItem.quantity || 1);
-        this.saleQuantity = Math.min(1, maxQty);
-
-        const modalWidth = 340;
-        const modalHeight = 200;
-        const x = this.scale.width / 2;
-        const y = this.scale.height / 2;
-
-        this.confirmModal = this.add.container(x, y);
-
-        const bg = this.add.rectangle(0, 0, modalWidth, modalHeight, 0x101820, 0.96)
-            .setStrokeStyle(3, 0xf4b942, 1);
-
-        const title = this.add.text(0, -70, `Đồng ý bán vật phẩm ${itemData.name} với giá`, {
-            fontSize: "18px",
-            color: "#ffffff",
-            fontStyle: "bold",
-            align: "center",
-            wordWrap: { width: modalWidth - 30 }
-        }).setOrigin(0.5);
-
-        const priceText = this.add.text(0, -38, `${Number(itemData.price ?? itemData.gold ?? 10)} gold / 1 cái`, {
-            fontSize: "16px",
-            color: "#ffd76a",
-            fontStyle: "bold"
-        }).setOrigin(0.5);
-
-        const quantityLabel = this.add.text(0, -2, "Số lượng bán:", {
-            fontSize: "15px",
-            color: "#dfe6ee",
-            fontStyle: "bold"
-        }).setOrigin(0.5);
-
-        const minusBtn = this.add.rectangle(-62, 32, 38, 28, 0x434d60, 1)
-            .setInteractive({ useHandCursor: true });
-        const minusText = this.add.text(-62, 32, "-", {
-            fontSize: "20px",
-            color: "#ffffff",
-            fontStyle: "bold"
-        }).setOrigin(0.5);
-
-        const qtyBox = this.add.rectangle(0, 32, 90, 28, 0xf3f6fb, 1)
-            .setStrokeStyle(2, 0x8aa4bf, 0.9);
-        const qtyText = this.add.text(0, 32, `${this.saleQuantity}`, {
-            fontSize: "16px",
-            color: "#1b1b1b",
-            fontStyle: "bold"
-        }).setOrigin(0.5);
-
-        const plusBtn = this.add.rectangle(62, 32, 38, 28, 0x434d60, 1)
-            .setInteractive({ useHandCursor: true });
-        const plusText = this.add.text(62, 32, "+", {
-            fontSize: "20px",
-            color: "#ffffff",
-            fontStyle: "bold"
-        }).setOrigin(0.5);
-
-        const confirmBtn = this.add.rectangle(-82, 72, 120, 32, 0x4caf50, 1)
-            .setInteractive({ useHandCursor: true });
-        const confirmText = this.add.text(-82, 72, "Đồng ý", {
-            fontSize: "15px",
-            color: "#ffffff",
-            fontStyle: "bold"
-        }).setOrigin(0.5);
-
-        const cancelBtn = this.add.rectangle(82, 72, 120, 32, 0xe74c3c, 1)
-            .setInteractive({ useHandCursor: true });
-        const cancelText = this.add.text(82, 72, "Hủy", {
-            fontSize: "15px",
-            color: "#ffffff",
-            fontStyle: "bold"
-        }).setOrigin(0.5);
-
-        const updateQty = () => {
-            qtyText.setText(`${this.saleQuantity}`);
-        };
-
-        minusBtn.on("pointerup", () => {
-            this.saleQuantity = Math.max(1, this.saleQuantity - 1);
-            updateQty();
-        });
-
-        plusBtn.on("pointerup", () => {
-            this.saleQuantity = Math.min(maxQty, this.saleQuantity + 1);
-            updateQty();
-        });
-
-        confirmBtn.on("pointerup", () => {
-            const total = this.saleQuantity * Number(itemData.price ?? itemData.gold ?? 10);
-            if (this.saleQuantity <= 0 || this.saleQuantity > maxQty) {
-                return;
-            }
-            this.sellItem(itemData.id, this.saleQuantity, inventoryItem.quality);
-            this.hideConfirmModal();
-            this.renderInventory();
-            console.log(`Đã bán ${this.saleQuantity} ${itemData.name} với tổng ${total} gold`);
-        });
-
-        cancelBtn.on("pointerup", () => {
-            this.hideConfirmModal();
-        });
-
-        this.confirmModal.add([
-            bg,
-            title,
-            priceText,
-            quantityLabel,
-            minusBtn,
-            minusText,
-            qtyBox,
-            qtyText,
-            plusBtn,
-            plusText,
-            confirmBtn,
-            confirmText,
-            cancelBtn,
-            cancelText
-        ]);
-
-        this.inventoryContainer.add(this.confirmModal);
-    }
-
-    showActionMenu(itemData, inventoryItem, x, y) {
-        this.hideActionMenu();
-        this.hideInfoModal();
-        this.hideConfirmModal();
-
-        const menuWidth = 180;
-        const menuHeight = 110;
-        const menuX = Math.min(x + 30, this.scale.width - menuWidth - 20);
-        const menuY = Math.max(y - 10, 150);
-
-        this.actionMenu = this.add.container(menuX, menuY);
-
-        const bg = this.add.rectangle(0, 0, menuWidth, menuHeight, 0x18212b, 0.96)
-            .setOrigin(0, 0)
-            .setStrokeStyle(2, 0xe5c07b, 0.9);
-
-        const buttonWidth = menuWidth - 30;
-        const centerX = menuWidth / 2;
-
-        const infoBtn = this.add.rectangle(centerX, 20, buttonWidth, 32, 0x4d90ff, 1)
-            .setInteractive({ useHandCursor: true });
-        const infoText = this.add.text(centerX, 20, "Xem thông tin", {
-            fontSize: "14px",
-            color: "#ffffff",
-            fontStyle: "bold"
-        }).setOrigin(0.5);
-
-        const sellBtn = this.add.rectangle(centerX, 68, buttonWidth, 32, 0x4caf50, 1)
-            .setInteractive({ useHandCursor: true });
-        const sellText = this.add.text(centerX, 68, "Bán", {
-            fontSize: "14px",
-            color: "#ffffff",
-            fontStyle: "bold"
-        }).setOrigin(0.5);
-
-        infoBtn.on("pointerup", () => {
-            this.showItemInfo(itemData, inventoryItem);
-        });
-
-        sellBtn.on("pointerup", () => {
-            this.showSellConfirmModal(itemData, inventoryItem);
-        });
-
-        this.actionMenu.add([bg, infoBtn, infoText, sellBtn, sellText]);
-        this.inventoryContainer.add(this.actionMenu);
     }
 
     renderInventory() {
@@ -340,6 +118,7 @@ export default class InventoryScene extends BaseScene {
         }
 
         this.inventoryContainer = this.add.container(0, 0);
+        this.itemMenu.setParentContainer(this.inventoryContainer);
 
         const slotSize = 80;
         const gap = 12;
@@ -360,10 +139,7 @@ export default class InventoryScene extends BaseScene {
 
         inventory.forEach((inventoryItem, index) => {
             const itemData = items.find(item => item.id === inventoryItem.itemId);
-
-            if (!itemData) {
-                return;
-            }
+            if (!itemData) return;
 
             const row = Math.floor(index / columns);
             const col = index % columns;
@@ -379,7 +155,7 @@ export default class InventoryScene extends BaseScene {
             itemImage.setDisplaySize(slotSize - 16, slotSize - 16);
             itemImage.setInteractive({ useHandCursor: true });
 
-            const levelValue = Number(inventoryItem.level ?? itemData.level ?? itemData.requiredLevel ?? 1);
+            const levelValue = Number(inventoryItem.level ?? itemData.level ?? getItemRequiredLevel(itemData));
             const levelText = this.add.text(
                 x - slotSize / 2 + 8,
                 y + slotSize / 2 - 8,
@@ -393,43 +169,112 @@ export default class InventoryScene extends BaseScene {
                 }
             ).setOrigin(0, 1);
 
-            // const quantityText = this.add.text(
-            //     x + slotSize / 2 - 6,
-            //     y + slotSize / 2 - 6,
-            //     `${inventoryItem.quantity}`,
-            //     {
-            //         fontSize: "14px",
-            //         color: "#ffffff",
-            //         fontStyle: "bold",
-            //         stroke: "#000000",
-            //         strokeThickness: 3,
-            //     }
-            // ).setOrigin(1, 1);
+            const quantityText = this.add.text(
+                x + slotSize / 2 - 6,
+                y + slotSize / 2 - 6,
+                `${inventoryItem.quantity}`,
+                {
+                    fontSize: "14px",
+                    color: "#ffffff",
+                    fontStyle: "bold",
+                    stroke: "#000000",
+                    strokeThickness: 3,
+                }
+            ).setOrigin(1, 1);
 
-            const qualityValue = inventoryItem.quality || "Nomal";
-            const qualityLabel = qualityValue === "Nomal" ? "Nomal" : qualityValue.charAt(0).toUpperCase() + qualityValue.slice(1);
-            // const nameText = this.add.text(
-            //     x,
-            //     y + slotSize / 2 + 20,
-            //     `${itemData.name}\n${qualityLabel}`,
-            //     {
-            //         fontSize: "11px",
-            //         color: "#ffffff",
-            //         fontStyle: "bold",
-            //         wordWrap: { width: slotSize + 12 },
-            //         align: "center"
-            //     }
-            // ).setOrigin(0.5);
+            const handlePointerDown = (pointer) => {
+                itemImage.downX = pointer.x;
+                itemImage.downY = pointer.y;
+            };
 
-            bg.on("pointerup", () => {
-                this.showActionMenu(itemData, inventoryItem, x, y);
-            });
+            const handlePointerUp = (pointer) => {
+                if (pointer.event) pointer.event.stopPropagation();
+                const dist = Phaser.Math.Distance.Between(
+                    itemImage.downX || pointer.x,
+                    itemImage.downY || pointer.y,
+                    pointer.x,
+                    pointer.y
+                );
+                if (dist < 8) {
+                    // Danh sách action cơ bản
+                    const actions = [
+                        {
+                            label: "Chi tiết",
+                            onClick: () => this.itemMenu.showItemInfo(itemData, inventoryItem)
+                        }
+                    ];
 
-            itemImage.on("pointerup", () => {
-                this.showActionMenu(itemData, inventoryItem, x, y);
-            });
+                    // Nếu item có decomposition thì hiện nút Phân tách
+                    if (itemData.decomposition) {
+                        actions.push({
+                            label: "Phân tách",
+                            onClick: () => this.itemMenu.showDecomposeConfirmModal({
+                                itemData,
+                                inventoryItem,
+                                onConfirm: () => this.decomposeItem(inventoryItem, itemData)
+                            })
+                        });
+                    }
 
-            this.inventoryContainer.add([bg, itemImage, levelText]);
+                    // Nút Bán
+                    actions.push({
+                        label: "Bán",
+                        onClick: () => this.itemMenu.showSellConfirmModal({
+                            targetX: x,
+                            targetY: y,
+                            cellSize: slotSize,
+                            itemData,
+                            maxQuantity: inventoryItem.quantity,
+                            onConfirm: (qty) => this.sellItem(itemData.id, qty, inventoryItem.quality)
+                        })
+                    });
+
+                    this.itemMenu.showActionMenu({
+                        targetX: x,
+                        targetY: y,
+                        cellSize: slotSize,
+                        itemData,
+                        inventoryItem,
+                        actions
+                    });
+                }
+            };
+
+            bg.on("pointerdown", handlePointerDown);
+            bg.on("pointerup", handlePointerUp);
+            itemImage.on("pointerdown", handlePointerDown);
+            itemImage.on("pointerup", handlePointerUp);
+
+            this.inventoryContainer.add([bg, itemImage, levelText, quantityText]);
         });
+    }
+
+    createBackButton() {
+        const backBtn = this.add.container(45, 70);
+        const btnBg = this.add.circle(0, 0, 24, 0x1b2838, 0.9)
+            .setStrokeStyle(2, 0x8aa4bf, 1)
+            .setInteractive({ useHandCursor: true });
+
+        const backIcon = this.textures.exists("back")
+            ? this.add.image(0, 0, "back").setDisplaySize(28, 28)
+            : this.add.text(0, 0, "‹", { fontSize: "34px", color: "#ffffff", fontStyle: "bold" }).setOrigin(0.5, 0.55);
+
+        btnBg.on("pointerover", () => {
+            btnBg.setFillStyle(0x2a3e57);
+            btnBg.setStrokeStyle(2, 0xffffff, 1);
+        });
+
+        btnBg.on("pointerout", () => {
+            btnBg.setFillStyle(0x1b2838);
+            btnBg.setStrokeStyle(2, 0x8aa4bf, 1);
+        });
+
+        btnBg.on("pointerup", (pointer) => {
+            if (pointer.event) pointer.event.stopPropagation();
+            this.scene.start("MenuScene");
+        });
+
+        backBtn.add([btnBg, backIcon]);
+        backBtn.setDepth(100);
     }
 }

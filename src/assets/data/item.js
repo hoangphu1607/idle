@@ -169,9 +169,14 @@ const items = [{
 
         stats: {
             attack_physical: 5,
-            attack_magic: 0,
+            attack_magic: 1,
             hp: 20,
             mp: 10,
+        },
+        decomposition: {
+            materials: [
+                { itemId: "plank", quantity: [5,6,7,8] },
+            ]
         }
     },
     {
@@ -188,7 +193,7 @@ const items = [{
         requiredLevel: 1,
 
         stats: {
-            attack_physical: 0,
+            attack_physical: 1,
             attack_magic: 5,
             hp: 10,
             mp: 20,
@@ -208,12 +213,53 @@ const items = [{
         requiredLevel: 1,
 
         stats: {
-            attack_physical: 0,
+            attack_physical: 1,
             attack_magic: 5,
             hp: 10,
             mp: 20,
         }
+    },
+    {
+        id: "plank",
+        name: "Plank",
+        description: "Một tấm ván gỗ.",
+        icon: "item_plank",
+        sell_price: 20,
+        type: "material",
+        rarity: "common",
+        maxStack: 999
     }
 ];
 
+/**
+ * Lấy danh sách nguyên liệu sau khi phân tách dựa theo cấu hình decomposition của item
+ * @param {Object} itemData - Định nghĩa gốc của item từ items.js
+ * @param {number} itemLevel - Level hiện tại của item bị tách (ví dụ Mace Lv.10)
+ * @returns {Array} - Danh sách nguyên liệu trả về kèm số lượng và level kế thừa
+ */
+export function getDecomposeMaterials(itemData, itemLevel = 1) {
+    if (!itemData?.decomposition?.materials) {
+        return [];
+    }
+
+    const targetLevel = Number(itemLevel || 1);
+
+    return itemData.decomposition.materials.map(mat => {
+        let qty = 1;
+        if (Array.isArray(mat.quantity) && mat.quantity.length > 0) {
+            // Random một giá trị ngẫu nhiên từ mảng đã cho (vd: [5, 6, 7, 8])
+            const randomIndex = Math.floor(Math.random() * mat.quantity.length);
+            qty = mat.quantity[randomIndex];
+        } else if (typeof mat.quantity === "number") {
+            qty = mat.quantity;
+        }
+
+        return {
+            itemId: mat.itemId,
+            quantity: Math.max(1, Number(qty) || 1),
+            level: targetLevel, // Kế thừa chính xác level của item gốc (Mace lv 10 -> Plank lv 10)
+            quality: mat.quality || "Nomal"
+        };
+    });
+}
 export default items;

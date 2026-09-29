@@ -218,4 +218,31 @@ export const MONSTERS = [
         experience: 10,
         gold: 2
     },
+    {
+        id: "monster_wood_lv10",
+        name: "Wood Monster",
+        avatar: "monster_wood_lv10",
+
+        hp: 700,
+        
+
+        attack_physical: 30,
+        attack_magic: 10,
+
+        armor: 10,
+        magic_resistance: 10,
+
+        role: "physical",
+
+        skills: [
+            {
+                id: "Wood_first_skill",
+                cooldown: 1.5,
+                initialCooldown: 0.2
+            }
+        ],
+
+        experience: 10,
+        gold: 2
+    },
 ];

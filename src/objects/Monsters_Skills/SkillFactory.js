@@ -1,24 +1,69 @@
 import SlimeSkill from "./SlimeSkill.js";
 import WolfSkill from "./WolfSkill.js";
 import OrcSkill from "./OrcSkill.js";
-import ThiefDaggerSkill from "./Thief_dagger_first_skill.js";
-import ThiefBowSkill from "./Thief_bow_first_skill.js";
+import BaseSkill from "./BaseSkill.js";
 
-const SKILL_CLASSES = {
+// 1. Cấu hình mặc định cho các skill dùng chung BaseSkill
+const GENERIC_PROJECTILE_CONFIGS = {
+    Thief_sword_first_skill: {
+        name: "Thief Sword Strike",
+        damageType: "physical",
+        damageMultiplier: 1.0,
+        projectileKey: "Base_first_skill",
+    },
+    Thief_bow_first_skill: {
+        name: "Thief Bow Shot",
+        damageType: "physical",
+        damageMultiplier: 1.0,
+        projectileKey: "Base_first_skill",
+    },
+    Thief_dagger_first_skill: {
+        name: "Thief Dagger Strike",
+        damageType: "physical",
+        damageMultiplier: 1.0,
+        projectileKey: "Base_first_skill",
+    },
+    Thief_mage_first_skill: {
+        name: "Thief Mage Strike",
+        damageType: "magic",
+        damageMultiplier: 1.5,
+        projectileKey: "Base_first_skill",
+    },
+    Thief_miner_first_skill: {
+        name: "Thief Miner Strike",
+        damageType: "physical",
+        damageMultiplier: 1.0,
+        projectileKey: "Base_first_skill",
+    },
+};
+
+// 2. Các skill có class xử lý logic đặc thù riêng biệt
+const SPECIAL_SKILL_CLASSES = {
     Slime_first_skill: SlimeSkill,
     Wolf_first_skill: WolfSkill,
     Orc_first_skill: OrcSkill,
-    Thief_dagger_first_skill: ThiefDaggerSkill,
-    Thief_bow_first_skill: ThiefBowSkill,
 };
 
 export function createMonsterSkill(skillData) {
-    const SkillClass = SKILL_CLASSES[skillData.id];
-
-    if (!SkillClass) {
-        console.warn(`Monster skill not found: ${skillData.id}`);
+    if (!skillData || !skillData.id) {
         return null;
     }
 
-    return new SkillClass(skillData);
+    // Trường hợp 1: Skill nằm trong danh mục Projectile chung
+    if (GENERIC_PROJECTILE_CONFIGS[skillData.id]) {
+        const mergedConfig = {
+            ...GENERIC_PROJECTILE_CONFIGS[skillData.id],
+            ...skillData, // Cho phép dữ liệu truyền vào ghi đè cooldown, damageMultiplier nếu cần
+        };
+        return new BaseSkill(mergedConfig);
+    }
+
+    // Trường hợp 2: Skill có class riêng biệt
+    const SpecialClass = SPECIAL_SKILL_CLASSES[skillData.id];
+    if (SpecialClass) {
+        return new SpecialClass(skillData);
+    }
+
+    console.warn(`Monster skill not found: ${skillData.id}`);
+    return null;
 }

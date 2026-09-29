@@ -188,7 +188,8 @@ export default class HeroSelectPopup {
         const gapX =
             (this.panelWidth - columns * cardWidth) / (columns + 1);
 
-        const heroes = SaveManager.loadHeroes(HEROES);
+        const heroes = SaveManager.loadHeroes(HEROES)
+            .filter((hero) => hero.unlocked);
 
         heroes.forEach((hero, index) => {
 

@@ -121,12 +121,39 @@ export default class SaveManager {
 
             return {
                 ...hero, // skills, stats, role... luôn lấy từ heroes.js
+                unlocked: Number(hero.id) === 1 || savedHero.unlocked === true,
                 level: savedHero.level ?? hero.level ?? 1,
                 experience: savedHero.experience ?? hero.experience ?? 0,
                 equipment: savedHero.equipment ?? {},
                 passives: savedHero.passives ?? {},
             };
         });
+    }
+
+    static unlockHero(heroId, cost) {
+        const saveData = this.load();
+        const heroKey = String(heroId);
+
+        saveData.heroes ||= {};
+        saveData.heroes[heroKey] ||= {};
+
+        if (Number(heroId) === 1 || saveData.heroes[heroKey].unlocked === true) {
+            return { success: true, alreadyUnlocked: true, gold: Number(saveData.player.gold || 0) };
+        }
+
+        const gold = Number(saveData.player.gold || 0);
+        if (gold < cost) {
+            return { success: false, reason: "insufficient-gold", gold };
+        }
+
+        saveData.player.gold = gold - cost;
+        saveData.heroes[heroKey].unlocked = true;
+
+        if (!this.save(saveData)) {
+            return { success: false, reason: "save-failed", gold };
+        }
+
+        return { success: true, gold: saveData.player.gold };
     }
 
     /**

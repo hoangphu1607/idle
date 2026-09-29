@@ -73,8 +73,12 @@ export default class MenuScene extends BaseScene  {
 
         const iconCoin = this.add.image(width_device - 15, 35, "icon_coin").setOrigin(1, 0).setScale(0.5);
         const coinText = this.add.text(width_device - 50, 40, SaveManager.get("player.gold").toString(), { fontSize: "24px", fill: "#fff" }).setOrigin(1, 0);
-        this.events.on("updateCoin", (newCoinValue) => {
+        const updateCoinText = (newCoinValue) => {
             coinText.setText(newCoinValue.toString());
+        };
+        this.events.on("updateCoin", updateCoinText);
+        this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+            this.events.off("updateCoin", updateCoinText);
         });
 
         this.menuContainer.add(btnPlay.container);
