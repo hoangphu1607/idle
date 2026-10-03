@@ -1,5 +1,5 @@
 import Skill from "../Hero_Skills/Skill.js";
-
+import Phaser from "phaser";
 export default class BaseSkill extends Skill {
     /**
      * @param {Object} config Cấu hình skill
@@ -66,18 +66,27 @@ export default class BaseSkill extends Skill {
                 : (caster.attack_physical || 0);
 
         // ==========================================
-        // PROJECTILE
+        // TỌA ĐỘ BẮT ĐẦU VÀ ĐÍCH ĐẾN
         // ==========================================
         const startX = caster.ownerGrid.container.x + caster.view.container.x;
         const startY = caster.ownerGrid.container.y + caster.view.container.y;
 
+        const targetX = target.ownerGrid.container.x + target.view.container.x;
+        const targetY = target.ownerGrid.container.y + target.view.container.y;
+
+        // Tính góc xoay hướng thẳng đến mục tiêu
+        const angle = Phaser.Math.Angle.Between(startX, startY, targetX, targetY);
+
+        // ==========================================
+        // PROJECTILE
+        // ==========================================
         const projectile = battle.add.image(startX, startY, this.projectileKey)
             .setOrigin(0.5)
             .setDisplaySize(this.projectileSize, this.projectileSize)
             .setDepth(10);
 
-        const targetX = target.ownerGrid.container.x + target.view.container.x;
-        const targetY = target.ownerGrid.container.y + target.view.container.y;
+        // Xoay hình ảnh theo hướng bay (bù trừ -90 độ do hình gốc quay xuống dưới)
+        projectile.rotation = angle - Math.PI / 2;
 
         battle.tweens.add({
             targets: projectile,

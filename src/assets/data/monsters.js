@@ -82,7 +82,7 @@ export const MONSTERS = [
         experience: 50,
         gold: 7
     },
-
+    //!--------------------Thief
     {
         id: "thief_dagger",
         name: "Thief (Dagger)",
@@ -245,4 +245,142 @@ export const MONSTERS = [
         experience: 10,
         gold: 2
     },
+
+    //!--------------------Skeleton
+    {
+        id: "skeleton_sword",
+        name: "Skeleton (Sword)",
+        avatar: "monster_skeleton_sword",
+
+        hp: 1000,
+        
+
+        attack_physical: 30,
+        attack_magic: 5,
+
+        armor: 7,
+        magic_resistance: 7,
+
+        role: "melee",
+
+        skills: [
+            {
+                id: "Skeleton_sword_first_skill",
+                cooldown: 1.2,
+                initialCooldown: 0.2
+            }
+        ],
+
+        experience: 10,
+        gold: 2
+    },
+    {
+        id: "skeleton_bow",
+        name: "Skeleton (Bow)",
+        avatar: "monster_skeleton_bow",
+
+        hp: 800,
+        
+
+        attack_physical: 20,
+        attack_magic: 5,
+
+        armor: 5,
+        magic_resistance: 5,
+
+        role: "ranged",
+
+        skills: [
+            {
+                id: "Skeleton_bow_first_skill",
+                cooldown: 1,
+                initialCooldown: 0.2
+            }
+        ],
+
+        experience: 10,
+        gold: 2
+    },
+    {
+        id: "skeleton_mage",
+        name: "Skeleton (Mage)",
+        avatar: "monster_skeleton_mage",
+
+        hp: 800,
+        
+
+        attack_physical: 5,
+        attack_magic: 20,
+
+        armor: 5,
+        magic_resistance: 5,
+
+        role: "magic",
+
+        skills: [
+            {
+                id: "Skeleton_mage_first_skill",
+                cooldown: 1.5,
+                initialCooldown: 0.2
+            }
+        ],
+
+        experience: 10,
+        gold: 2
+    },
+    {
+        id: "skeleton_warlock",
+        name: "Skeleton (Warlock)",
+        avatar: "monster_skeleton_warlock",
+
+        hp: 900,
+        
+
+        attack_physical: 5,
+        attack_magic: 30,
+
+        armor: 5,
+        magic_resistance: 5,
+
+        role: "melee",
+
+        skills: [
+            {
+                id: "Skeleton_warlock_first_skill",
+                cooldown: 1.5,
+                initialCooldown: 0.2
+            }
+        ],
+
+        experience: 10,
+        gold: 2
+    },
+    {
+        id: "skeleton_knight",
+        name: "Skeleton (Knight)",
+        avatar: "monster_skeleton_knight",
+
+        hp: 1500
+,
+        
+
+        attack_physical: 35,
+        attack_magic: 5,
+
+        armor: 15,
+        magic_resistance: 15,
+
+        role: "melee",
+
+        skills: [
+            {
+                id: "Skeleton_knight_first_skill",
+                cooldown: 1.5,
+                initialCooldown: 0.2
+            }
+        ],
+
+        experience: 10,
+        gold: 2
+    },    
 ];

@@ -80,30 +80,30 @@ export default class MapCard {
         // =========================
         // Subtitle
         // =========================
-        this.subtitle = this.scene.add.text(
-            90,
-            50,
-            subtitle,
-            {
-                fontSize: "18px",
-                color: "#555555"
-            }
-        );
+        // this.subtitle = this.scene.add.text(
+        //     90,
+        //     50,
+        //     subtitle,
+        //     {
+        //         fontSize: "18px",
+        //         color: "#555555"
+        //     }
+        // );
 
 
         // =========================
         // Difficulty label
         // =========================
-        this.difficultyLabel = this.scene.add.text(
-            width - 20,
-            52,
-            "Độ khó:",
-            {
-                fontSize: "16px",
-                color: "#ffffff",
-                fontStyle: "bold"
-            }
-        ).setOrigin(1, 0);
+        // this.difficultyLabel = this.scene.add.text(
+        //     width - 20,
+        //     52,
+        //     "Độ khó:",
+        //     {
+        //         fontSize: "16px",
+        //         color: "#ffffff",
+        //         fontStyle: "bold"
+        //     }
+        // ).setOrigin(1, 0);
 
 
         // =========================
@@ -118,8 +118,8 @@ export default class MapCard {
         this.container.add([
             this.background,
             this.title,
-            this.subtitle,
-            this.difficultyLabel,
+            //this.subtitle,
+            //this.difficultyLabel,
             this.difficultySelect
         ]);
 

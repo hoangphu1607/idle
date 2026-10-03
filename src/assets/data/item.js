@@ -96,6 +96,16 @@ export function getItemBackgroundKey(quality) {
     return QUALITY_BACKGROUND_KEYS[quality] || "bg_item_nomal";
 }
 
+export function getItemLevelBackgroundKey(level) {
+    const normalizedLevel = Number(level);
+    if (level === null || level === undefined || level === "" || !Number.isFinite(normalizedLevel) || normalizedLevel <= 0) {
+        return "bg_item_lv10";
+    }
+
+    const backgroundLevel = Math.min(50, Math.max(10, Math.ceil(normalizedLevel / 10) * 10));
+    return `bg_item_lv${backgroundLevel}`;
+}
+
 export function getRandomItemQuality(itemId = null) {
     if (!QUALITY_ITEMS.has(itemId)) {
         return "Nomal";

@@ -5,6 +5,7 @@ import BaseSkill from "./BaseSkill.js";
 
 // 1. Cấu hình mặc định cho các skill dùng chung BaseSkill
 const GENERIC_PROJECTILE_CONFIGS = {
+    //!------------Thief------------
     Thief_sword_first_skill: {
         name: "Thief Sword Strike",
         damageType: "physical",
@@ -35,6 +36,45 @@ const GENERIC_PROJECTILE_CONFIGS = {
         damageMultiplier: 1.0,
         projectileKey: "Base_first_skill",
     },
+
+    //*!------------Skeleton------------
+    Skeleton_sword_first_skill: {
+        name: "Skeleton Sword Strike",
+        damageType: "physical",
+        damageMultiplier: 1.0,
+        projectileKey: "Base_first_skill",
+    },
+    Skeleton_bow_first_skill: {
+        name: "Skeleton Bow Shot",
+        damageType: "physical",
+        damageMultiplier: 1.0,
+        projectileKey: "Base_first_skill",
+    },
+    Skeleton_dagger_first_skill: {
+        name: "Skeleton Dagger Strike",
+        damageType: "physical",
+        damageMultiplier: 1.0,
+        projectileKey: "Base_first_skill",
+    },
+    Skeleton_mage_first_skill: {
+        name: "Skeleton Mage Strike",
+        damageType: "magic",
+        damageMultiplier: 1,
+        projectileKey: "Base_first_skill",
+    },
+    Skeleton_warlock_first_skill: {
+        name: "Skeleton Warlock Strike",
+        damageType: "magic",
+        damageMultiplier: 1.2,
+        projectileKey: "Base_first_skill",
+    },
+    Skeleton_knight_first_skill: {
+        name: "Skeleton Knight Strike",
+        damageType: "physical",
+        damageMultiplier: 1.0,
+        projectileKey: "Base_first_skill",
+    },
+
 };
 
 // 2. Các skill có class xử lý logic đặc thù riêng biệt

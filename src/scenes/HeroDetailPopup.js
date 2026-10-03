@@ -1,5 +1,5 @@
 import SaveManager from "../managers/SaveManager.js";
-import items, { getItemBackgroundKey, getItemRequiredLevel, getDecomposeMaterials } from "../assets/data/item.js";
+import items, { getItemBackgroundKey, getItemLevelBackgroundKey, getItemRequiredLevel, getDecomposeMaterials } from "../assets/data/item.js";
 import ItemActionMenu from "../ui/ItemActionMenu.js";
 import Phaser from "phaser";
 import { HERO_SKILL_INFO, CLASS_LABELS, HERO_PASSIVE_INFO } from "../assets/data/heroSkills.js";
@@ -591,9 +591,19 @@ export default class HeroDetailPopup {
             const x = startX + col * (slotSize + gap);
             const y = startY + row * (slotSize + gap);
 
-            const backgroundKey = getItemBackgroundKey(inventoryItem.quality || "Nomal");
-            const itemBackground = this.scene.add.image(x + slotSize / 2, y + slotSize / 2, backgroundKey);
-            itemBackground.setDisplaySize(slotSize, slotSize);
+            const itemLevelBackground = this.scene.add.image(
+                x + slotSize / 2,
+                y + slotSize / 2,
+                getItemLevelBackgroundKey(inventoryItem.level ?? itemData.level ?? itemData.requiredLevel)
+            );
+            itemLevelBackground.setDisplaySize(slotSize, slotSize);
+
+            const itemQualityBackground = this.scene.add.image(
+                x + slotSize / 2,
+                y + slotSize / 2,
+                getItemBackgroundKey(inventoryItem.quality || "Nomal")
+            );
+            itemQualityBackground.setDisplaySize(slotSize + 12, slotSize + 12);
 
             const itemImage = this.scene.add.image(x + slotSize / 2, y + slotSize / 2, itemData.icon);
             itemImage.setDisplaySize(slotSize - 6, slotSize - 6);
@@ -632,10 +642,10 @@ export default class HeroDetailPopup {
                 fontSize: "10px", color: "#ffffff", fontStyle: "bold", stroke: "#000000", strokeThickness: 3
             }).setOrigin(0, 1);
 
-            this.inventoryContainer.add([itemBackground, itemImage, quantity, levelText]);
+            this.inventoryContainer.add([itemLevelBackground, itemQualityBackground, itemImage, quantity, levelText]);
             this.inventoryItemViews.push({
                 y: y,
-                elements: [itemBackground, itemImage, levelText]
+                elements: [itemQualityBackground, itemLevelBackground, itemImage, quantity, levelText]
             });
         });
 

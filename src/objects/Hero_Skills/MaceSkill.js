@@ -41,6 +41,8 @@ export default class MaceSkill extends Skill {
             "Mace_first_skill",
         );
 
+        // Đảm bảo tâm xoay nằm ở chính giữa hình
+        projectile.setOrigin(0.5);
         projectile.setDepth(10);
 
         const targetX =
@@ -53,7 +55,9 @@ export default class MaceSkill extends Skill {
             targets: projectile,
             x: targetX,
             y: targetY,
+            angle: 1080, // Xoay 3 vòng (360 * 3 = 1080 độ) trong suốt thời gian bay
             duration: 1000,
+            ease: "Linear",
 
             onComplete: () => {
                 projectile.destroy();
@@ -70,12 +74,8 @@ export default class MaceSkill extends Skill {
                 if (target.dead) {
                     battle.removeUnit(target);
                 }
-
-                //console.log(`${caster.name} attacks ${target.name} for ${damage} damage`,);
             },
         });
-
-        //console.log(`${caster.name} uses ${this.name} on ${target.name}`);
 
         this.startCooldown(currentTime);
     }

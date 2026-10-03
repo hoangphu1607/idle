@@ -1,6 +1,6 @@
 import BaseScene from "./base/BaseScene";
 import SaveManager from "../managers/SaveManager.js";
-import items, { getItemBackgroundKey, getItemRequiredLevel, getDecomposeMaterials } from "../assets/data/item.js";
+import items, { getItemBackgroundKey, getItemLevelBackgroundKey, getItemRequiredLevel, getDecomposeMaterials } from "../assets/data/item.js";
 import ItemActionMenu from "../ui/ItemActionMenu.js";
 import Phaser from "phaser";
 
@@ -146,10 +146,16 @@ export default class InventoryScene extends BaseScene {
             const x = startX + col * (slotSize + gap) + slotSize / 2;
             const y = startY + row * (slotSize + gap) + slotSize / 2;
 
-            const bgKey = getItemBackgroundKey(inventoryItem.quality || "Nomal");
-            const bg = this.add.image(x, y, bgKey);
-            bg.setDisplaySize(slotSize, slotSize);
-            bg.setInteractive({ useHandCursor: true });
+            const levelBg = this.add.image(
+                x,
+                y,
+                getItemLevelBackgroundKey(inventoryItem.level ?? itemData.level ?? itemData.requiredLevel)
+            );
+            levelBg.setDisplaySize(slotSize, slotSize);
+
+            const qualityBg = this.add.image(x, y, getItemBackgroundKey(inventoryItem.quality || "Nomal"));
+            qualityBg.setDisplaySize(slotSize + 12, slotSize + 12);
+            qualityBg.setInteractive({ useHandCursor: true });
 
             const itemImage = this.add.image(x, y, itemData.icon);
             itemImage.setDisplaySize(slotSize - 16, slotSize - 16);
@@ -240,12 +246,12 @@ export default class InventoryScene extends BaseScene {
                 }
             };
 
-            bg.on("pointerdown", handlePointerDown);
-            bg.on("pointerup", handlePointerUp);
+            qualityBg.on("pointerdown", handlePointerDown);
+            qualityBg.on("pointerup", handlePointerUp);
             itemImage.on("pointerdown", handlePointerDown);
             itemImage.on("pointerup", handlePointerUp);
 
-            this.inventoryContainer.add([bg, itemImage, levelText, quantityText]);
+            this.inventoryContainer.add([levelBg, qualityBg, itemImage, levelText, quantityText]);
         });
     }
 

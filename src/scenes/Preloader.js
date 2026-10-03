@@ -16,6 +16,11 @@ export default class Preloader extends Phaser.Scene {
         this.load.image("bg_item_outstanding", "src/assets/bg/bg_item_outstanding.png");
         this.load.image("bg_item_excellent", "src/assets/bg/bg_item_excellent.png");
         this.load.image("bg_item_masterpiece", "src/assets/bg/bg_item_masterpiece.png");
+        this.load.image("bg_item_lv10", "src/assets/bg/bg_item_lv10.png");
+        this.load.image("bg_item_lv20", "src/assets/bg/bg_item_lv20.png");
+        this.load.image("bg_item_lv30", "src/assets/bg/bg_item_lv30.png");
+        this.load.image("bg_item_lv40", "src/assets/bg/bg_item_lv40.png");
+        this.load.image("bg_item_lv50", "src/assets/bg/bg_item_lv50.png");
         this.load.image("bg-map-forest", "src/assets/bg/bg-map-forest.png");
         this.load.image("bg-map-snow", "src/assets/bg/bg-map-snow.png");
         this.load.image("bg-map-desert", "src/assets/bg/bg-map-desert.png");
@@ -62,6 +67,16 @@ export default class Preloader extends Phaser.Scene {
         this.load.image("monster_thief_sword", "src/assets/monster/monster_thief_sword.png");
         this.load.image("monster_thief_mage", "src/assets/monster/monster_thief_mage.png");
         this.load.image("monster_thief_miner", "src/assets/monster/monster_thief_miner.png");
+
+        this.load.image("monster_skeleton_sword", "src/assets/monster/monster_skeleton_sword.png");
+        this.load.image("monster_skeleton_bow", "src/assets/monster/monster_skeleton_bow.png");
+        this.load.image("monster_skeleton_mage", "src/assets/monster/monster_skeleton_mage.png");
+        this.load.image("monster_skeleton_knight", "src/assets/monster/monster_skeleton_knight.png");
+        this.load.image("monster_skeleton_warlock", "src/assets/monster/monster_skeleton_warlock.png");
+        
+        
+        
+        
 
         this.load.image("monster_wood_lv10", "src/assets/monster/monster_wood_lv10.png");
         

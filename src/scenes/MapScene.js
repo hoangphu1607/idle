@@ -76,7 +76,7 @@ export default class MapScene extends BaseScene {
                 content: "open world"
             }
         ];
-        
+
         this.heroSelectPopup = new HeroSelectPopup(this);
         maps.forEach((map, index) => {
 
@@ -90,7 +90,7 @@ export default class MapScene extends BaseScene {
                 subtitle: map.tier,
                 bg: map.bg,
                 onClick: () => {
-                    
+
                     //console.log(map.title);
                     this.heroSelectPopup.show(map.content, map.id, map.title);
 
@@ -99,6 +99,52 @@ export default class MapScene extends BaseScene {
             });
 
         });
+
+        this.createBackButton();
+    }
+    createBackButton() {
+        // Sử dụng trực tiếp this.add thay vì this.scene.add
+        const backBtn = this.add.container(45, 70);
+
+        // Nền nút hình tròn
+        const btnBg = this.add.circle(0, 0, 24, 0x1b2838, 0.9)
+            .setStrokeStyle(2, 0x8aa4bf, 1)
+            .setInteractive({ useHandCursor: true });
+
+        // Biểu tượng quay lại (truy cập texture manager qua this.textures)
+        const backIcon = this.textures.exists("back")
+            ? this.add.image(0, 0, "back").setDisplaySize(28, 28)
+            : this.add.text(0, 0, "‹", {
+                fontSize: "34px",
+                color: "#ffffff",
+                fontStyle: "bold"
+            }).setOrigin(0.5, 0.55);
+
+        btnBg.on("pointerover", () => {
+            btnBg.setFillStyle(0x2a3e57);
+            btnBg.setStrokeStyle(2, 0xffffff, 1);
+        });
+
+        btnBg.on("pointerout", () => {
+            btnBg.setFillStyle(0x1b2838);
+            btnBg.setStrokeStyle(2, 0x8aa4bf, 1);
+        });
+
+        btnBg.on("pointerup", (pointer) => {
+            if (pointer && pointer.event) {
+                pointer.event.stopPropagation();
+            }
+            // Chuyển Scene thông qua this.scene.start
+            this.scene.start("MenuScene");
+        });
+
+        backBtn.add([btnBg, backIcon]);
+        backBtn.setDepth(100);
+
+        // Nếu có container quản lý chung thì thêm vào, tránh lỗi nếu chưa khởi tạo
+        if (this.container) {
+            this.container.add(backBtn);
+        }
     }
 
 }
