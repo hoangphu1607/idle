@@ -12,6 +12,8 @@ export default class HeroSelectPopup {
         this.maxSelect = 8;
         this.minSelect = 1;
         this.cards = [];
+        this.difficulty = "normal";
+        this.difficultyButtons = {};
 
         this.container = scene.add.container(0, 0);
 
@@ -101,6 +103,7 @@ export default class HeroSelectPopup {
         );
 
         this.container.add(this.txtCount);
+        this.createDifficultySelector();
         this.createHeroGrid();
 
         // Confirm Button
@@ -169,9 +172,51 @@ export default class HeroSelectPopup {
                 content: this.content,
                 mapId: this.mapId,
                 mapName: this.mapName,
+                difficulty: this.difficulty,
             });
         });
 
+    }
+
+    createDifficultySelector() {
+        const difficulties = ["easy", "normal", "hard", "hell"];
+        const labels = {
+            easy: "Easy",
+            normal: "Normal",
+            hard: "Hard",
+            hell: "Hell",
+        };
+        const centerX = this.scene.scale.width / 2;
+
+        difficulties.forEach((difficulty, index) => {
+            const x = centerX - 144 + index * 96;
+            const background = this.scene.add.rectangle(x, 260, 84, 34, 0x434d60, 1)
+                .setStrokeStyle(1, 0xe5c07b, 0.9)
+                .setInteractive({ useHandCursor: true });
+            const label = this.scene.add.text(x, 260, labels[difficulty], {
+                fontSize: "13px",
+                color: "#ffffff",
+                fontStyle: "bold",
+            }).setOrigin(0.5);
+
+            background.on("pointerup", () => {
+                this.difficulty = difficulty;
+                this.updateDifficultySelector();
+            });
+
+            this.difficultyButtons[difficulty] = { background, label };
+            this.container.add([background, label]);
+        });
+
+        this.updateDifficultySelector();
+    }
+
+    updateDifficultySelector() {
+        Object.entries(this.difficultyButtons).forEach(([difficulty, button]) => {
+            const selected = difficulty === this.difficulty;
+            button.background.setFillStyle(selected ? 0x3366cc : 0x434d60);
+            button.label.setColor(selected ? "#ffffff" : "#c8d0d8");
+        });
     }
 
     createHeroGrid() {
@@ -260,6 +305,8 @@ export default class HeroSelectPopup {
         this.content = content || {};
         this.mapId = mapId;
         this.mapName = mapName;
+        this.difficulty = "normal";
+        this.updateDifficultySelector();
 
         switch (this.content) {
 

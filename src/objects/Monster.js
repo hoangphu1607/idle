@@ -1,7 +1,7 @@
 import Unit from "./Unit.js";
 import { createMonsterSkill } from "./Monsters_Skills/SkillFactory.js";
 import monsterTiers from "../assets/data/monsterTiers.js";
-import { MONSTER_DROPS } from "../assets/data/monsterDrops.js";
+import { getMonsterDropPool } from "../assets/data/monsterDrops.js";
 
 export default class Monster extends Unit {
 
@@ -90,8 +90,11 @@ export default class Monster extends Unit {
         // DROP ITEMS
         // ==========================================
 
-        this.dropItems =
-            MONSTER_DROPS[this.id] || [];
+        this.dropItems = getMonsterDropPool(
+            this.id,
+            scene.difficulty,
+            this.type === "mob_gather" ? this.tier : null
+        );
 
 
         // ==========================================

@@ -177,6 +177,8 @@ export default class ItemActionMenu {
         const y = this.scene.scale.height / 2;
 
         const itemLevel = Number(inventoryItem?.level ?? itemData?.level ?? 1);
+        const itemTier = inventoryItem?.tier;
+        const itemLabel = itemTier ? `Tier ${itemTier}` : `Lv.${itemLevel}`;
 
         this.decomposeModal = this.scene.add.container(x, y);
         this.decomposeModal.setDepth(10015);
@@ -198,7 +200,7 @@ export default class ItemActionMenu {
         const desc = this.scene.add.text(
             0,
             -42,
-            `Phân tách ${itemData.name} Lv.${itemLevel}?\nNguyên liệu nhận được sẽ kế thừa Lv.${itemLevel}.`,
+            `Phân tách ${itemData.name} ${itemLabel}?\nNguyên liệu nhận được sẽ kế thừa Lv.${itemLevel}.`,
             {
                 fontSize: "13px",
                 color: "#dfe6ee",
@@ -439,7 +441,8 @@ export default class ItemActionMenu {
             wordWrap: { width: modalWidth - 30 }
         }).setOrigin(0.5);
 
-        const meta = this.scene.add.text(0, 18, `Loại: ${itemData.type || "-"}   |   Quality: ${qualityLabel}   |   Giá: ${Number(itemData.sell_price ?? itemData.price ?? itemData.gold ?? 10)}`, {
+        const tierLabel = inventoryItem?.tier ? `Tier: ${inventoryItem.tier}   |   ` : "";
+        const meta = this.scene.add.text(0, 18, `${tierLabel}Loại: ${itemData.type || "-"}   |   Quality: ${qualityLabel}   |   Giá: ${Number(itemData.sell_price ?? itemData.price ?? itemData.gold ?? 10)}`, {
             fontSize: "13px",
             color: "#ffd76a",
             fontStyle: "bold"

@@ -21,7 +21,7 @@ export default class UnitView {
         this.sprite = this.scene.add.image(
             0,
             0,
-            this.unit.avatar
+            this.unit.type == "mob_gather" ? this.unit.avatar + this.unit.tier : this.unit.avatar
         );
 
         this.sprite.setDisplaySize(

@@ -37,12 +37,14 @@ export default class InventoryScene extends BaseScene {
 
         const targetLevel = Number(inventoryItem.level ?? itemData.level ?? getItemRequiredLevel(itemData));
         const targetQuality = inventoryItem.quality || "Nomal";
+        const targetTier = inventoryItem.tier ?? null;
 
         // Tìm vị trí của item bị phân tách
         const itemIndex = inventory.findIndex(item =>
             item.itemId === inventoryItem.itemId &&
             (item.quality || "Nomal") === targetQuality &&
-            Number(item.level ?? getItemRequiredLevel(itemData)) === targetLevel
+            Number(item.level ?? getItemRequiredLevel(itemData)) === targetLevel &&
+            (item.tier ?? null) === targetTier
         );
 
         if (itemIndex === -1) return;
@@ -82,10 +84,15 @@ export default class InventoryScene extends BaseScene {
         this.renderInventory();
     }
 
-    sellItem(itemId, quantity = 1, quality = null) {
+    sellItem(itemId, quantity = 1, quality = null, tier = undefined, level = undefined) {
         const saveData = SaveManager.load();
         const inventory = saveData.inventory || [];
-        const itemIndex = inventory.findIndex(item => item.itemId === itemId && (quality === null || quality === undefined || item.quality === quality));
+        const itemIndex = inventory.findIndex(item =>
+            item.itemId === itemId &&
+            (quality === null || quality === undefined || item.quality === quality) &&
+            (tier === undefined || (item.tier ?? null) === tier) &&
+            (level === undefined || Number(item.level ?? 1) === Number(level))
+        );
 
         if (itemIndex === -1) return;
 
@@ -165,7 +172,7 @@ export default class InventoryScene extends BaseScene {
             const levelText = this.add.text(
                 x - slotSize / 2 + 8,
                 y + slotSize / 2 - 8,
-                `Lv.${levelValue}`,
+                inventoryItem.tier ?? `Lv.${levelValue}`,
                 {
                     fontSize: "10px",
                     color: "#ffffff",
@@ -231,7 +238,13 @@ export default class InventoryScene extends BaseScene {
                             cellSize: slotSize,
                             itemData,
                             maxQuantity: inventoryItem.quantity,
-                            onConfirm: (qty) => this.sellItem(itemData.id, qty, inventoryItem.quality)
+                            onConfirm: (qty) => this.sellItem(
+                                itemData.id,
+                                qty,
+                                inventoryItem.quality,
+                                inventoryItem.tier,
+                                inventoryItem.level
+                            )
                         })
                     });
 

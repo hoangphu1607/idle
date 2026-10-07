@@ -27,13 +27,30 @@ export const QUALITY_MULTIPLIERS = {
     excellent: 1.6,
     masterpiece: 1.8
 };
+export const ITEM_TIERS = [
+    "I",
+    "II",
+    "III",
+    "IV",
+    "V",
+    "VI",
+    "VII",
+    "VIII",
+    "IX",
+    "X"
+];
 
-export const ITEM_LEVEL_RANGES = {
-    easy: { minLevel: 1, maxLevel: 10 },
-    normal: { minLevel: 10, maxLevel: 20 },
-    hard: { minLevel: 20, maxLevel: 30 },
-    hell: { minLevel: 30, maxLevel: 30 }
+export const ITEM_TIERS_BY_DIFFICULTY = {
+    easy: ["I", "II", "III"],
+    normal: ["III", "IV", "V"],
+    hard: ["V", "VI", "VII"],
+    hell: ["VI", "VII", "VIII"]
 };
+
+export function getItemTiersByDifficulty(difficulty = "normal") {
+    const normalizedDifficulty = String(difficulty ?? "normal").trim().toLowerCase();
+    return ITEM_TIERS_BY_DIFFICULTY[normalizedDifficulty] ?? ITEM_TIERS_BY_DIFFICULTY.normal;
+}
 
 export function getQualityMultiplier(quality) {
     const normalizedQuality = String(quality ?? "Nomal").trim();
@@ -65,11 +82,6 @@ export function getItemLevelMultiplier(level = 1) {
     }
 
     return 1;
-}
-
-export function getDifficultyLevelRange(difficulty = "normal") {
-    const normalizedDifficulty = String(difficulty ?? "normal").trim().toLowerCase();
-    return ITEM_LEVEL_RANGES[normalizedDifficulty] ?? ITEM_LEVEL_RANGES.normal;
 }
 
 export const QUALITY_LABELS = {
@@ -238,7 +250,17 @@ const items = [{
         type: "material",
         rarity: "common",
         maxStack: 999
-    }
+    },
+    {
+        id: "log",
+        name: "Log",
+        description: "Một khúc gỗ.",
+        icon: "item_log",
+        sell_price: 10,
+        type: "material",
+        rarity: "common",
+        maxStack: 999
+    },
 ];
 
 /**

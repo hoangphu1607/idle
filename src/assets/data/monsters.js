@@ -218,33 +218,7 @@ export const MONSTERS = [
         experience: 10,
         gold: 2
     },
-    {
-        id: "monster_wood_lv10",
-        name: "Wood Monster",
-        avatar: "monster_wood_lv10",
-
-        hp: 700,
-        
-
-        attack_physical: 30,
-        attack_magic: 10,
-
-        armor: 10,
-        magic_resistance: 10,
-
-        role: "physical",
-
-        skills: [
-            {
-                id: "Wood_first_skill",
-                cooldown: 1.5,
-                initialCooldown: 0.2
-            }
-        ],
-
-        experience: 10,
-        gold: 2
-    },
+    
 
     //!--------------------Skeleton
     {
@@ -382,5 +356,34 @@ export const MONSTERS = [
 
         experience: 10,
         gold: 2
-    },    
+    },  
+    //!--------------------Mob Gather
+    {
+        id: "wood_monster",
+        name: "Wood Monster",
+        avatar: "monster_wood_tier",
+        type:"mob_gather",
+
+        hp: 10,        
+
+        attack_physical: 20,
+        attack_magic: 5,
+
+        armor: 15,
+        magic_resistance: 15,
+
+        role: "melee",
+
+        skills: [
+            {
+                id: "Wood_monster_first_skill",
+                cooldown: 5,
+                initialCooldown: 0.2
+            }
+        ],
+
+        experience: 10,
+        gold: 2
+    },
+
 ];

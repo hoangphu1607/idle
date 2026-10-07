@@ -78,7 +78,7 @@ export default class Preloader extends Phaser.Scene {
         
         
 
-        this.load.image("monster_wood_lv10", "src/assets/monster/monster_wood_lv10.png");
+        this.load.image("monster_wood_tier1", "src/assets/monster/monster_wood_tier1.png");
         
 
         //Hero Skills
@@ -100,7 +100,7 @@ export default class Preloader extends Phaser.Scene {
         //Monsters_Skills
         this.load.image("Slime_first_skill", "src/assets/Monsters_Skills/Slime_first_skill.png");
         this.load.image("Base_first_skill", "src/assets/Monsters_Skills/Base_first_skill.png");
-
+        this.load.image("Wood_monster_first_skill", "src/assets/Monsters_Skills/Wood_monster_first_skill.png");
 
         //slot item
         this.load.svg("inventory_slots", "src/assets/ui/inventory_slots.svg", {
@@ -118,6 +118,7 @@ export default class Preloader extends Phaser.Scene {
         this.load.image("item_nature_staff", "src/assets/item/item_nature_staff.png");
 
         this.load.image("item_plank", "src/assets/item/item_plank.png");
+        this.load.image("item_log", "src/assets/item/item_log.png");
 
         // this.load.image("item_mace_lv1", "src/assets/item/item_mace_lv1.png");
         // this.load.image("item_fire_staff_lv1", "src/assets/item/item_fire_staff_lv1.png");

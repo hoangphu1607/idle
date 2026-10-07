@@ -48,6 +48,7 @@ export default class Unit {
         this.isStunned = false;
         this.stunUntil = 0;
         this.stunTimer = null;
+        this.type = data.type || "";
     }
 
     setPosition(row, col) {

@@ -14,6 +14,7 @@ export default class BattleScene extends BaseScene {
     init(data) {
         this.heroes = (data.heroes || []).map((hero) => SaveManager.getEffectiveHero(hero));
         this.content = data.content;
+        this.difficulty = data.difficulty || "normal";
         this.mapId = data.mapId || "jungle";
         this.mapName = data.mapName || this.mapId;
         this.stages = STAGES_BY_MAP[this.mapId] || STAGES_BY_MAP.jungle;
@@ -359,20 +360,57 @@ export default class BattleScene extends BaseScene {
             };
 
             const createLoopTimer = () => {
-                const loopTimer = this.time.addEvent({
-                    delay: cooldown,
-                    loop: true,
-                    callback: useSkill,
-                });
+                const scheduleNextSkill = (delay) => {
+                    const loopTimer = this.time.delayedCall(
+                        Math.max(0, delay),
+                        () => {
+                            if (!unit || unit.dead) {
+                                return;
+                            }
 
-                unit.skillTimers[index] = {
-                    ...(unit.skillTimers[index] || {}),
-                    loopTimer,
+                            const currentTime = this.time.now;
+
+                            if (unit.isStunned) {
+                                scheduleNextSkill(
+                                    Math.max(1, unit.stunUntil - currentTime)
+                                );
+                                return;
+                            }
+
+                            if (!skill.isReady(currentTime)) {
+                                scheduleNextSkill(
+                                    skill.nextAvailableTime - currentTime
+                                );
+                                return;
+                            }
+
+                            useSkill();
+
+                            const nextDelay =
+                                skill.nextAvailableTime > this.time.now
+                                    ? skill.nextAvailableTime - this.time.now
+                                    : cooldown;
+
+                            scheduleNextSkill(nextDelay);
+                        }
+                    );
+
+                    unit.skillTimers[index] = {
+                        ...(unit.skillTimers[index] || {}),
+                        loopTimer,
+                    };
+
+                    if (index === 0) {
+                        unit.attackTimer = loopTimer;
+                    }
                 };
 
-                if (index === 0) {
-                    unit.attackTimer = loopTimer;
-                }
+                const nextAvailableDelay =
+                    skill.nextAvailableTime > this.time.now
+                        ? skill.nextAvailableTime - this.time.now
+                        : cooldown;
+
+                scheduleNextSkill(nextAvailableDelay);
             };
 
             if (initialCooldown > 0) {

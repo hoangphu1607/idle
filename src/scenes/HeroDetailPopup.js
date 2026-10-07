@@ -538,10 +538,11 @@ export default class HeroDetailPopup {
                 itemId: entry.itemId,
                 quantity: Number(entry.quantity) > 0 ? Number(entry.quantity) : 1,
                 quality: entry.quality ?? "Nomal",
-                level: Number(entry.level ?? entry.requiredLevel ?? 1)
+                level: Number(entry.level ?? entry.requiredLevel ?? 1),
+                tier: entry.tier ?? null
             };
         }
-        return { itemId: null, quantity: 0, quality: "Nomal", level: 1 };
+        return { itemId: null, quantity: 0, quality: "Nomal", level: 1, tier: null };
     }
 
     updateInventoryViewportVisibility() {
@@ -638,9 +639,14 @@ export default class HeroDetailPopup {
                 fontSize: "14px", color: "#ffffff", fontStyle: "bold", stroke: "#000000", strokeThickness: 3
             }).setOrigin(1, 1);
 
-            const levelText = this.scene.add.text(x + 6, y + slotSize - 12, `Lv.${itemImage.level}`, {
+            const levelText = this.scene.add.text(
+                x + 6,
+                y + slotSize - 12,
+                inventoryItem.tier ?? `Lv.${itemImage.level}`,
+                {
                 fontSize: "10px", color: "#ffffff", fontStyle: "bold", stroke: "#000000", strokeThickness: 3
-            }).setOrigin(0, 1);
+                }
+            ).setOrigin(0, 1);
 
             this.inventoryContainer.add([itemLevelBackground, itemQualityBackground, itemImage, quantity, levelText]);
             this.inventoryItemViews.push({
@@ -676,16 +682,33 @@ export default class HeroDetailPopup {
             itemImage.itemId = itemId;
             itemImage.quality = slotEntry.quality ?? "Nomal";
             itemImage.level = Number(slotEntry.level ?? itemData.level ?? getItemRequiredLevel(itemData));
+            itemImage.tier = slotEntry.tier ?? null;
             itemImage.equipmentSlotType = slot.slotType;
 
             itemImage.on("pointerup", (pointer) => {
                 if (pointer.event) pointer.event.stopPropagation();
-                this.openItemMenu(itemImage.x, itemImage.y, 48, itemData, true, slot.slotType, null, itemImage.quality, itemImage.level);
+                this.openItemMenu(
+                    itemImage.x,
+                    itemImage.y,
+                    48,
+                    itemData,
+                    true,
+                    slot.slotType,
+                    null,
+                    itemImage.quality,
+                    itemImage.level,
+                    itemImage.tier
+                );
             });
 
-            const levelText = this.scene.add.text(slot.x - 18, slot.y + 18, `Lv.${itemImage.level}`, {
-                fontSize: "10px", color: "#ffffff", fontStyle: "bold", stroke: "#000000", strokeThickness: 3
-            }).setOrigin(0, 1);
+            const levelText = this.scene.add.text(
+                slot.x - 18,
+                slot.y + 18,
+                itemImage.tier ?? `Lv.${itemImage.level}`,
+                {
+                    fontSize: "10px", color: "#ffffff", fontStyle: "bold", stroke: "#000000", strokeThickness: 3
+                }
+            ).setOrigin(0, 1);
 
             this.container.add([itemImage, levelText]);
             this.equipmentItemImages[slot.slotType] = itemImage;
@@ -705,10 +728,11 @@ export default class HeroDetailPopup {
     // =====================================================
     // Logic Phân tách trang bị trong Popup
     // =====================================================
-    decomposeItem(itemData, isEquipped = false, slotType = null, inventoryItem = null, equippedQuality = null, equippedLevel = null) {
+    decomposeItem(itemData, isEquipped = false, slotType = null, inventoryItem = null, equippedQuality = null, equippedLevel = null, equippedTier = null) {
         const saveData = SaveManager.load();
         const targetLevel = Number(inventoryItem?.level ?? equippedLevel ?? itemData.level ?? getItemRequiredLevel(itemData));
         const targetQuality = inventoryItem?.quality ?? equippedQuality ?? "Nomal";
+        const targetTier = inventoryItem?.tier ?? equippedTier ?? null;
 
         if (isEquipped && slotType && this.currentHero) {
             // Trường hợp 1: Món đồ đang được Hero trang bị trên người
@@ -736,7 +760,8 @@ export default class HeroDetailPopup {
             const itemIndex = inventory.findIndex(item =>
                 item.itemId === itemData.id &&
                 (item.quality || "Nomal") === targetQuality &&
-                Number(item.level ?? getItemRequiredLevel(itemData)) === targetLevel
+                Number(item.level ?? getItemRequiredLevel(itemData)) === targetLevel &&
+                (item.tier ?? null) === targetTier
             );
 
             if (itemIndex !== -1) {
@@ -783,7 +808,7 @@ export default class HeroDetailPopup {
     // =====================================================
     // Gọi ItemActionMenu để mở Menu
     // =====================================================
-    openItemMenu(targetX, targetY, cellSize, itemData, isEquipped = false, slotType = null, inventoryItem = null, equippedQuality = null, equippedLevel = null) {
+    openItemMenu(targetX, targetY, cellSize, itemData, isEquipped = false, slotType = null, inventoryItem = null, equippedQuality = null, equippedLevel = null, equippedTier = null) {
         const firstActionText = isEquipped ? "Tháo ra" : "Trang bị";
         const maxSellQty = this.getSellableQuantity(itemData, isEquipped, slotType, inventoryItem, equippedQuality, equippedLevel);
 
@@ -796,7 +821,8 @@ export default class HeroDetailPopup {
                             itemId: itemData.id,
                             equipmentSlotType: slotType,
                             quality: equippedQuality ?? "Nomal",
-                            level: equippedLevel ?? Number(itemData.level ?? itemData.requiredLevel ?? 1)
+                            level: equippedLevel ?? Number(itemData.level ?? itemData.requiredLevel ?? 1),
+                            tier: equippedTier
                         });
                     } else {
                         const normalType = this.normalizeEquipmentType(itemData.type);
@@ -815,9 +841,21 @@ export default class HeroDetailPopup {
                 onClick: () => {
                     this.itemMenu.showDecomposeConfirmModal({
                         itemData,
-                        inventoryItem: inventoryItem || { level: equippedLevel, quality: equippedQuality },
+                        inventoryItem: inventoryItem || {
+                            level: equippedLevel,
+                            quality: equippedQuality,
+                            tier: equippedTier
+                        },
                         onConfirm: () => {
-                            this.decomposeItem(itemData, isEquipped, slotType, inventoryItem, equippedQuality, equippedLevel);
+                            this.decomposeItem(
+                                itemData,
+                                isEquipped,
+                                slotType,
+                                inventoryItem,
+                                equippedQuality,
+                                equippedLevel,
+                                equippedTier
+                            );
                         }
                     });
                 }
@@ -835,7 +873,16 @@ export default class HeroDetailPopup {
                     itemData,
                     maxQuantity: maxSellQty,
                     onConfirm: (qty) => {
-                        this.sellItem(itemData, isEquipped, slotType, inventoryItem, qty, equippedQuality, equippedLevel);
+                        this.sellItem(
+                            itemData,
+                            isEquipped,
+                            slotType,
+                            inventoryItem,
+                            qty,
+                            equippedQuality,
+                            equippedLevel,
+                            equippedTier
+                        );
                     }
                 });
             }
@@ -863,7 +910,7 @@ export default class HeroDetailPopup {
         return Math.max(1, Number(inventoryItem?.quantity ?? 1));
     }
 
-    sellItem(itemData, isEquipped = false, slotType = null, inventoryItem = null, quantity = 1, equippedQuality = null, equippedLevel = null) {
+    sellItem(itemData, isEquipped = false, slotType = null, inventoryItem = null, quantity = 1, equippedQuality = null, equippedLevel = null, equippedTier = null) {
         const saleQuantity = Math.max(1, Number(quantity || 1));
         const price = itemData.sell_price ? itemData.sell_price : 10;
 
@@ -877,7 +924,8 @@ export default class HeroDetailPopup {
                 itemId: itemData.id,
                 equipmentSlotType: slotType,
                 quality: currentQuality,
-                level: currentLevel
+                level: currentLevel,
+                tier: equippedTier
             });
         }
 
@@ -885,11 +933,13 @@ export default class HeroDetailPopup {
         const inventory = freshData.inventory || [];
         const quality = inventoryItem?.quality ?? equippedQuality ?? null;
         const targetLevel = Number(inventoryItem?.level ?? equippedLevel ?? itemData.level ?? getItemRequiredLevel(itemData));
+        const targetTier = inventoryItem?.tier ?? equippedTier ?? null;
 
         const index = inventory.findIndex(item =>
             item.itemId === itemData.id &&
             (quality === null || quality === undefined || item.quality === quality) &&
-            Number(item.level ?? getItemRequiredLevel(itemData)) === targetLevel
+            Number(item.level ?? getItemRequiredLevel(itemData)) === targetLevel &&
+            (item.tier ?? null) === targetTier
         );
 
         if (index !== -1) {
@@ -938,12 +988,16 @@ export default class HeroDetailPopup {
 
         const targetQuality = inventoryItemContext?.quality || "Nomal";
         const targetLevel = Number(inventoryItemContext?.level ?? itemData.level ?? getItemRequiredLevel(itemData));
+        const targetTier = inventoryItemContext?.tier ?? null;
 
         const inventoryItem = inventory.find((item) => {
             const itemLvl = Number(item.level ?? getItemRequiredLevel(itemData));
             const itemQ = item.quality || "Nomal";
-            return item.itemId === itemData.id && itemLvl === targetLevel && itemQ === targetQuality;
-        }) || inventory.find(item => item.itemId === itemData.id && item.quantity > 0);
+            return item.itemId === itemData.id &&
+                itemLvl === targetLevel &&
+                itemQ === targetQuality &&
+                (item.tier ?? null) === targetTier;
+        });
 
         if (!inventoryItem || inventoryItem.quantity < 1) {
             this.showToast("Không tìm thấy vật phẩm trong túi đồ!");
@@ -964,7 +1018,10 @@ export default class HeroDetailPopup {
 
         const currentEntry = this.getEquipmentEntry(equipment, slotType);
         const previousItemId = currentEntry.itemId;
-        const isSameItem = previousItemId === itemData.id;
+        const isSameItem = previousItemId === itemData.id &&
+            currentEntry.quality === targetQuality &&
+            currentEntry.level === targetLevel &&
+            (currentEntry.tier ?? null) === targetTier;
 
         if (!isStackableSlot && isSameItem && (currentEntry.quality || "Nomal") === targetQuality) {
             return false;
@@ -988,7 +1045,8 @@ export default class HeroDetailPopup {
             const prevItemInInv = saveData.inventory.find(item =>
                 item.itemId === previousItemId &&
                 (item.quality || "Nomal") === prevQuality &&
-                Number(item.level ?? 1) === prevLevel
+                Number(item.level ?? 1) === prevLevel &&
+                (item.tier ?? null) === (currentEntry.tier ?? null)
             );
 
             if (prevItemInInv) {
@@ -998,7 +1056,8 @@ export default class HeroDetailPopup {
                     itemId: previousItemId,
                     quantity: currentEntry.quantity,
                     quality: prevQuality,
-                    level: prevLevel
+                    level: prevLevel,
+                    ...(currentEntry.tier ? { tier: currentEntry.tier } : {})
                 });
             }
         }
@@ -1007,7 +1066,8 @@ export default class HeroDetailPopup {
             itemId: itemData.id,
             quantity: isStackableSlot ? (currentQuantity + transferQuantity) : 1,
             quality: targetQuality,
-            level: targetLevel
+            level: targetLevel,
+            ...(targetTier ? { tier: targetTier } : {})
         };
 
         saveData.heroes[heroKey] = { ...savedHero, equipment };
@@ -1023,8 +1083,12 @@ export default class HeroDetailPopup {
         const inventory = saveData.inventory || [];
         const targetQuality = gameObject.quality ?? "Nomal";
         const targetLevel = Number(gameObject.level ?? 1);
+        const targetTier = gameObject.tier ?? null;
         const hasExistingStack = inventory.some(
-            item => item.itemId === gameObject.itemId && item.quality === targetQuality && Number(item.level ?? 1) === targetLevel
+            item => item.itemId === gameObject.itemId &&
+                item.quality === targetQuality &&
+                Number(item.level ?? 1) === targetLevel &&
+                (item.tier ?? null) === targetTier
         );
         const inventoryCapacity = 6 * 4;
 
@@ -1040,7 +1104,10 @@ export default class HeroDetailPopup {
         const currentQuality = currentEntry.quality ?? targetQuality ?? "Nomal";
         const currentLevel = Number(currentEntry.level ?? gameObject.level ?? targetLevel ?? 1);
         const matchingInventoryItem = inventory.find(
-            item => item.itemId === gameObject.itemId && item.quality === currentQuality && Number(item.level ?? 1) === currentLevel
+            item => item.itemId === gameObject.itemId &&
+                item.quality === currentQuality &&
+                Number(item.level ?? 1) === currentLevel &&
+                (item.tier ?? null) === targetTier
         );
         const quantityToReturn = this.isStackableEquipmentSlot(gameObject.equipmentSlotType) ? currentEntry.quantity : 1;
 
@@ -1051,7 +1118,8 @@ export default class HeroDetailPopup {
                 itemId: gameObject.itemId,
                 quantity: quantityToReturn,
                 quality: currentQuality,
-                level: currentLevel
+                level: currentLevel,
+                ...(targetTier ? { tier: targetTier } : {})
             });
         }
 
@@ -1062,7 +1130,8 @@ export default class HeroDetailPopup {
                     itemId: gameObject.itemId,
                     quantity: nextQuantity,
                     quality: currentQuality,
-                    level: currentLevel
+                    level: currentLevel,
+                    ...(targetTier ? { tier: targetTier } : {})
                 };
             } else {
                 delete equipment[gameObject.equipmentSlotType];

@@ -2,6 +2,7 @@ import SlimeSkill from "./SlimeSkill.js";
 import WolfSkill from "./WolfSkill.js";
 import OrcSkill from "./OrcSkill.js";
 import BaseSkill from "./BaseSkill.js";
+import WoodMonsterSkill from "./Wood_monster_first_skill.js";
 
 // 1. Cấu hình mặc định cho các skill dùng chung BaseSkill
 const GENERIC_PROJECTILE_CONFIGS = {
@@ -82,6 +83,7 @@ const SPECIAL_SKILL_CLASSES = {
     Slime_first_skill: SlimeSkill,
     Wolf_first_skill: WolfSkill,
     Orc_first_skill: OrcSkill,
+    Wood_monster_first_skill: WoodMonsterSkill,
 };
 
 export function createMonsterSkill(skillData) {

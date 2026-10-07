@@ -1,4 +1,4 @@
-import { getDifficultyLevelRange as getRangeByDifficulty } from "./item.js";
+import { getItemTiersByDifficulty, ITEM_TIERS } from "./item.js";
 
 export const MONSTER_DROPS = {
 
@@ -23,21 +23,21 @@ export const MONSTER_DROPS = {
             chance: 0.4,
             minQuantity: 1,
             maxQuantity: 1,
-            level: 10
+            tiered: true
         },
         {
             itemId: "fire_staff",
             chance: 0.35,
             minQuantity: 1,
             maxQuantity: 1,
-            level: 10
+            tiered: true
         },
         {
             itemId: "nature_staff",
             chance: 0.35,
             minQuantity: 1,
             maxQuantity: 1,
-            level: 10
+            tiered: true
         }
     ],
 
@@ -47,41 +47,59 @@ export const MONSTER_DROPS = {
             chance: 0.35,
             minQuantity: 1,
             maxQuantity: 1,
-            level: 20
+            tiered: true
         },
         {
             itemId: "fire_staff",
             chance: 0.35,
             minQuantity: 1,
             maxQuantity: 1,
-            level: 20
+            tiered: true
         },
         {
             itemId: "nature_staff",
             chance: 0.35,
             minQuantity: 1,
             maxQuantity: 1,
-            level: 20
+            tiered: true
         }
-    ]
+    ],
+
+    wood_monster: [
+        {
+            itemId: "log",
+            chance: 1,
+            minQuantity: 1,
+            maxQuantity: 3,
+            tiered: true
+        },        
+    ],
+    
 
 };
 
-export function getMonsterDropPool(monsterId, difficulty = "normal") {
+export function getMonsterDropPool(monsterId, difficulty = "normal", monsterTier = null) {
     const pool = MONSTER_DROPS[monsterId] || [];
-    const { minLevel, maxLevel } = getRangeByDifficulty(difficulty);
+    const tiers = getItemTiersByDifficulty(difficulty);
+    const fixedTier = Number.isInteger(Number(monsterTier)) && Number(monsterTier) > 0
+        ? ITEM_TIERS[Number(monsterTier) - 1]
+        : null;
 
     return pool
         .filter((drop) => {
-            if (!drop.itemId) {
-                return false;
+            return Boolean(drop.itemId);
+        })
+        .map((drop) => {
+            if (!drop.tiered) {
+                return drop;
             }
 
-            const dropLevel = Number(drop.level ?? minLevel ?? 1);
-            return dropLevel >= minLevel && dropLevel <= maxLevel;
-        })
-        .map((drop) => ({
-            ...drop,
-            level: Number(drop.level ?? minLevel ?? 1)
-        }));
+            if (fixedTier) {
+                const fixedDrop = { ...drop };
+                delete fixedDrop.tiers;
+                return { ...fixedDrop, tier: fixedTier };
+            }
+
+            return { ...drop, tiers: drop.tiers ?? tiers };
+        });
 }
