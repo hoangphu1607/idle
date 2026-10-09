@@ -65,22 +65,55 @@ export default class Unit {
 
         const rawDamage = Math.max(0, Number(value) || 0);
         const multiplier = Number(options.multiplier) || 1;
-        const modifiedDamage = rawDamage * multiplier;
-        const mitigation = damageType === "magic"
-            ? this.magic_resistance
-            : this.armor;
-        const finalDamage = Math.max(1, modifiedDamage - mitigation);
-        const damageResult = {
-            rawDamage,
-            multiplier,
-            modifiedDamage,
-            mitigation,
-            finalDamage,
-            damageType,
-        };
+        let damageResult;
 
-        this.hp -= finalDamage;
-        this.showDamageNumber(finalDamage, damageType);
+        if (damageType === "mixed") {
+            const magicRawDamage = Math.max(0, Number(options.magicDamage) || 0);
+            const physicalModifiedDamage = rawDamage * multiplier;
+            const magicModifiedDamage = magicRawDamage * multiplier;
+            const physicalMitigation = this.armor;
+            const magicMitigation = this.magic_resistance;
+            const physicalFinalDamage = Math.max(1, physicalModifiedDamage - physicalMitigation);
+            const magicFinalDamage = magicRawDamage > 0
+                ? Math.max(1, magicModifiedDamage - magicMitigation)
+                : 0;
+            const finalDamage = physicalFinalDamage + magicFinalDamage;
+
+            damageResult = {
+                rawDamage: rawDamage + magicRawDamage,
+                multiplier,
+                modifiedDamage: physicalModifiedDamage + magicModifiedDamage,
+                mitigation: physicalMitigation + (magicRawDamage > 0 ? magicMitigation : 0),
+                finalDamage,
+                damageType,
+                physicalDamage: physicalFinalDamage,
+                magicDamage: magicFinalDamage,
+            };
+
+            this.showDamageNumber(physicalFinalDamage, "physical", -12);
+            if (magicRawDamage > 0) {
+                this.showDamageNumber(magicFinalDamage, "magic", 12);
+            }
+        } else {
+            const modifiedDamage = rawDamage * multiplier;
+            const mitigation = damageType === "magic"
+                ? this.magic_resistance
+                : this.armor;
+            const finalDamage = Math.max(1, modifiedDamage - mitigation);
+
+            damageResult = {
+                rawDamage,
+                multiplier,
+                modifiedDamage,
+                mitigation,
+                finalDamage,
+                damageType,
+            };
+
+            this.showDamageNumber(finalDamage, damageType);
+        }
+
+        this.hp -= damageResult.finalDamage;
         /*
          * Monster chỉ bị kích hoạt khi bị Hero/Player tấn công
          */
@@ -91,15 +124,15 @@ export default class Unit {
         ) {
             const wasPassive = !this.isAggro;
             this.isAggro = true;
-            this.addThreat(attacker, finalDamage * attacker.threat);
+            this.addThreat(attacker, damageResult.finalDamage * attacker.threat);
 
             // Nếu đây là lần đầu tiên bị đánh, phản đòn ngay lập tức
             if (wasPassive && typeof this.scene.attack === "function") {
                 this.scene.attack(this);
             }
 
-            this.scene.alertNearbyMonsters?.(this, attacker, finalDamage);
-            this.scene.recordDamage?.(attacker, finalDamage);
+            this.scene.alertNearbyMonsters?.(this, attacker, damageResult.finalDamage);
+            this.scene.recordDamage?.(attacker, damageResult.finalDamage);
         }
 
         if (this.hp <= 0) {
@@ -187,7 +220,7 @@ export default class Unit {
         );
 
     }
-    showDamageNumber(damage, damageType = "physical") {
+    showDamageNumber(damage, damageType = "physical", offsetX = 0) {
         if (!this.view || !this.view.container) {
             return;
         }
@@ -199,7 +232,7 @@ export default class Unit {
 
         // Container của Unit nằm trong BattleGrid nên cần đổi sang tọa độ world.
         const gridContainer = this.ownerGrid?.container;
-        const x = (gridContainer?.x || 0) + this.view.container.x;
+        const x = (gridContainer?.x || 0) + this.view.container.x + offsetX;
         const y = (gridContainer?.y || 0) + this.view.container.y;
 
         const damageText = this.scene.add.text(

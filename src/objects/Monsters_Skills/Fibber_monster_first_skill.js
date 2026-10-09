@@ -1,10 +1,10 @@
 import Skill from "../Hero_Skills/Skill.js";
 
-export default class WoodMonsterSkill extends Skill {
+export default class FibberMonsterSkill extends Skill {
     constructor(config) {
         super({
-            id: "Wood_monster_first_skill",
-            name: "Wood Monster Attack",
+            id: "Fibber_monster_first_skill",
+            name: "Fibber Monster Attack",
             cooldown: config.cooldown,
             initialCooldown: config.initialCooldown,
         });
@@ -56,7 +56,7 @@ export default class WoodMonsterSkill extends Skill {
         const projectile = battle.add.image(
             targetX,
             startY,
-            "Wood_monster_first_skill"
+            "Fibber_monster_first_skill"
         );
 
         // Neo ở giữa đáy (bottom-center)
@@ -75,17 +75,20 @@ export default class WoodMonsterSkill extends Skill {
             onComplete: () => {
                 // Gây sát thương ngay khi trồi lên hoàn tất
                 if (!target.dead) {
-                    const damage = caster.attack_physical;
+                    const physicalDamage = caster.attack_physical;
+                    const magicDamage = caster.attack_magic * 0.2;
 
                     target.takeDamage(
-                        damage,
+                        physicalDamage,
                         caster,
-                        "physical"
+                        "mixed",
+                        { magicDamage }
                     );
 
                     console.log(
                         `${caster.name} uses ${this.name} on ${target.name}: ` +
-                        `time=${currentTime}, damage=${damage}`
+                        `time=${currentTime}, physicalDamage=${physicalDamage}, ` +
+                        `magicDamage=${magicDamage}`
                     );
 
                     if (target.dead) {

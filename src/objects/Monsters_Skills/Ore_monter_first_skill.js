@@ -1,10 +1,10 @@
 import Skill from "../Hero_Skills/Skill.js";
 
-export default class WoodMonsterSkill extends Skill {
+export default class OreMonsterSkill extends Skill {
     constructor(config) {
         super({
-            id: "Wood_monster_first_skill",
-            name: "Wood Monster Attack",
+            id: "Ore_monster_first_skill",
+            name: "Ore Monster Attack",
             cooldown: config.cooldown,
             initialCooldown: config.initialCooldown,
         });
@@ -50,13 +50,13 @@ export default class WoodMonsterSkill extends Skill {
         // ==========================================
         // Tạo cây dưới chân Hero
         // ==========================================
-        const finalY = footY + 25;         // Vị trí mọc lên hoàn chỉnh (ngay mặt sàn tiếp đất)
-        const startY = footY + 50;    // Vị trí lún dưới lòng đất trước khi đâm lên
+        const finalY = footY;         // Vị trí mọc lên hoàn chỉnh (ngay mặt sàn tiếp đất)
+        const startY = footY + 25;    // Vị trí lún dưới lòng đất trước khi đâm lên
 
         const projectile = battle.add.image(
             targetX,
             startY,
-            "Wood_monster_first_skill"
+            "Ore_monster_first_skill"
         );
 
         // Neo ở giữa đáy (bottom-center)
@@ -94,9 +94,9 @@ export default class WoodMonsterSkill extends Skill {
                 }
 
                 // ============================================
-                // Asset tồn tại 3 giây (3000ms) trước khi biến mất
+                // Asset tồn tại 1 giây (1000ms) trước khi biến mất
                 // ============================================
-                battle.time.delayedCall(3000, () => {
+                battle.time.delayedCall(1000, () => {
                     if (!projectile || !projectile.scene) return;
 
                     // Hiệu ứng lặn dần xuống đất

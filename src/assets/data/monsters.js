@@ -364,7 +364,7 @@ export const MONSTERS = [
         avatar: "monster_wood_tier",
         type:"mob_gather",
 
-        hp: 10,        
+        hp: 100,        
 
         attack_physical: 20,
         attack_magic: 5,
@@ -386,4 +386,58 @@ export const MONSTERS = [
         gold: 2
     },
 
+    {
+        id: "fibber_monster",
+        name: "Fibber Monster",
+        avatar: "monster_fibber_tier",
+        type:"mob_gather",
+
+        hp: 100,        
+
+        attack_physical: 10,
+        attack_magic: 15,
+
+        armor: 10,
+        magic_resistance: 10,
+
+        role: "melee",
+
+        skills: [
+            {
+                id: "Fibber_monster_first_skill",
+                cooldown: 5,
+                initialCooldown: 0.2
+            }
+        ],
+
+        experience: 10,
+        gold: 2
+    },
+    {
+        id: "ore_monster",
+        name: "Ore Monster",
+        avatar: "monster_ore_tier",
+        type:"mob_gather",
+
+        hp: 100,        
+
+        attack_physical: 10,
+        attack_magic: 15,
+
+        armor: 10,
+        magic_resistance: 10,
+
+        role: "melee",
+
+        skills: [
+            {
+                id: "Ore_monster_first_skill",
+                cooldown: 5,
+                initialCooldown: 0.2
+            }
+        ],
+
+        experience: 10,
+        gold: 2
+    },
 ];

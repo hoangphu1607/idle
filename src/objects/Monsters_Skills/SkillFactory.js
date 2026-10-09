@@ -3,6 +3,9 @@ import WolfSkill from "./WolfSkill.js";
 import OrcSkill from "./OrcSkill.js";
 import BaseSkill from "./BaseSkill.js";
 import WoodMonsterSkill from "./Wood_monster_first_skill.js";
+import FibberMonsterSkill from "./Fibber_monster_first_skill.js";
+import OreMonsterSkill from "./Ore_monter_first_skill.js"; // Import skill cho Ore Monster
+
 
 // 1. Cấu hình mặc định cho các skill dùng chung BaseSkill
 const GENERIC_PROJECTILE_CONFIGS = {
@@ -84,6 +87,8 @@ const SPECIAL_SKILL_CLASSES = {
     Wolf_first_skill: WolfSkill,
     Orc_first_skill: OrcSkill,
     Wood_monster_first_skill: WoodMonsterSkill,
+    Fibber_monster_first_skill: FibberMonsterSkill, 
+    Ore_monster_first_skill: OreMonsterSkill, // Thêm skill cho Ore Monster
 };
 
 export function createMonsterSkill(skillData) {

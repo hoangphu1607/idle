@@ -9,7 +9,7 @@ export const JUNGLE_STAGES = [
                     {
                         id: "slime",
                         formation: [   
-                            ["","wood_monster", ""],
+                            ["","", "ore_monster"],
                             //["thief_bow", "thief_mage", "thief_bow"],                         
                             // ["thief_sword", "thief_dagger", "thief_miner"],
                         ],
