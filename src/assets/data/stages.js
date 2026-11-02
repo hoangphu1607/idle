@@ -2,42 +2,39 @@ export const JUNGLE_STAGES = [
     {
         id: 1,
         name: "Stage 1",
-
         waves: [
             {
                 monsters: [
-                    {
-                        id: "slime",
-                        formation: [   
-                            ["","", "ore_monster"],
-                            //["thief_bow", "thief_mage", "thief_bow"],                         
-                            // ["thief_sword", "thief_dagger", "thief_miner"],
-                        ],
-                    },
+                    {formation: [["ore_monster","", "ore_monster"],],},
                 ],
             },
         ],
     },
 
-    // {
-    //     id: 2,
-    //     name: "Stage 2",
-
-    //     waves: [
-    //         {
-    //             monsters: [
-    //                 {
-    //                     id: "slime",
-    //                     formation: [
-    //                         ["wolf", 0, "wolf"],
-    //                         ["slime", "slime", "slime"],
-    //                     ],
-    //                 },
-    //             ],
-    //         },
-    //     ],
-    // },
-
+    {
+        id: 2,
+        name: "Stage 2",
+        waves: [
+            {
+                monsters: [
+                    {formation: [["thief_miner", "thief_dagger", "thief_miner"],],},
+                    {formation: [["", "thief_sword", ""],],},
+                ],
+            },
+        ],
+    },
+    {
+        id: 3,
+        name: "Stage 3",
+        waves: [
+            {
+                monsters: [
+                    {formation: [["thief_bow", "thief_mage", "thief_bow"],],},
+                    {formation: [["thief_sword", "", "thief_sword"],],},
+                ],
+            },
+        ],
+    },
     // {
     //     id: 3,
     //     name: "Stage 3",

@@ -18,7 +18,8 @@ export default class BattleScene extends BaseScene {
         this.mapId = data.mapId || "jungle";
         this.mapName = data.mapName || this.mapId;
         this.stages = STAGES_BY_MAP[this.mapId] || STAGES_BY_MAP.jungle;
-        this.stageIndex = data.stageIndex || 0;
+        this.stageQueue = [];
+        this.lastStage = null;
         this.currentStage = null;
         this.waveIndex = 0;
         this.isTransitioning = false;
@@ -723,7 +724,31 @@ export default class BattleScene extends BaseScene {
             return null;
         }
 
-        return Phaser.Utils.Array.GetRandom(this.stages);
+        if (this.stageQueue.length === 0) {
+            this.stageQueue = [...this.stages];
+
+            for (let index = this.stageQueue.length - 1; index > 0; index--) {
+                const randomIndex = Phaser.Math.Between(0, index);
+                [this.stageQueue[index], this.stageQueue[randomIndex]] = [
+                    this.stageQueue[randomIndex],
+                    this.stageQueue[index],
+                ];
+            }
+
+            if (
+                this.stageQueue.length > 1 &&
+                this.stageQueue[0] === this.lastStage
+            ) {
+                const swapIndex = Phaser.Math.Between(1, this.stageQueue.length - 1);
+                [this.stageQueue[0], this.stageQueue[swapIndex]] = [
+                    this.stageQueue[swapIndex],
+                    this.stageQueue[0],
+                ];
+            }
+        }
+
+        this.lastStage = this.stageQueue.shift();
+        return this.lastStage;
     }
 
     /**

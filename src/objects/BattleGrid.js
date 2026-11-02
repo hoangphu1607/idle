@@ -135,10 +135,9 @@ export default class BattleGrid {
     }
 
     spawnMonsters(wave) {
-        wave.monsters.forEach((spawnData) => {
+        const formations = wave.monsters.map((spawnData) => {
             if (spawnData.formation) {
-                this.spawnFormation(spawnData);
-                return;
+                return spawnData;
             }
 
             const formation = Array.from(
@@ -146,13 +145,30 @@ export default class BattleGrid {
                 () => [1],
             );
 
-            this.spawnFormation({ ...spawnData, formation });
+            return { ...spawnData, formation };
+        });
+
+        const totalHeight = formations.reduce(
+            (height, spawnData) => height + spawnData.formation.length,
+            0,
+        );
+
+        if (totalHeight > this.rows) {
+            console.warn("Monster formations exceed the available grid height");
+            return;
+        }
+
+        let row = Math.floor((this.rows - totalHeight) / 2);
+
+        formations.forEach((spawnData) => {
+            this.spawnFormation(spawnData, row);
+            row += spawnData.formation.length;
         });
     }
 
-    spawnFormation(spawnData) {
+    spawnFormation(spawnData, fixedRow = null) {
         const formation = spawnData.formation;
-        const position = this.getRandomFormationPosition(formation);
+        const position = this.getRandomFormationPosition(formation, fixedRow);
 
         if (!position) {
             console.warn("No empty space available for monster formation");
@@ -190,12 +206,14 @@ export default class BattleGrid {
         });
     }
 
-    getRandomFormationPosition(formation) {
+    getRandomFormationPosition(formation, fixedRow = null) {
         const height = formation.length;
         const width = Math.max(...formation.map((row) => row.length));
         const positions = [];
+        const firstRow = fixedRow ?? 0;
+        const lastRow = fixedRow ?? this.rows - height;
 
-        for (let row = 0; row <= this.rows - height; row++) {
+        for (let row = firstRow; row <= lastRow; row++) {
             for (let col = 0; col <= this.cols - width; col++) {
                 const isEmpty = formation.every((formationRow, rowIndex) =>
                     formationRow.every((cell, colIndex) => {

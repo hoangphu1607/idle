@@ -65,8 +65,8 @@ export default class MaceSkill extends Skill {
                 if (target.dead) {
                     return;
                 }
-
-                const damage = caster.attack_physical;
+                const baseDamage = 95;
+                const damage = baseDamage + caster.attack_physical ;
 
                 // Truyền caster để Monster biết ai đã tấn công mình
                 target.takeDamage(damage, caster, "physical");

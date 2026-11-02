@@ -206,7 +206,8 @@ export default class NatureSkill extends Skill {
                 // =================================================
                 // Lượng HP hồi
                 // =================================================
-                const healAmount = effect.count * 10;
+                const baseHeal = 10; // Mỗi stack hồi 10 HP
+                const healAmount = effect.count * baseHeal;
 
                 // Chỉ heal nếu đang thiếu HP
                 if (target.hp < target.maxHp) {

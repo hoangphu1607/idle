@@ -5,8 +5,8 @@ export const HEROES = [
         name: "Mace",
         level: 1,
 
-        attack_physical: 20,
-        attack_magic: 5,
+        attack_physical: 5,
+        attack_magic: 1,
         // Mace cần chỉ số phòng thủ gốc để Defense Mastery có thể tăng theo %.
         armor: 10,
         magic_resistance: 10,
