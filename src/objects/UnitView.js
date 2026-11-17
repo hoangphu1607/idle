@@ -24,9 +24,9 @@ export default class UnitView {
             this.unit.type == "mob_gather" ? this.unit.avatar + this.unit.tier : this.unit.avatar
         );
 
-        this.sprite.setDisplaySize(
-            this.cellSize - 8,
-            this.cellSize - 8
+        const spriteSize = this.cellSize - 8;
+        this.sprite.setScale(
+            spriteSize / Math.max(this.sprite.width, this.sprite.height)
         );
 
         this.stunIcon = this.scene.add.image(

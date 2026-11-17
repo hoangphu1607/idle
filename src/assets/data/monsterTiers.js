@@ -1,39 +1,47 @@
-const monsterTiers = {
+const monsterTierBaseStats = {
     1: {
-        hp: 1.00,
-        mp: 1.00,
-        armor: 1.00,
-        magic_resistance: 1.00,
-        attack_physical: 1.00,
-        attack_magic: 1.00,
+        hp: 100,
+        mp: 200,
+        armor: 5,
+        magic_resistance: 5,
+        attack_physical: 12,
+        attack_magic: 5,
+        experience: 10,
+        gold: 2
     },
 
     2: {
-        hp: 1.50,
-        mp: 1.30,
-        armor: 1.20,
-        magic_resistance: 1.20,
-        attack_physical: 1.40,
-        attack_magic: 1.40,
+        hp: 800,
+        mp: 200,
+        armor: 6,
+        magic_resistance: 6,
+        attack_physical: 20,
+        attack_magic: 5,
+        experience: 20,
+        gold: 4
     },
 
     3: {
-        hp: 2.20,
-        mp: 1.70,
-        armor: 1.50,
-        magic_resistance: 1.50,
-        attack_physical: 1.80,
-        attack_magic: 1.80,
+        hp: 1000,
+        mp: 200,
+        armor: 7,
+        magic_resistance: 7,
+        attack_physical: 30,
+        attack_magic: 10,
+        experience: 30,
+        gold: 6
     },
 
     4: {
-        hp: 3.20,
-        mp: 2.20,
-        armor: 2.00,
-        magic_resistance: 2.00,
-        attack_physical: 2.50,
-        attack_magic: 2.50,
+        hp: 1500,
+        mp: 300,
+        armor: 15,
+        magic_resistance: 15,
+        attack_physical: 35,
+        attack_magic: 15,
+        experience: 50,
+        gold: 10
     },
 };
 
-export default monsterTiers;
+export default monsterTierBaseStats;

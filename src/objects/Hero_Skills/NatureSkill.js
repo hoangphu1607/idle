@@ -175,11 +175,11 @@ export default class NatureSkill extends Skill {
             effect.healEvent.remove(false);
         }
 
-        let remainingTicks = 4; // 4 ticks, mỗi tick 1 giây
+        let remainingTicks = 8; // 8 ticks, mỗi tick 1 giây
 
         effect.healEvent = battle.time.addEvent({
             delay: 1000,
-            repeat: 3,
+            repeat: remainingTicks - 1,
 
             callback: () => {
 
@@ -231,8 +231,6 @@ export default class NatureSkill extends Skill {
 
                 remainingTicks -= 1;
 
-                // =================================================
-                // Hết 12 giây
                 // =================================================
                 if (remainingTicks <= 0) {
 

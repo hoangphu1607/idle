@@ -1,6 +1,7 @@
 import Unit from "./Unit.js";
 import { createMonsterSkill } from "./Monsters_Skills/SkillFactory.js";
-import monsterTiers from "../assets/data/monsterTiers.js";
+import monsterTierBaseStats from "../assets/data/monsterTiers.js";
+import { MONSTER_ROLES } from "../assets/data/monsterRoles.js";
 import { getMonsterDropPool } from "../assets/data/monsterDrops.js";
 
 export default class Monster extends Unit {
@@ -13,16 +14,16 @@ export default class Monster extends Unit {
 
         const requestedTier = Number(data.tier) || 1;
 
-        const tier = monsterTiers[requestedTier]
+        const tier = monsterTierBaseStats[requestedTier]
             ? requestedTier
             : 1;
 
-        const tierMultiplier = monsterTiers[tier];
+        const tierBaseStats = monsterTierBaseStats[tier];
+        const roleMultiplier = MONSTER_ROLES[data.role];
 
-
-        // ==========================================
-        // BASE STATS
-        // ==========================================
+        if (!roleMultiplier) {
+            throw new Error(`Unknown monster role "${data.role}" for "${data.id}"`);
+        }
 
         const statKeys = [
             "hp",
@@ -33,22 +34,13 @@ export default class Monster extends Unit {
             "attack_magic",
         ];
 
-        const baseStats = Object.fromEntries(
-            statKeys.map((stat) => [
-                stat,
-                data[stat] ?? 0
-            ])
-        );
-
-
-        // ==========================================
-        // FINAL STATS
-        // ==========================================
+        const overrides = data.overrides || {};
+        const baseStats = { ...tierBaseStats };
 
         const finalStats = Object.fromEntries(
             statKeys.map((stat) => [
                 stat,
-                baseStats[stat] * (tierMultiplier[stat] ?? 1)
+                overrides[stat] ?? baseStats[stat] * roleMultiplier[stat]
             ])
         );
 
@@ -71,7 +63,7 @@ export default class Monster extends Unit {
 
         this.baseStats = baseStats;
 
-        this.tierMultiplier = tierMultiplier;
+        this.roleMultiplier = roleMultiplier;
 
         this.finalStats = finalStats;
 
@@ -102,10 +94,10 @@ export default class Monster extends Unit {
         // ==========================================
 
         this.experienceReward =
-            data.experience ?? 0;
+            overrides.experience ?? tierBaseStats.experience ?? 0;
 
         this.goldReward =
-            data.gold ?? 0;
+            overrides.gold ?? tierBaseStats.gold ?? 0;
 
 
         // ==========================================
